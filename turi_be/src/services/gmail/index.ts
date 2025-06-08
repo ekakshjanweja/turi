@@ -7,6 +7,12 @@ import {
   validateEmail,
   encodeEmailHeader,
   createEmailMessage,
+  createLabel,
+  updateLabel,
+  deleteLabel,
+  listLabels,
+  findLabelByName,
+  getOrCreateLabel,
 } from "./helpers";
 import type {
   EmailSearchResult,
@@ -20,6 +26,13 @@ import type {
   SearchEmails,
   SendEmail,
   EmailSendResult,
+  GmailLabel,
+  LabelManagerResult,
+  ListEmailLabels,
+  CreateLabel,
+  UpdateLabel,
+  DeleteLabel,
+  GetOrCreateLabel,
 } from "./types";
 
 export class GmailService {
@@ -265,10 +278,10 @@ export class GmailService {
         .replace(/=+$/, "");
 
       // Define the type for messageRequest
-      interface GmailMessageRequest {
+      type GmailMessageRequest = {
         raw: string;
         threadId?: string;
-      }
+      };
 
       const messageRequest: GmailMessageRequest = {
         raw: encodedMessage,
@@ -330,6 +343,260 @@ export class GmailService {
         messageId: "",
         action: (args.action || "send") === "send" ? "sent" : "draft",
         message: `Failed to ${args.action || "send"} email: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: errorResult,
+        },
+      };
+    }
+  }
+
+  // Label Management Methods
+
+  public async listEmailLabels(args?: ListEmailLabels): Promise<
+    | {
+        content: {
+          type: "text";
+          text: LabelManagerResult;
+        };
+      }
+    | undefined
+  > {
+    if (!this.gmail) {
+      console.error("Gmail client is not initialized.");
+      return;
+    }
+
+    try {
+      const labelResults = await listLabels(this.gmail);
+
+      const result: LabelManagerResult = {
+        success: true,
+        message: `Found ${labelResults.count.total} labels (${labelResults.count.system} system, ${labelResults.count.user} user)`,
+        labels: labelResults,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: result,
+        },
+      };
+    } catch (error) {
+      console.error("Error in listEmailLabels:", error);
+
+      const errorResult: LabelManagerResult = {
+        success: false,
+        message: `Failed to list labels: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: errorResult,
+        },
+      };
+    }
+  }
+
+  public async createEmailLabel(args: CreateLabel): Promise<
+    | {
+        content: {
+          type: "text";
+          text: LabelManagerResult;
+        };
+      }
+    | undefined
+  > {
+    if (!this.gmail) {
+      console.error("Gmail client is not initialized.");
+      return;
+    }
+
+    try {
+      const label = await createLabel(this.gmail, args.name, {
+        messageListVisibility: args.messageListVisibility,
+        labelListVisibility: args.labelListVisibility,
+      });
+
+      const result: LabelManagerResult = {
+        success: true,
+        message: `Label "${args.name}" created successfully`,
+        label,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: result,
+        },
+      };
+    } catch (error) {
+      console.error("Error in createEmailLabel:", error);
+
+      const errorResult: LabelManagerResult = {
+        success: false,
+        message: `Failed to create label: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: errorResult,
+        },
+      };
+    }
+  }
+
+  public async updateEmailLabel(args: UpdateLabel): Promise<
+    | {
+        content: {
+          type: "text";
+          text: LabelManagerResult;
+        };
+      }
+    | undefined
+  > {
+    if (!this.gmail) {
+      console.error("Gmail client is not initialized.");
+      return;
+    }
+
+    try {
+      const updates: any = {};
+      if (args.name) updates.name = args.name;
+      if (args.messageListVisibility)
+        updates.messageListVisibility = args.messageListVisibility;
+      if (args.labelListVisibility)
+        updates.labelListVisibility = args.labelListVisibility;
+
+      const label = await updateLabel(this.gmail, args.id, updates);
+
+      const result: LabelManagerResult = {
+        success: true,
+        message: `Label updated successfully`,
+        label,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: result,
+        },
+      };
+    } catch (error) {
+      console.error("Error in updateEmailLabel:", error);
+
+      const errorResult: LabelManagerResult = {
+        success: false,
+        message: `Failed to update label: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: errorResult,
+        },
+      };
+    }
+  }
+
+  public async deleteEmailLabel(args: DeleteLabel): Promise<
+    | {
+        content: {
+          type: "text";
+          text: LabelManagerResult;
+        };
+      }
+    | undefined
+  > {
+    if (!this.gmail) {
+      console.error("Gmail client is not initialized.");
+      return;
+    }
+
+    try {
+      const deleteResult = await deleteLabel(this.gmail, args.id);
+
+      const result: LabelManagerResult = {
+        success: true,
+        message: deleteResult.message,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: result,
+        },
+      };
+    } catch (error) {
+      console.error("Error in deleteEmailLabel:", error);
+
+      const errorResult: LabelManagerResult = {
+        success: false,
+        message: `Failed to delete label: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: errorResult,
+        },
+      };
+    }
+  }
+
+  public async getOrCreateEmailLabel(args: GetOrCreateLabel): Promise<
+    | {
+        content: {
+          type: "text";
+          text: LabelManagerResult;
+        };
+      }
+    | undefined
+  > {
+    if (!this.gmail) {
+      console.error("Gmail client is not initialized.");
+      return;
+    }
+
+    try {
+      const label = await getOrCreateLabel(this.gmail, args.name, {
+        messageListVisibility: args.messageListVisibility,
+        labelListVisibility: args.labelListVisibility,
+      });
+
+      const result: LabelManagerResult = {
+        success: true,
+        message: `Label "${args.name}" retrieved or created successfully`,
+        label,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: result,
+        },
+      };
+    } catch (error) {
+      console.error("Error in getOrCreateEmailLabel:", error);
+
+      const errorResult: LabelManagerResult = {
+        success: false,
+        message: `Failed to get or create label: ${
           error instanceof Error ? error.message : String(error)
         }`,
       };

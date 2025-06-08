@@ -15,7 +15,7 @@ import type {
 } from "./schema";
 
 // Gmail API types
-export interface GmailMessagePart {
+export type GmailMessagePart = {
   partId?: string;
   mimeType?: string;
   filename?: string;
@@ -29,19 +29,19 @@ export interface GmailMessagePart {
     data?: string;
   };
   parts?: GmailMessagePart[];
-}
+};
 
-export interface EmailAttachment {
+export type EmailAttachment = {
   id: string;
   filename: string;
   mimeType: string;
   size: number;
-}
+};
 
-export interface EmailContent {
+export type EmailContent = {
   text: string;
   html: string;
-}
+};
 
 // Email operation types
 export type SendEmail = z.infer<typeof SendEmailSchema>;
@@ -51,12 +51,43 @@ export type ModifyEmail = z.infer<typeof ModifyEmailSchema>;
 export type DeleteEmail = z.infer<typeof DeleteEmailSchema>;
 
 // Email send result type
-export interface EmailSendResult {
+export type EmailSendResult = {
   success: boolean;
   messageId: string;
   action: "sent" | "draft";
   message: string;
-}
+};
+
+// Gmail Label types
+export type GmailLabel = {
+  id: string;
+  name: string;
+  type?: string;
+  messageListVisibility?: string;
+  labelListVisibility?: string;
+  messagesTotal?: number;
+  messagesUnread?: number;
+  color?: {
+    textColor?: string;
+    backgroundColor?: string;
+  };
+};
+
+export type LabelManagerResult = {
+  success: boolean;
+  message: string;
+  label?: GmailLabel;
+  labels?: {
+    all: GmailLabel[];
+    system: GmailLabel[];
+    user: GmailLabel[];
+    count: {
+      total: number;
+      system: number;
+      user: number;
+    };
+  };
+};
 
 // Label operation types
 export type ListEmailLabels = z.infer<typeof ListEmailLabelsSchema>;

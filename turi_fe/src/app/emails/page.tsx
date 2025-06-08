@@ -13,6 +13,8 @@ import type {
   EmailSearchResult,
   EmailSummary,
   EmailReadResult,
+  LabelManagerResult,
+  GmailLabel,
 } from "@/types/websocket";
 import {
   Send,
@@ -32,6 +34,10 @@ import {
   Paperclip,
   Eye,
   MessageSquare,
+  Tag,
+  Tags,
+  Folder,
+  FolderOpen,
 } from "lucide-react";
 
 const EmailsPage = () => {
@@ -514,6 +520,226 @@ const EmailsPage = () => {
             </div>
           );
         }
+      }
+
+      if (toolName === "list_email_labels" && parsed) {
+        // Check if it's the structured label result format
+        if (parsed.success !== undefined && parsed.labels) {
+          const labelResult = parsed as LabelManagerResult;
+
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
+                <Tags className="w-4 h-4" />
+                <span>Gmail labels retrieved</span>
+              </div>
+
+              {/* Status Summary */}
+              <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                    {labelResult.message}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700"
+                  >
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    {labelResult.success ? "Success" : "Failed"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Labels Display */}
+              {labelResult.labels && (
+                <div className="space-y-4">
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-background border rounded-lg p-3 text-center">
+                      <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                        {labelResult.labels.count.total}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Total</div>
+                    </div>
+                    <div className="bg-background border rounded-lg p-3 text-center">
+                      <div className="text-lg font-semibold text-green-600 dark:text-green-400">
+                        {labelResult.labels.count.system}
+                      </div>
+                      <div className="text-xs text-muted-foreground">System</div>
+                    </div>
+                    <div className="bg-background border rounded-lg p-3 text-center">
+                      <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
+                        {labelResult.labels.count.user}
+                      </div>
+                      <div className="text-xs text-muted-foreground">User</div>
+                    </div>
+                  </div>
+
+                  {/* System Labels */}
+                  {labelResult.labels.system.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                        <Folder className="w-4 h-4" />
+                        System Labels ({labelResult.labels.system.length})
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {labelResult.labels.system.map((label: GmailLabel) => (
+                          <div
+                            key={label.id}
+                            className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Tag className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                <span className="font-medium text-sm text-blue-800 dark:text-blue-200">
+                                  {label.name}
+                                </span>
+                              </div>
+                              {label.messagesTotal !== undefined && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 text-xs"
+                                >
+                                  {label.messagesTotal} msgs
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-1">
+                              ID: {label.id}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* User Labels */}
+                  {labelResult.labels.user.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                        <FolderOpen className="w-4 h-4" />
+                        User Labels ({labelResult.labels.user.length})
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {labelResult.labels.user.map((label: GmailLabel) => (
+                          <div
+                            key={label.id}
+                            className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Tag className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                <span className="font-medium text-sm text-orange-800 dark:text-orange-200">
+                                  {label.name}
+                                </span>
+                              </div>
+                              {label.messagesTotal !== undefined && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700 text-xs"
+                                >
+                                  {label.messagesTotal} msgs
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="mt-2 space-y-1">
+                              <p className="text-xs font-mono text-orange-600 dark:text-orange-400">
+                                ID: {label.id}
+                              </p>
+                              {label.messageListVisibility && (
+                                <p className="text-xs text-orange-600 dark:text-orange-400">
+                                  Visibility: {label.messageListVisibility}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No user labels message */}
+                  {labelResult.labels.user.length === 0 && (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <FolderOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No custom labels found</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        }
+      }
+
+      // Handle other label-related tools (create, update, delete, get_or_create)
+      if (toolName && (toolName.includes("label") || toolName.includes("Label")) && parsed) {
+        const labelResult = parsed as LabelManagerResult;
+        
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
+              <Tag className="w-4 h-4" />
+              <span>Label operation completed</span>
+            </div>
+
+            {/* Status */}
+            <div className={`${
+              labelResult.success 
+                ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" 
+                : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
+            } border rounded-lg p-3`}>
+              <div className="flex items-center gap-2">
+                {labelResult.success ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                )}
+                <span className={`text-sm font-medium ${
+                  labelResult.success 
+                    ? "text-green-800 dark:text-green-200" 
+                    : "text-red-800 dark:text-red-200"
+                }`}>
+                  {labelResult.message}
+                </span>
+              </div>
+            </div>
+
+            {/* Label Details (if available) */}
+            {labelResult.label && (
+              <div className="bg-background border rounded-lg p-4">
+                <h4 className="text-sm font-medium text-foreground flex items-center gap-2 mb-3">
+                  <Tag className="w-4 h-4" />
+                  Label Details
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Name:</span>
+                    <span className="text-sm font-medium">{labelResult.label.name}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">ID:</span>
+                    <span className="text-xs font-mono">{labelResult.label.id}</span>
+                  </div>
+                  {labelResult.label.type && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Type:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {labelResult.label.type}
+                      </Badge>
+                    </div>
+                  )}
+                  {labelResult.label.messageListVisibility && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Visibility:</span>
+                      <span className="text-xs">{labelResult.label.messageListVisibility}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
       }
     } catch (error) {
       // Fall back to regular display

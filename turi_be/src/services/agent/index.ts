@@ -10,6 +10,7 @@ import type {
   EmailReadResult,
 } from "../../types/websocket";
 import {
+  ListEmailLabelsSchema,
   ReadEmailSchema,
   SearchEmailsSchema,
   SendEmailSchema,
@@ -19,6 +20,7 @@ import type {
   ReadEmail,
   SendEmail,
   EmailSendResult,
+  LabelManagerResult,
 } from "../gmail/types";
 
 export class Agent {
@@ -116,7 +118,7 @@ export class Agent {
       model: google("gemini-2.0-flash"),
       tools: {
         send_email: {
-          description: "Sends a new email",
+          description: "Sends or drafts a new email",
           parameters: SendEmailSchema,
           execute: async (args: any) => {
             const sendArgs: SendEmail = SendEmailSchema.parse(args);
@@ -198,6 +200,25 @@ export class Agent {
             this.lastSearchResults = searchResult.emails;
 
             return searchResult;
+          },
+        },
+
+        list_email_labels: {
+          description: "Retrieves all available Gmail labels",
+          parameters: ListEmailLabelsSchema,
+          execute: async () => {
+            const response = await this.gmailService.listEmailLabels();
+
+            if (!response) {
+              throw new Error(
+                "Failed to retrieve labels or Gmail service not initialized."
+              );
+            }
+
+            const labelManagerResult: LabelManagerResult =
+              response.content.text;
+
+            return labelManagerResult;
           },
         },
       },

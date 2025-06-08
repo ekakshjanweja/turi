@@ -83,3 +83,34 @@ export interface EmailReadResult {
   email: EmailDetail;
   messageId: string;
 }
+
+// Gmail Label types
+export interface GmailLabel {
+  id: string;
+  name: string;
+  type?: string;
+  messageListVisibility?: string;
+  labelListVisibility?: string;
+  messagesTotal?: number;
+  messagesUnread?: number;
+  color?: {
+    textColor?: string;
+    backgroundColor?: string;
+  };
+}
+
+export interface LabelManagerResult {
+  success: boolean;
+  message: string;
+  label?: GmailLabel;
+  labels?: {
+    all: GmailLabel[];
+    system: GmailLabel[];
+    user: GmailLabel[];
+    count: {
+      total: number;
+      system: number;
+      user: number;
+    };
+  };
+}
