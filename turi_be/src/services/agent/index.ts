@@ -30,6 +30,12 @@ import type {
   DeleteLabel,
   GetOrCreateLabel,
 } from "../gmail/types";
+import { 
+  EMAIL_AGENT_SYSTEM_PROMPT,
+  EMAIL_SEARCH_PROMPT,
+  EMAIL_COMPOSITION_PROMPT,
+  LABEL_MANAGEMENT_PROMPT
+} from "./prompts";
 
 export class Agent {
   private messages: CoreMessage[];
@@ -43,6 +49,10 @@ export class Agent {
     this.messageCount = 0;
     this.ws = ws;
     this.gmailService = gmailService;
+    this.messages.push({
+      role: "system",
+      content: EMAIL_AGENT_SYSTEM_PROMPT,
+    });
   }
 
   private sendWebSocketMessage(message: WebSocketMessage) {
@@ -95,8 +105,10 @@ export class Agent {
       typeof result === "string" ? result : JSON.stringify(result, null, 2)
     }\n\n`;
 
+    // Add specific guidance based on tool type
     switch (toolName) {
       case "search_emails":
+        prompt += `${EMAIL_SEARCH_PROMPT}\n\n`;
         prompt += `This was an email search operation. Respond in a natural, conversational way as if you're a helpful assistant. Start with something like "Hey there, I found X emails..." and then:
         1. Mention how many emails were found and what the search was for
         2. Naturally describe what the emails are about - focus on the most important or interesting ones. Don't just list subjects verbatim, but summarize them in a conversational way. For example: "There's one from Sarah about the project deadline, another from your bank about account updates, and a few newsletters." Group similar emails together and highlight the ones that seem most urgent or important.
@@ -108,22 +120,32 @@ export class Agent {
         prompt += `This was an email reading operation. Summarize the email content including sender, subject, and main points. Highlight any important information or attachments.`;
         break;
       case "send_email":
+        prompt += `${EMAIL_COMPOSITION_PROMPT}\n\n`;
         prompt += `This was an email sending operation. Confirm whether the email was sent or saved as draft, and provide any relevant details about the recipient and subject.`;
         break;
       case "list_email_labels":
-        prompt += `This was a Gmail labels listing operation. Summarize how many labels were found, break down system vs user labels, and highlight any interesting patterns or useful labels for organization. Mention key system labels and any custom user labels.`;
-        break;
       case "create_email_label":
-        prompt += `This was a label creation operation. Confirm whether the label was created successfully, mention the label name, and explain what this means for email organization.`;
-        break;
       case "update_email_label":
-        prompt += `This was a label update operation. Explain what changes were made to the label and confirm the success of the operation.`;
-        break;
       case "delete_email_label":
-        prompt += `This was a label deletion operation. Confirm whether the label was deleted successfully and explain what this means for emails that had this label.`;
-        break;
       case "get_or_create_email_label":
-        prompt += `This was a get-or-create label operation. Explain whether an existing label was found or a new one was created, and provide details about the label.`;
+        prompt += `${LABEL_MANAGEMENT_PROMPT}\n\n`;
+        switch (toolName) {
+          case "list_email_labels":
+            prompt += `This was a Gmail labels listing operation. Summarize how many labels were found, break down system vs user labels, and highlight any interesting patterns or useful labels for organization. Mention key system labels and any custom user labels.`;
+            break;
+          case "create_email_label":
+            prompt += `This was a label creation operation. Confirm whether the label was created successfully, mention the label name, and explain what this means for email organization.`;
+            break;
+          case "update_email_label":
+            prompt += `This was a label update operation. Explain what changes were made to the label and confirm the success of the operation.`;
+            break;
+          case "delete_email_label":
+            prompt += `This was a label deletion operation. Confirm whether the label was deleted successfully and explain what this means for emails that had this label.`;
+            break;
+          case "get_or_create_email_label":
+            prompt += `This was a get-or-create label operation. Explain whether an existing label was found or a new one was created, and provide details about the label.`;
+            break;
+        }
         break;
       default:
         prompt += `This was a ${toolName} operation. Explain what was accomplished and what the user should know about the results.`;
