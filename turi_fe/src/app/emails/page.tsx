@@ -26,7 +26,7 @@ import type {
   EmailReadResult,
   LabelManagerResult,
   GmailLabel,
-} from "@/types/websocket";
+} from "@/types/types";
 import {
   Send,
   Mail,
