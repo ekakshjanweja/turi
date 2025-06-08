@@ -7,7 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/loading";
 import { Unauthorized } from "@/components/unauthorized";
 import { auth } from "@/lib/auth";
-import type { Message, WebSocketMessage, EmailSearchResult, EmailSummary } from "@/types/websocket";
+import type {
+  Message,
+  WebSocketMessage,
+  EmailSearchResult,
+  EmailSummary,
+} from "@/types/websocket";
 import {
   Send,
   Mail,
@@ -238,31 +243,36 @@ const EmailsPage = () => {
 
   const renderToolResult = (content: string | object, toolName?: string) => {
     const contentStr = formatContent(content);
-    
+
     // Try to parse as structured data for better display
     try {
-      const parsed = typeof content === "string" ? JSON.parse(content) : content;
-      
+      const parsed =
+        typeof content === "string" ? JSON.parse(content) : content;
+
       if (toolName === "search_emails" && parsed) {
         // Check if it's the new structured format
         if (parsed.emails && Array.isArray(parsed.emails)) {
           const searchResult = parsed as EmailSearchResult;
-          
+
           return (
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
                 <Search className="w-4 h-4" />
                 <span>Email search completed</span>
               </div>
-              
+
               {/* Search Summary */}
               <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-green-800 dark:text-green-200">
                     Search Query: "{searchResult.query}"
                   </span>
-                  <Badge variant="outline" className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700">
-                    {searchResult.totalCount} {searchResult.totalCount === 1 ? 'email' : 'emails'} found
+                  <Badge
+                    variant="outline"
+                    className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
+                  >
+                    {searchResult.totalCount}{" "}
+                    {searchResult.totalCount === 1 ? "email" : "emails"} found
                   </Badge>
                 </div>
               </div>
@@ -274,20 +284,23 @@ const EmailsPage = () => {
                     <Mail className="w-4 h-4" />
                     Email Results
                   </h4>
-                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                  <div className="space-y-2">
                     {searchResult.emails.map((email, index) => (
-                      <div key={email.id} className="bg-background border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                      <div
+                        key={email.id}
+                        className="bg-background border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                      >
                         <div className="space-y-2">
                           {/* Subject */}
                           <div className="flex items-start gap-2">
                             <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
                               <p className="font-medium text-foreground text-sm leading-5 break-words">
-                                {email.subject || '(No subject)'}
+                                {email.subject || "(No subject)"}
                               </p>
                             </div>
                           </div>
-                          
+
                           {/* From */}
                           <div className="flex items-center gap-2">
                             <AtSign className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -295,21 +308,21 @@ const EmailsPage = () => {
                               {email.from}
                             </p>
                           </div>
-                          
+
                           {/* Date */}
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                             <p className="text-xs text-muted-foreground">
                               {new Date(email.date).toLocaleString(undefined, {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
                               })}
                             </p>
                           </div>
-                          
+
                           {/* Email ID for reference */}
                           <div className="pt-1 border-t border-muted">
                             <p className="text-xs font-mono text-muted-foreground">
@@ -330,7 +343,7 @@ const EmailsPage = () => {
             </div>
           );
         }
-        
+
         // Fallback for old string array format
         return (
           <div className="space-y-3">
@@ -352,7 +365,7 @@ const EmailsPage = () => {
       }
     } catch (error) {
       // Fall back to regular display
-      console.warn('Failed to parse tool result as structured data:', error);
+      console.warn("Failed to parse tool result as structured data:", error);
     }
 
     return (
@@ -492,18 +505,19 @@ const EmailsPage = () => {
                     </span>
                   </div>
                   <div className="text-sm">
-                    {message.type === "TOOL_RESULT" 
-                      ? renderToolResult(message.content, message.toolName)
-                      : (
-                        <div className={`whitespace-pre-wrap ${
+                    {message.type === "TOOL_RESULT" ? (
+                      renderToolResult(message.content, message.toolName)
+                    ) : (
+                      <div
+                        className={`whitespace-pre-wrap ${
                           message.type === "USER_INPUT"
                             ? "text-foreground"
                             : "text-foreground"
-                        }`}>
-                          {formatContent(message.content)}
-                        </div>
-                      )
-                    }
+                        }`}
+                      >
+                        {formatContent(message.content)}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -526,7 +540,10 @@ const EmailsPage = () => {
                 </div>
                 <div className="bg-muted/50 border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                    <Badge
+                      variant="outline"
+                      className="text-xs bg-primary/10 text-primary border-primary/20"
+                    >
                       AI processing
                     </Badge>
                   </div>
