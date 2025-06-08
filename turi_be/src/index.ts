@@ -1,6 +1,10 @@
 import { Hono } from "hono";
 import { auth } from "./lib/auth";
 import { cors } from "hono/cors";
+import { createBunWebSocket } from "hono/bun";
+import type { ServerWebSocket } from "bun";
+import { Agent } from "./services/agent";
+import { GmailService } from "./services/gmail";
 
 const app = new Hono<{
   Variables: {
@@ -57,7 +61,41 @@ app.get("/health", (c) => {
   });
 });
 
+const { upgradeWebSocket, websocket } = createBunWebSocket<ServerWebSocket>();
+app.get(
+  "/ws",
+  upgradeWebSocket(async (c) => {
+    let agent: Agent;
+    let gmailService: GmailService;
+
+    return {
+      onOpen: async (_, ws) => {
+        const user = c.get("user");
+        const session = c.get("session");
+
+        if (!user || !session) {
+          ws.close(1008, "Unauthorized");
+          return;
+        }
+
+        gmailService = new GmailService();
+        await gmailService.init(user.id);
+        agent = new Agent(ws, gmailService);
+      },
+      onMessage: async (event, ws) => {
+        const message = JSON.parse(event.data as string);
+
+        if (message.type === "USER_INPUT") {
+          await agent.handleUserInput(message.content);
+        }
+      },
+      onClose: async () => {},
+    };
+  })
+);
+
 export default {
   port: process.env.PORT || 8000,
   fetch: app.fetch,
+  websocket: websocket,
 };

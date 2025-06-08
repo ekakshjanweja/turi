@@ -28,6 +28,14 @@ export function Navbar() {
               </Button>
             </Link>
             <Link
+              href="/emails"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Button variant="ghost" size="sm">
+                Emails
+              </Button>
+            </Link>
+            <Link
               href="/profile"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
