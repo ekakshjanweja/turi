@@ -19,18 +19,28 @@ export const SendEmailSchema = z.object({
   bcc: z.array(z.string()).optional().describe("List of BCC recipients"),
   threadId: z.string().optional().describe("Thread ID to reply to"),
   inReplyTo: z.string().optional().describe("Message ID being replied to"),
+  action: z
+    .enum(["send", "draft"])
+    .describe("Whether to send the email or save as draft"),
 });
 
-export const ReadEmailSchema = z.object({
-  messageId: z.string().optional().describe("ID of the email message to retrieve"),
-  emailReference: z.string().optional().describe("Reference to an email from previous search results (e.g., 'first email', 'email from John', 'latest email', 'email with subject about project')"),
-}).refine(
-  (data) => data.messageId || data.emailReference,
-  {
+export const ReadEmailSchema = z
+  .object({
+    messageId: z
+      .string()
+      .optional()
+      .describe("ID of the email message to retrieve"),
+    emailReference: z
+      .string()
+      .optional()
+      .describe(
+        "Reference to an email from previous search results (e.g., 'first email', 'email from John', 'latest email', 'email with subject about project')"
+      ),
+  })
+  .refine((data) => data.messageId || data.emailReference, {
     message: "Either messageId or emailReference must be provided",
     path: ["messageId", "emailReference"],
-  }
-);
+  });
 
 export const SearchEmailsSchema = z.object({
   query: z

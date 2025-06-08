@@ -4,6 +4,9 @@ import {
   configureOAuth2Client,
   createGmailClient,
   extractEmailContent,
+  validateEmail,
+  encodeEmailHeader,
+  createEmailMessage,
 } from "./helpers";
 import type {
   EmailSearchResult,
@@ -15,6 +18,8 @@ import type {
   GmailMessagePart,
   ReadEmail,
   SearchEmails,
+  SendEmail,
+  EmailSendResult,
 } from "./types";
 
 export class GmailService {
@@ -209,5 +214,132 @@ export class GmailService {
         text: emailReadResult,
       },
     };
+  }
+
+  public async sendEmail(args: SendEmail): Promise<
+    | {
+        content: {
+          type: "text";
+          text: EmailSendResult;
+        };
+      }
+    | undefined
+  > {
+    if (!this.gmail) {
+      console.error("Gmail client is not initialized.");
+      return;
+    }
+
+    try {
+      // Validate email addresses in to, cc, and bcc fields
+      args.to.forEach((email) => {
+        if (!validateEmail(email)) {
+          throw new Error(`Recipient email address is invalid: ${email}`);
+        }
+      });
+
+      if (args.cc) {
+        args.cc.forEach((email) => {
+          if (!validateEmail(email)) {
+            throw new Error(`CC email address is invalid: ${email}`);
+          }
+        });
+      }
+
+      if (args.bcc) {
+        args.bcc.forEach((email) => {
+          if (!validateEmail(email)) {
+            throw new Error(`BCC email address is invalid: ${email}`);
+          }
+        });
+      }
+
+      // Create the email message
+      const message = createEmailMessage(args);
+
+      // Encode the message for Gmail API
+      const encodedMessage = Buffer.from(message)
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+
+      // Define the type for messageRequest
+      interface GmailMessageRequest {
+        raw: string;
+        threadId?: string;
+      }
+
+      const messageRequest: GmailMessageRequest = {
+        raw: encodedMessage,
+      };
+
+      // Add threadId if specified
+      if (args.threadId) {
+        messageRequest.threadId = args.threadId;
+      }
+
+      const action = args.action || "send";
+
+      if (action === "send") {
+        const response = await this.gmail.users.messages.send({
+          userId: "me",
+          requestBody: messageRequest,
+        });
+
+        const result: EmailSendResult = {
+          success: true,
+          messageId: response.data.id || "",
+          action: "sent",
+          message: `Email sent successfully with ID: ${response.data.id}`,
+        };
+
+        return {
+          content: {
+            type: "text",
+            text: result,
+          },
+        };
+      } else {
+        const response = await this.gmail.users.drafts.create({
+          userId: "me",
+          requestBody: {
+            message: messageRequest,
+          },
+        });
+
+        const result: EmailSendResult = {
+          success: true,
+          messageId: response.data.id || "",
+          action: "draft",
+          message: `Email draft created successfully with ID: ${response.data.id}`,
+        };
+
+        return {
+          content: {
+            type: "text",
+            text: result,
+          },
+        };
+      }
+    } catch (error) {
+      console.error("Error in sendEmail:", error);
+
+      const errorResult: EmailSendResult = {
+        success: false,
+        messageId: "",
+        action: (args.action || "send") === "send" ? "sent" : "draft",
+        message: `Failed to ${args.action || "send"} email: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+
+      return {
+        content: {
+          type: "text",
+          text: errorResult,
+        },
+      };
+    }
   }
 }

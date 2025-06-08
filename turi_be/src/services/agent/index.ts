@@ -7,9 +7,19 @@ import type {
   WebSocketMessage,
   EmailSearchResult,
   EmailSummary,
+  EmailReadResult,
 } from "../../types/websocket";
-import { ReadEmailSchema, SearchEmailsSchema } from "../gmail/schema";
-import type { SearchEmails, ReadEmail } from "../gmail/types";
+import {
+  ReadEmailSchema,
+  SearchEmailsSchema,
+  SendEmailSchema,
+} from "../gmail/schema";
+import type {
+  SearchEmails,
+  ReadEmail,
+  SendEmail,
+  EmailSendResult,
+} from "../gmail/types";
 
 export class Agent {
   private messages: CoreMessage[];
@@ -105,6 +115,25 @@ export class Agent {
     const result = await generateText({
       model: google("gemini-2.0-flash"),
       tools: {
+        send_email: {
+          description: "Sends a new email",
+          parameters: SendEmailSchema,
+          execute: async (args: any) => {
+            const sendArgs: SendEmail = SendEmailSchema.parse(args);
+
+            const response = await this.gmailService.sendEmail(sendArgs);
+
+            if (!response) {
+              throw new Error(
+                "Failed to send email or Gmail service not initialized."
+              );
+            }
+
+            const emailSendResult: EmailSendResult = response.content.text;
+
+            return emailSendResult;
+          },
+        },
         read_email: {
           description:
             "Retrieves the content of a specific email. You can provide either a messageId or describe which email from the search results (e.g., 'first email', 'email from John', 'latest email')",
@@ -145,7 +174,9 @@ export class Agent {
                 "Email not found or Gmail service not initialized."
               );
             }
-            return response.content.text;
+
+            const emailReadResult: EmailReadResult = response.content.text;
+            return emailReadResult;
           },
         },
         search_emails: {
@@ -166,7 +197,7 @@ export class Agent {
             const searchResult = response.content.text as EmailSearchResult;
             this.lastSearchResults = searchResult.emails;
 
-            return response.content.text;
+            return searchResult;
           },
         },
       },

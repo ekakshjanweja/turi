@@ -50,6 +50,14 @@ export type SearchEmails = z.infer<typeof SearchEmailsSchema>;
 export type ModifyEmail = z.infer<typeof ModifyEmailSchema>;
 export type DeleteEmail = z.infer<typeof DeleteEmailSchema>;
 
+// Email send result type
+export interface EmailSendResult {
+  success: boolean;
+  messageId: string;
+  action: "sent" | "draft";
+  message: string;
+}
+
 // Label operation types
 export type ListEmailLabels = z.infer<typeof ListEmailLabelsSchema>;
 export type CreateLabel = z.infer<typeof CreateLabelSchema>;
