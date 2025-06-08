@@ -56,8 +56,30 @@ export interface EmailSummary {
   date: string;
 }
 
+export interface EmailDetail {
+  id: string;
+  threadId: string;
+  subject: string;
+  from: string;
+  to: string;
+  date: string;
+  textContent?: string;
+  htmlContent?: string;
+  attachments: Array<{
+    id: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+  }>;
+}
+
 export interface EmailSearchResult {
   emails: EmailSummary[];
   query: string;
   totalCount: number;
+}
+
+export interface EmailReadResult {
+  email: EmailDetail;
+  messageId: string;
 }

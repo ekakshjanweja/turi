@@ -12,6 +12,7 @@ import type {
   WebSocketMessage,
   EmailSearchResult,
   EmailSummary,
+  EmailReadResult,
 } from "@/types/websocket";
 import {
   Send,
@@ -28,6 +29,9 @@ import {
   Calendar,
   AtSign,
   FileText,
+  Paperclip,
+  Eye,
+  MessageSquare,
 } from "lucide-react";
 
 const EmailsPage = () => {
@@ -362,6 +366,154 @@ const EmailsPage = () => {
             </div>
           </div>
         );
+      }
+
+      if (toolName === "read_email" && parsed) {
+        // Check if it's the new structured format
+        if (parsed.email && parsed.messageId) {
+          const readResult = parsed as EmailReadResult;
+          const email = readResult.email;
+
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
+                <Eye className="w-4 h-4" />
+                <span>Email details retrieved</span>
+              </div>
+
+              {/* Email Details */}
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-4">
+                {/* Header Info */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    Email ID: {email.id}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
+                  >
+                    <MessageSquare className="w-3 h-3 mr-1" />
+                    Thread ID: {email.threadId}
+                  </Badge>
+                </div>
+
+                {/* Subject */}
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-foreground text-base leading-6 break-words">
+                        {email.subject || "(No subject)"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* From/To/Date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <AtSign className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground">From:</p>
+                      <p className="text-sm font-medium truncate">
+                        {email.from}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <AtSign className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground">To:</p>
+                      <p className="text-sm font-medium truncate">{email.to}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 md:col-span-2">
+                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Date:</p>
+                      <p className="text-sm font-medium">
+                        {new Date(email.date).toLocaleString(undefined, {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                {(email.textContent || email.htmlContent) && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                        Content:
+                      </p>
+                    </div>
+                    <div className="bg-background border rounded-md p-3 max-h-64 overflow-y-auto">
+                      <div className="whitespace-pre-wrap text-sm text-foreground">
+                        {email.textContent || (
+                          <>
+                            <div className="text-xs text-muted-foreground mb-2">
+                              [HTML Content - Plain text not available]
+                            </div>
+                            <div
+                              className="prose prose-sm max-w-none"
+                              dangerouslySetInnerHTML={{
+                                __html: email.htmlContent || "",
+                              }}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Attachments */}
+                {email.attachments && email.attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Paperclip className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                        Attachments ({email.attachments.length}):
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      {email.attachments.map((attachment, index) => (
+                        <div
+                          key={attachment.id}
+                          className="bg-background border rounded-md p-3 flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Paperclip className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">
+                                {attachment.filename}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {attachment.mimeType} •{" "}
+                                {Math.round(attachment.size / 1024)} KB
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            ID: {attachment.id}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
       }
     } catch (error) {
       // Fall back to regular display

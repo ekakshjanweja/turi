@@ -1,8 +1,21 @@
 import { gmail_v1 } from "googleapis";
 import { OAuth2Client } from "googleapis-common";
-import { configureOAuth2Client, createGmailClient } from "./helpers";
-import type { SearchEmails } from "./types";
-import type { EmailSearchResult, EmailSummary } from "../../types/websocket";
+import {
+  configureOAuth2Client,
+  createGmailClient,
+  extractEmailContent,
+} from "./helpers";
+import type {
+  EmailSearchResult,
+  EmailSummary,
+  EmailReadResult,
+} from "../../types/websocket";
+import type {
+  EmailAttachment,
+  GmailMessagePart,
+  ReadEmail,
+  SearchEmails,
+} from "./types";
 
 export class GmailService {
   private oauth2Client: OAuth2Client | null = null;
@@ -49,6 +62,7 @@ export class GmailService {
 
     this.gmail = createGmailClientResponse.gmail!;
   }
+
   public async searchEmails(args: SearchEmails): Promise<
     | {
         content: {
@@ -70,28 +84,24 @@ export class GmailService {
 
     const messages = response.data.messages || [];
     const results = await Promise.all(
-      messages.map(
-        async (
-          msg
-        ): Promise<EmailSummary | null> => {
-          if (!this.gmail) {
-            return null;
-          }
-          const detail = await this.gmail.users.messages.get({
-            userId: "me",
-            id: msg.id!,
-            format: "metadata",
-            metadataHeaders: ["Subject", "From", "Date"],
-          });
-          const headers = detail.data.payload?.headers || [];
-          return {
-            id: msg.id!,
-            subject: headers.find((h) => h.name === "Subject")?.value || "",
-            from: headers.find((h) => h.name === "From")?.value || "",
-            date: headers.find((h) => h.name === "Date")?.value || "",
-          };
+      messages.map(async (msg): Promise<EmailSummary | null> => {
+        if (!this.gmail) {
+          return null;
         }
-      )
+        const detail = await this.gmail.users.messages.get({
+          userId: "me",
+          id: msg.id!,
+          format: "metadata",
+          metadataHeaders: ["Subject", "From", "Date"],
+        });
+        const headers = detail.data.payload?.headers || [];
+        return {
+          id: msg.id!,
+          subject: headers.find((h) => h.name === "Subject")?.value || "",
+          from: headers.find((h) => h.name === "From")?.value || "",
+          date: headers.find((h) => h.name === "Date")?.value || "",
+        };
+      })
     );
 
     const emails = results.filter((msg): msg is EmailSummary => msg !== null);
@@ -106,6 +116,97 @@ export class GmailService {
       content: {
         type: "text",
         text: searchResult,
+      },
+    };
+  }
+
+  public async readEmails(args: ReadEmail): Promise<
+    | {
+        content: {
+          type: "text";
+          text: EmailReadResult;
+        };
+      }
+    | undefined
+  > {
+    if (!this.gmail) {
+      console.error("Gmail client is not initialized.");
+      return;
+    }
+
+    const response = await this.gmail.users.messages.get({
+      userId: "me",
+      id: args.messageId,
+      format: "full",
+    });
+
+    const headers = response.data.payload?.headers || [];
+    const subject =
+      headers.find((h) => h.name?.toLowerCase() === "subject")?.value || "";
+    const from =
+      headers.find((h) => h.name?.toLowerCase() === "from")?.value || "";
+    const to = headers.find((h) => h.name?.toLowerCase() === "to")?.value || "";
+    const date =
+      headers.find((h) => h.name?.toLowerCase() === "date")?.value || "";
+    const threadId = response.data.threadId || "";
+
+    // Extract email content using the recursive function
+    const { text, html } = extractEmailContent(
+      (response.data.payload as GmailMessagePart) || {}
+    );
+
+    // Get attachment information
+    const attachments: EmailAttachment[] = [];
+    const processAttachmentParts = (
+      part: GmailMessagePart,
+      path: string = ""
+    ) => {
+      if (part.body && part.body.attachmentId) {
+        const filename =
+          part.filename || `attachment-${part.body.attachmentId}`;
+        attachments.push({
+          id: part.body.attachmentId,
+          filename: filename,
+          mimeType: part.mimeType || "application/octet-stream",
+          size: part.body.size || 0,
+        });
+      }
+
+      if (part.parts) {
+        part.parts.forEach((subpart: GmailMessagePart) =>
+          processAttachmentParts(subpart, `${path}/parts`)
+        );
+      }
+    };
+
+    if (response.data.payload) {
+      processAttachmentParts(response.data.payload as GmailMessagePart);
+    }
+
+    const emailReadResult: EmailReadResult = {
+      email: {
+        id: response.data.id || "",
+        threadId,
+        subject,
+        from,
+        to,
+        date,
+        textContent: text || undefined,
+        htmlContent: html || undefined,
+        attachments: attachments.map((a) => ({
+          id: a.id,
+          filename: a.filename,
+          mimeType: a.mimeType,
+          size: a.size,
+        })),
+      },
+      messageId: args.messageId || response.data.id || "",
+    };
+
+    return {
+      content: {
+        type: "text",
+        text: emailReadResult,
       },
     };
   }
