@@ -94,6 +94,13 @@ export class GmailService {
       console.error("Gmail client is not initialized.");
       return;
     }
+
+    let query = args.query;
+
+    if (!query.includes("category:")) {
+      query += " category:primary";
+    }
+
     const response = await this.gmail.users.messages.list({
       userId: "me",
       q: args.query,

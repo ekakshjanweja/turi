@@ -30,11 +30,11 @@ import type {
   DeleteLabel,
   GetOrCreateLabel,
 } from "../gmail/types";
-import { 
+import {
   EMAIL_AGENT_SYSTEM_PROMPT,
   EMAIL_SEARCH_PROMPT,
   EMAIL_COMPOSITION_PROMPT,
-  LABEL_MANAGEMENT_PROMPT
+  LABEL_MANAGEMENT_PROMPT,
 } from "./prompts";
 
 export class Agent {
@@ -108,20 +108,13 @@ export class Agent {
     // Add specific guidance based on tool type
     switch (toolName) {
       case "search_emails":
-        prompt += `${EMAIL_SEARCH_PROMPT}\n\n`;
-        prompt += `This was an email search operation. Respond in a natural, conversational way as if you're a helpful assistant. Start with something like "Hey there, I found X emails..." and then:
-        1. Mention how many emails were found and what the search was for
-        2. Naturally describe what the emails are about - focus on the most important or interesting ones. Don't just list subjects verbatim, but summarize them in a conversational way. For example: "There's one from Sarah about the project deadline, another from your bank about account updates, and a few newsletters." Group similar emails together and highlight the ones that seem most urgent or important.
-        3. End by asking if they'd like to reply to any of them, read a specific email, or if there's anything that catches their attention
-        4. If no emails were found, be encouraging and suggest alternative search terms or actions
-        Keep it friendly, personal, and focus on what would actually matter to the user. Don't overwhelm them with every single subject line.`;
+        prompt = EMAIL_SEARCH_PROMPT;
         break;
       case "read_email":
         prompt += `This was an email reading operation. Summarize the email content including sender, subject, and main points. Highlight any important information or attachments.`;
         break;
       case "send_email":
-        prompt += `${EMAIL_COMPOSITION_PROMPT}\n\n`;
-        prompt += `This was an email sending operation. Confirm whether the email was sent or saved as draft, and provide any relevant details about the recipient and subject.`;
+        prompt = EMAIL_COMPOSITION_PROMPT;
         break;
       case "list_email_labels":
       case "create_email_label":
@@ -233,6 +226,8 @@ export class Agent {
           parameters: SendEmailSchema,
           execute: async (args: any) => {
             const sendArgs: SendEmail = SendEmailSchema.parse(args);
+
+            console.log("Sending email with args:", sendArgs);
 
             const response = await this.gmailService.sendEmail(sendArgs);
 

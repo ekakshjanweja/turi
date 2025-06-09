@@ -17,10 +17,14 @@ export default function Home() {
   }, [session, router]);
 
   const signIn = async () => {
-    await auth.signIn.social({
-      provider: "google",
-      callbackURL: "http://localhost:3000/dashboard",
-    });
+    try {
+      await auth.signIn.social({
+        provider: "google",
+        callbackURL: "http://localhost:3000/dashboard",
+      });
+    } catch (error) {
+      console.error("Sign in failed:", error);
+    }
   };
 
   if (isPending) {

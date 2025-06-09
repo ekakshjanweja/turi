@@ -17,18 +17,10 @@ import {
 import { Unauthorized } from "@/components/unauthorized";
 import { ToolResult } from "@/components/tool-result";
 import { auth } from "@/lib/auth";
-import {
-  ArrowUp,
-  Square,
-  Bot,
-  Clock,
-  Search,
-} from "lucide-react";
+import { ArrowUp, Square, Bot, Clock, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type {
-  Message as MessageType,
-  WebSocketMessage,
-} from "@/types/types";
+import type { Message as MessageType, WebSocketMessage } from "@/types/types";
+import { formatTime, getMessageBadgeColor } from "@/lib/dash-utils";
 
 export default function Dashboard() {
   const { data: session, isPending } = auth.useSession();
@@ -180,35 +172,6 @@ export default function Dashboard() {
     setInput(value);
   };
 
-  const getMessageBadgeColor = (type: string) => {
-    switch (type) {
-      case "USER_INPUT":
-        return "bg-primary/10 text-primary border-primary/20";
-      case "AI_RESPONSE":
-        return "bg-chart-1/10 text-chart-1 border-chart-1/20";
-      case "TOOL_RESULT":
-        return "bg-chart-3/10 text-chart-3 border-chart-3/20";
-      case "SYSTEM":
-        return "bg-chart-4/10 text-chart-4 border-chart-4/20";
-      default:
-        return "bg-muted/50 text-muted-foreground border-border";
-    }
-  };
-
-  const formatTime = (timestamp: Date) => {
-    return timestamp.toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatContent = (content: string | object) => {
-    if (typeof content === "string") {
-      return content;
-    }
-    return JSON.stringify(content, null, 2);
-  };
-
   if (isPending) {
     return <Loading />;
   }
@@ -318,7 +281,10 @@ export default function Dashboard() {
                   {/* Message content */}
                   <div className="bg-transparent">
                     {message.type === "TOOL_RESULT" ? (
-                      <ToolResult content={message.content} toolName={message.toolName} />
+                      <ToolResult
+                        content={message.content}
+                        toolName={message.toolName}
+                      />
                     ) : (
                       <MessageContent markdown className="bg-transparent p-0">
                         {message.content as string}
