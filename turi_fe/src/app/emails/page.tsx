@@ -2,10 +2,21 @@
 
 import { useEffect, useState, FormEvent, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/loading";
 import { Unauthorized } from "@/components/unauthorized";
+import { Markdown } from "@/components/ui/markdown";
+import {
+  PromptInput,
+  PromptInputTextarea,
+  PromptInputActions,
+  PromptInputAction,
+} from "@/components/ui/prompt-input";
+import {
+  Message as MessageComponent,
+  MessageAvatar,
+  MessageContent,
+} from "@/components/ui/message";
 import { auth } from "@/lib/auth";
 import type {
   Message,
@@ -15,7 +26,7 @@ import type {
   EmailReadResult,
   LabelManagerResult,
   GmailLabel,
-} from "@/types/websocket";
+} from "@/types/types";
 import {
   Send,
   Mail,
@@ -48,6 +59,10 @@ const EmailsPage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     // Ensure this runs only in the client
@@ -178,8 +193,8 @@ const EmailsPage = () => {
     };
   }, []);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: FormEvent) => {
+    if (e) e.preventDefault();
     if (input.trim() && socket && socket.readyState === WebSocket.OPEN) {
       const messageToSend: WebSocketMessage = {
         type: "USER_INPUT",
@@ -214,31 +229,16 @@ const EmailsPage = () => {
     }
   };
 
-  const getMessageIcon = (type: string) => {
-    switch (type) {
-      case "USER_INPUT":
-        return <User className="w-4 h-4" />;
-      case "AI_RESPONSE":
-        return <Bot className="w-4 h-4" />;
-      case "TOOL_RESULT":
-        return <Database className="w-4 h-4" />;
-      case "SYSTEM":
-        return <AlertCircle className="w-4 h-4" />;
-      default:
-        return <AlertCircle className="w-4 h-4" />;
-    }
-  };
-
   const getMessageBadgeColor = (type: string) => {
     switch (type) {
       case "USER_INPUT":
-        return "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20";
+        return "bg-primary/10 text-primary border-primary/20";
       case "AI_RESPONSE":
-        return "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20";
+        return "bg-chart-1/10 text-chart-1 border-chart-1/20";
       case "TOOL_RESULT":
-        return "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20";
+        return "bg-chart-3/10 text-chart-3 border-chart-3/20";
       case "SYSTEM":
-        return "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20";
+        return "bg-chart-4/10 text-chart-4 border-chart-4/20";
       default:
         return "bg-muted/50 text-muted-foreground border-border";
     }
@@ -266,20 +266,20 @@ const EmailsPage = () => {
 
           return (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
+              <div className="flex items-center gap-2 text-sm font-medium text-chart-1">
                 <Search className="w-4 h-4" />
                 <span>Email search completed</span>
               </div>
 
               {/* Search Summary */}
-              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+              <div className="bg-chart-1/10 border border-chart-1/20 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                  <span className="text-sm font-medium text-chart-1">
                     Search Query: "{searchResult.query}"
                   </span>
                   <Badge
                     variant="outline"
-                    className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
+                    className="bg-chart-1/10 text-chart-1 border-chart-1/30"
                   >
                     {searchResult.totalCount}{" "}
                     {searchResult.totalCount === 1 ? "email" : "emails"} found
@@ -357,7 +357,7 @@ const EmailsPage = () => {
         // Fallback for old string array format
         return (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
+            <div className="flex items-center gap-2 text-sm font-medium text-chart-1">
               <Search className="w-4 h-4" />
               <span>Email search completed</span>
             </div>
@@ -382,21 +382,21 @@ const EmailsPage = () => {
 
           return (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
                 <Eye className="w-4 h-4" />
                 <span>Email details retrieved</span>
               </div>
 
               {/* Email Details */}
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-4">
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 space-y-4">
                 {/* Header Info */}
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  <span className="text-sm font-medium text-primary">
                     Email ID: {email.id}
                   </span>
                   <Badge
                     variant="outline"
-                    className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
+                    className="bg-primary/10 text-primary border-primary/30"
                   >
                     <MessageSquare className="w-3 h-3 mr-1" />
                     Thread ID: {email.threadId}
@@ -406,7 +406,7 @@ const EmailsPage = () => {
                 {/* Subject */}
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
-                    <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <FileText className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-foreground text-base leading-6 break-words">
                         {email.subject || "(No subject)"}
@@ -418,7 +418,7 @@ const EmailsPage = () => {
                 {/* From/To/Date */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="flex items-center gap-2">
-                    <AtSign className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <AtSign className="w-4 h-4 text-primary flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted-foreground">From:</p>
                       <p className="text-sm font-medium truncate">
@@ -428,7 +428,7 @@ const EmailsPage = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <AtSign className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <AtSign className="w-4 h-4 text-primary flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted-foreground">To:</p>
                       <p className="text-sm font-medium truncate">{email.to}</p>
@@ -436,7 +436,7 @@ const EmailsPage = () => {
                   </div>
 
                   <div className="flex items-center gap-2 md:col-span-2">
-                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <Calendar className="w-4 h-4 text-primary flex-shrink-0" />
                     <div>
                       <p className="text-xs text-muted-foreground">Date:</p>
                       <p className="text-sm font-medium">
@@ -456,8 +456,8 @@ const EmailsPage = () => {
                 {(email.textContent || email.htmlContent) && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <p className="text-sm font-medium text-primary">
                         Content:
                       </p>
                     </div>
@@ -485,8 +485,8 @@ const EmailsPage = () => {
                 {email.attachments && email.attachments.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Paperclip className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      <Paperclip className="w-4 h-4 text-primary" />
+                      <p className="text-sm font-medium text-primary">
                         Attachments ({email.attachments.length}):
                       </p>
                     </div>
@@ -529,20 +529,20 @@ const EmailsPage = () => {
 
           return (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
+              <div className="flex items-center gap-2 text-sm font-medium text-chart-3">
                 <Tags className="w-4 h-4" />
                 <span>Gmail labels retrieved</span>
               </div>
 
               {/* Status Summary */}
-              <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+              <div className="bg-chart-3/10 border border-chart-3/20 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                  <span className="text-sm font-medium text-chart-3">
                     {labelResult.message}
                   </span>
                   <Badge
                     variant="outline"
-                    className="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700"
+                    className="bg-chart-3/10 text-chart-3 border-chart-3/30"
                   >
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     {labelResult.success ? "Success" : "Failed"}
@@ -556,19 +556,21 @@ const EmailsPage = () => {
                   {/* Summary Stats */}
                   <div className="grid grid-cols-3 gap-4">
                     <div className="bg-background border rounded-lg p-3 text-center">
-                      <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                      <div className="text-lg font-semibold text-primary">
                         {labelResult.labels.count.total}
                       </div>
                       <div className="text-xs text-muted-foreground">Total</div>
                     </div>
                     <div className="bg-background border rounded-lg p-3 text-center">
-                      <div className="text-lg font-semibold text-green-600 dark:text-green-400">
+                      <div className="text-lg font-semibold text-chart-1">
                         {labelResult.labels.count.system}
                       </div>
-                      <div className="text-xs text-muted-foreground">System</div>
+                      <div className="text-xs text-muted-foreground">
+                        System
+                      </div>
                     </div>
                     <div className="bg-background border rounded-lg p-3 text-center">
-                      <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
+                      <div className="text-lg font-semibold text-chart-4">
                         {labelResult.labels.count.user}
                       </div>
                       <div className="text-xs text-muted-foreground">User</div>
@@ -586,25 +588,25 @@ const EmailsPage = () => {
                         {labelResult.labels.system.map((label: GmailLabel) => (
                           <div
                             key={label.id}
-                            className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
+                            className="bg-chart-1/10 border border-chart-1/20 rounded-lg p-3"
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <Tag className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                <span className="font-medium text-sm text-blue-800 dark:text-blue-200">
+                                <Tag className="w-4 h-4 text-chart-1" />
+                                <span className="font-medium text-sm text-chart-1">
                                   {label.name}
                                 </span>
                               </div>
                               {label.messagesTotal !== undefined && (
                                 <Badge
                                   variant="outline"
-                                  className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 text-xs"
+                                  className="bg-chart-1/10 text-chart-1 border-chart-1/30 text-xs"
                                 >
                                   {label.messagesTotal} msgs
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-1">
+                            <p className="text-xs font-mono text-chart-1 mt-1">
                               ID: {label.id}
                             </p>
                           </div>
@@ -624,30 +626,30 @@ const EmailsPage = () => {
                         {labelResult.labels.user.map((label: GmailLabel) => (
                           <div
                             key={label.id}
-                            className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3"
+                            className="bg-chart-4/10 border border-chart-4/20 rounded-lg p-3"
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <Tag className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                                <span className="font-medium text-sm text-orange-800 dark:text-orange-200">
+                                <Tag className="w-4 h-4 text-chart-4" />
+                                <span className="font-medium text-sm text-chart-4">
                                   {label.name}
                                 </span>
                               </div>
                               {label.messagesTotal !== undefined && (
                                 <Badge
                                   variant="outline"
-                                  className="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700 text-xs"
+                                  className="bg-chart-4/10 text-chart-4 border-chart-4/30 text-xs"
                                 >
                                   {label.messagesTotal} msgs
                                 </Badge>
                               )}
                             </div>
                             <div className="mt-2 space-y-1">
-                              <p className="text-xs font-mono text-orange-600 dark:text-orange-400">
+                              <p className="text-xs font-mono text-chart-4">
                                 ID: {label.id}
                               </p>
                               {label.messageListVisibility && (
-                                <p className="text-xs text-orange-600 dark:text-orange-400">
+                                <p className="text-xs text-chart-4">
                                   Visibility: {label.messageListVisibility}
                                 </p>
                               )}
@@ -673,33 +675,39 @@ const EmailsPage = () => {
       }
 
       // Handle other label-related tools (create, update, delete, get_or_create)
-      if (toolName && (toolName.includes("label") || toolName.includes("Label")) && parsed) {
+      if (
+        toolName &&
+        (toolName.includes("label") || toolName.includes("Label")) &&
+        parsed
+      ) {
         const labelResult = parsed as LabelManagerResult;
-        
+
         return (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
+            <div className="flex items-center gap-2 text-sm font-medium text-chart-3">
               <Tag className="w-4 h-4" />
               <span>Label operation completed</span>
             </div>
 
             {/* Status */}
-            <div className={`${
-              labelResult.success 
-                ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" 
-                : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
-            } border rounded-lg p-3`}>
+            <div
+              className={`${
+                labelResult.success
+                  ? "bg-chart-1/10 border-chart-1/20"
+                  : "bg-destructive/10 border-destructive/20"
+              } border rounded-lg p-3`}
+            >
               <div className="flex items-center gap-2">
                 {labelResult.success ? (
-                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <CheckCircle2 className="w-4 h-4 text-chart-1" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  <AlertCircle className="w-4 h-4 text-destructive" />
                 )}
-                <span className={`text-sm font-medium ${
-                  labelResult.success 
-                    ? "text-green-800 dark:text-green-200" 
-                    : "text-red-800 dark:text-red-200"
-                }`}>
+                <span
+                  className={`text-sm font-medium ${
+                    labelResult.success ? "text-chart-1" : "text-destructive"
+                  }`}
+                >
                   {labelResult.message}
                 </span>
               </div>
@@ -715,15 +723,21 @@ const EmailsPage = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Name:</span>
-                    <span className="text-sm font-medium">{labelResult.label.name}</span>
+                    <span className="text-sm font-medium">
+                      {labelResult.label.name}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">ID:</span>
-                    <span className="text-xs font-mono">{labelResult.label.id}</span>
+                    <span className="text-xs font-mono">
+                      {labelResult.label.id}
+                    </span>
                   </div>
                   {labelResult.label.type && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Type:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Type:
+                      </span>
                       <Badge variant="outline" className="text-xs">
                         {labelResult.label.type}
                       </Badge>
@@ -731,8 +745,12 @@ const EmailsPage = () => {
                   )}
                   {labelResult.label.messageListVisibility && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Visibility:</span>
-                      <span className="text-xs">{labelResult.label.messageListVisibility}</span>
+                      <span className="text-sm text-muted-foreground">
+                        Visibility:
+                      </span>
+                      <span className="text-xs">
+                        {labelResult.label.messageListVisibility}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -749,7 +767,7 @@ const EmailsPage = () => {
     return (
       <div className="space-y-2">
         {toolName && (
-          <div className="flex items-center gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
+          <div className="flex items-center gap-2 text-sm font-medium text-chart-3">
             <Database className="w-4 h-4" />
             <span>{toolName} executed</span>
           </div>
@@ -773,46 +791,44 @@ const EmailsPage = () => {
   if (!session?.user) return <Unauthorized />;
 
   return (
-    <main className="max-w-4xl mx-auto p-6">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
+    <main className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/20">
+      <div className="max-w-5xl mx-auto h-screen flex flex-col">
+        {/* Minimal Header */}
+        <header className="flex items-center justify-between p-6 border-b border-border/50 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Mail className="w-6 h-6 text-primary" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
+              <Mail className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Email Agent</h1>
-              <p className="text-muted-foreground">
-                AI-powered email search and assistance
+              <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                Email Assistant
+              </h1>
+              <p className="text-sm text-muted-foreground/80">
+                AI-powered email management
               </p>
             </div>
           </div>
 
-          {/* Connection Status */}
+          {/* Minimal Connection Status */}
           <div className="flex items-center gap-2">
-            {isConnected ? (
-              <Wifi className="w-4 h-4 text-green-500" />
-            ) : (
-              <WifiOff className="w-4 h-4 text-muted-foreground" />
-            )}
-            <Badge
-              variant="outline"
-              className={`${
-                isConnected
-                  ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
-                  : "bg-muted/50 text-muted-foreground border-border"
-              }`}
-            >
-              {isConnected ? "Connected" : "Disconnected"}
-            </Badge>
+            <div
+              className={`w-2 h-2 rounded-full ${
+                isConnected ? "bg-chart-1" : "bg-muted-foreground"
+              } ${isConnected ? "animate-pulse" : ""}`}
+            />
+            <span className="text-xs text-muted-foreground font-medium">
+              {isConnected ? "Online" : "Offline"}
+            </span>
           </div>
-        </div>
+        </header>
 
-        {/* Chat Window */}
-        <div className="bg-card border rounded-lg flex flex-col h-[600px]">
+        {/* Clean Chat Container */}
+        <div className="flex-1 flex flex-col bg-background relative">
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div
+            className="flex-1 overflow-y-auto p-6 pb-24 space-y-4"
+            id="messages-container"
+          >
             {messages.length === 0 && isConnected && (
               <div className="text-center py-12">
                 <div className="p-3 bg-muted/50 rounded-full w-fit mx-auto mb-4">
@@ -843,30 +859,31 @@ const EmailsPage = () => {
             )}
 
             {messages.map((message) => (
-              <div
+              <MessageComponent
                 key={message.id}
-                className={`flex gap-3 ${
+                className={`${
                   message.type === "USER_INPUT"
                     ? "justify-end"
                     : "justify-start"
                 }`}
               >
                 {message.type !== "USER_INPUT" && (
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      {getMessageIcon(message.type)}
-                    </div>
-                  </div>
+                  <MessageAvatar
+                    src=""
+                    alt={message.type}
+                    fallback={
+                      message.type === "AI_RESPONSE"
+                        ? "AI"
+                        : message.type === "TOOL_RESULT"
+                        ? "T"
+                        : "S"
+                    }
+                  />
                 )}
 
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    message.type === "USER_INPUT"
-                      ? "bg-background"
-                      : "bg-muted/50 border"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="flex flex-col max-w-[80%] space-y-1">
+                  {/* Message metadata */}
+                  <div className="flex items-center gap-2 px-2">
                     <Badge
                       variant="outline"
                       className={`text-xs ${getMessageBadgeColor(
@@ -882,97 +899,73 @@ const EmailsPage = () => {
                       {formatTime(message.timestamp)}
                     </span>
                   </div>
-                  <div className="text-sm">
-                    {message.type === "TOOL_RESULT" ? (
-                      renderToolResult(message.content, message.toolName)
-                    ) : (
-                      <div
-                        className={`whitespace-pre-wrap ${
-                          message.type === "USER_INPUT"
-                            ? "text-foreground"
-                            : "text-foreground"
-                        }`}
-                      >
-                        {formatContent(message.content)}
-                      </div>
-                    )}
-                  </div>
+
+                  {/* Message content */}
+                  {message.type === "TOOL_RESULT" ? (
+                    <div className="rounded-lg p-2 text-foreground bg-muted/80 prose break-words whitespace-normal">
+                      {renderToolResult(message.content, message.toolName)}
+                    </div>
+                  ) : (
+                    <MessageContent
+                      markdown={message.type === "AI_RESPONSE"}
+                      className={`${
+                        message.type === "USER_INPUT"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/80"
+                      }`}
+                    >
+                      {formatContent(message.content)}
+                    </MessageContent>
+                  )}
                 </div>
 
                 {message.type === "USER_INPUT" && (
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="w-4 h-4 text-primary" />
-                    </div>
-                  </div>
+                  <MessageAvatar src="" alt="User" fallback="U" />
                 )}
-              </div>
+              </MessageComponent>
             ))}
-
-            {isLoading && (
-              <div className="flex gap-3 justify-start">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                    <Bot className="w-4 h-4 animate-pulse text-primary" />
-                  </div>
-                </div>
-                <div className="bg-muted/50 border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge
-                      variant="outline"
-                      className="text-xs bg-primary/10 text-primary border-primary/20"
-                    >
-                      AI processing
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                      <div
-                        className="w-2 h-2 bg-primary rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-primary rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></div>
-                    </div>
-                    <span>Thinking...</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             <div ref={messagesEndRef} />
           </div>
+        </div>
 
-          {/* Input Form */}
-          <div className="border-t p-4">
-            <form onSubmit={handleSubmit} className="flex gap-3">
-              <Input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
+        {/* Fixed Input Form */}
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg">
+          <div className="max-w-5xl mx-auto p-4">
+            <PromptInput
+              value={input}
+              onValueChange={setInput}
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+            >
+              <PromptInputTextarea
                 placeholder={
                   isConnected
                     ? "Ask about your emails..."
                     : "Connecting to server..."
                 }
-                className="flex-1"
                 disabled={!isConnected || isLoading}
+                rows={1}
+                className="resize-none"
               />
-              <Button
-                type="submit"
-                disabled={!isConnected || !input.trim() || isLoading}
-                size="sm"
-              >
-                {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
-            </form>
+              <PromptInputActions>
+                <PromptInputAction tooltip="Send message">
+                  <Button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={!isConnected || !input.trim() || isLoading}
+                    size="sm"
+                    className="rounded-full"
+                  >
+                    {isLoading ? (
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </PromptInputAction>
+              </PromptInputActions>
+            </PromptInput>
           </div>
         </div>
       </div>
