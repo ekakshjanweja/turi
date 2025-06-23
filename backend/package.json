@@ -10,7 +10,7 @@
     "db:push": "bun drizzle-kit push --config=drizzle.config.ts",
     "db:studio": "bun drizzle-kit studio",
     "db:viz": "bun run drizzle-lab visualizer",
-    "deploy": "bun run cf-gen-types && wrangler secret bulk .dev.vars && wrangler deploy --minify",
+    "deploy": "bun run cf-gen-types && wrangler secret bulk .env && wrangler deploy --minify",
     "cf-gen-types": "wrangler types --env-interface CloudflareBindings"
   },
   "devDependencies": {
