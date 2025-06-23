@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/react";
+import { getSessionToken } from "./utils";
 
 export const auth = createAuthClient({
   baseURL:
@@ -9,26 +10,7 @@ export const auth = createAuthClient({
   fetchOptions: {
     credentials: "include",
     headers: {
-      get Cookie() {
-        return getSessionToken();
-      },
+      Cookie: getSessionToken(),
     },
   },
 });
-
-// Helper function to get the session token from cookies
-const getSessionToken = () => {
-  if (typeof document === "undefined") return "";
-
-  const isProduction = process.env.NODE_ENV === "production";
-  const cookieName = isProduction
-    ? "__Secure-better-auth.session_token"
-    : "better-auth.session_token";
-
-  const cookies = document.cookie.split(";");
-  const sessionCookie = cookies.find((cookie) =>
-    cookie.trim().startsWith(`${cookieName}=`)
-  );
-
-  return sessionCookie ? sessionCookie.trim() : "";
-};
