@@ -8,5 +8,14 @@ export const auth = createAuthClient({
       : "http://localhost:8000",
   fetchOptions: {
     credentials: "include",
+    onSuccess: (ctx) => {
+      const authToken = ctx.response.headers.get("set-auth-token");
+
+      if (authToken) {
+        console.log("Auth token received:", authToken);
+
+        localStorage.setItem("bearer_token", authToken);
+      }
+    },
   },
 });
