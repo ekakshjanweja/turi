@@ -19,7 +19,7 @@ export default function Test() {
       console.log("Session token:", sessionToken);
 
       const response = await fetch(
-        "http://localhost:8000/api/auth/get-session",
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/auth/get-session`,
         {
           method: "GET",
           credentials: "include",
