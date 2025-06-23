@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db";
 import { BETTER_AUTH_SECRET, BETTER_AUTH_URL } from "./config";
+import { openAPI } from "better-auth/plugins";
 
 export const auth = betterAuth({
   secret: BETTER_AUTH_SECRET,
@@ -14,6 +15,7 @@ export const auth = betterAuth({
     "http://localhost:8000",
     "https://turimail.vercel.app",
   ],
+  plugins: [openAPI()],
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
