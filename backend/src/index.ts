@@ -1,16 +1,25 @@
 import { Hono } from "hono";
 import { auth } from "./lib/auth";
-import { PORT } from "./lib/config";
 import type { AgentSession, Message } from "./lib/types/types";
 import { streamSSE } from "hono/streaming";
 import { cors } from "hono/cors";
-import { GmailService } from "./services/gmail";
-import { Agent } from "./services/agent";
+
+// Lazy imports to reduce startup time
+const lazyGmailService = async () => {
+  const { GmailService } = await import("./services/gmail");
+  return GmailService;
+};
+
+const lazyAgent = async () => {
+  const { Agent } = await import("./services/agent");
+  return Agent;
+};
 
 const app = new Hono<{
   Variables: {
     user: typeof auth.$Infer.Session.user | null;
     session: typeof auth.$Infer.Session.session | null;
+    Bindings: CloudflareBindings;
   };
 }>();
 
@@ -88,9 +97,11 @@ app.get("/agent", (c) => {
     let clear = c.req.query("clear") === "true";
 
     if (!agentSession) {
+      const GmailService = await lazyGmailService();
       const gmailService = new GmailService();
       await gmailService.init(user.id);
 
+      const Agent = await lazyAgent();
       const agent = new Agent(stream, gmailService, audioEnabled);
 
       agentSession = {
@@ -109,6 +120,7 @@ app.get("/agent", (c) => {
     }
 
     if (agentSession.audio !== audioEnabled) {
+      const Agent = await lazyAgent();
       const newAgent = new Agent(
         stream,
         agentSession.gmailService,
@@ -191,17 +203,15 @@ app.post("/agent", async (c) => {
 });
 
 // For Cloudflare Workers
-
-// export default {
-//   fetch(request: Request, env: Env, ctx: EßxecutionContext) {
-//     return app.fetch(request, env, ctx)
-//   },
-// }
+export default {
+  fetch(request: Request, env: CloudflareBindings, ctx: ExecutionContext) {
+    return app.fetch(request, env, ctx)
+  },
+}
 
 // For Bun or local development
-
-export default {
-  port: PORT,
-  fetch: app.fetch,
-  idleTimeout: 0,
-};
+// export default {
+//   port: PORT,
+//   fetch: app.fetch,
+//   idleTimeout: 0,
+// };
