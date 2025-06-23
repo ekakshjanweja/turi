@@ -8,12 +8,6 @@ export const auth = createAuthClient({
         "https://turi.jekaksh.workers.dev"
       : "http://localhost:8000",
   fetchOptions: {
-    onRequest: (request) => {
-      request.headers.set("Cookie", document.cookie);
-    },
     credentials: "include",
-    headers: {
-      Cookie: getSessionToken(),
-    },
   },
 });
