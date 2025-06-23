@@ -13,9 +13,6 @@ export const getSessionToken = () => {
     ? "__Secure-better-auth.session_token"
     : "better-auth.session_token";
 
-  console.log("Retrieving session token...");
-  console.log(`Cookie name: ${cookieName}`);
-
   const cookies = document.cookie.split(";");
   const sessionCookie = cookies.find((cookie) =>
     cookie.trim().startsWith(`${cookieName}=`)
