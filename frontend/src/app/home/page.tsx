@@ -15,16 +15,8 @@ import {
 } from "@/components/ui/prompt-input";
 import { auth } from "@/lib/auth";
 import { AudioContent, Message } from "@/lib/types";
-import {
-  ArrowUp,
-  Bot,
-  ChevronDown,
-  Clock,
-  Square,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ArrowUp, Clock, Square, Volume2, VolumeX } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Placeholder } from "@/components/placeholder";
 
@@ -103,30 +95,22 @@ export default function Home() {
     setInput(value);
   };
 
-  let eventSource: EventSource | null = null;
+  const eventSourceRef = useRef<EventSource | null>(null);
 
-  useEffect(() => {
-    connectToSSE(true);
-
-    return () => {
-      eventSource?.close();
-    };
-  }, [audio]);
-
-  const connectToSSE = (clear: boolean) => {
-    eventSource = new EventSource(
+  const connectToSSE = useCallback((clear: boolean) => {
+    eventSourceRef.current = new EventSource(
       `http://localhost:8000/agent?audio=${audio}${clear ? "&clear=true" : ""}`,
       {
         withCredentials: true,
       }
     );
 
-    eventSource.onopen = () => {
+    eventSourceRef.current.onopen = () => {
       console.log("SSE connection opened");
       setIsConnected(true);
     };
 
-    eventSource.addEventListener("message", (event) => {
+    eventSourceRef.current.addEventListener("message", (event) => {
       const message: Message = JSON.parse(event.data);
 
       if (message.type !== "AUDIO") {
@@ -158,12 +142,20 @@ export default function Home() {
       }
     });
 
-    eventSource.onerror = (error) => {
+    eventSourceRef.current.onerror = (error) => {
       console.error("SSE error:", error);
       setIsConnected(false);
-      eventSource?.close();
+      eventSourceRef.current?.close();
     };
-  };
+  }, [audio, setMessages, setIsConnected]);
+
+  useEffect(() => {
+    connectToSSE(true);
+
+    return () => {
+      eventSourceRef.current?.close();
+    };
+  }, [audio, connectToSSE]);
 
   const sendMessage = async (message: string) => {
     try {

@@ -9,7 +9,11 @@ export const auth = betterAuth({
     provider: "pg",
   }),
   baseURL: BETTER_AUTH_URL,
-  trustedOrigins: ["http://localhost:3000", "http://localhost:8000"],
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "https://turimail.vercel.app/",
+  ],
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,

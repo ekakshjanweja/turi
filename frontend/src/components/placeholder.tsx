@@ -6,7 +6,7 @@ export function Placeholder() {
       <div className="p-3 bg-muted/50 rounded-full w-fit mx-auto mb-4">
         <Bot className="w-8 h-8 text-muted-foreground" />
       </div>
-      <h3 className="font-semibold mb-2">Hello! I'm Turi your email assistant.</h3>
+      <h3 className="font-semibold mb-2">Hello! I&apos;m Turi your email assistant.</h3>
       <p className="text-muted-foreground mb-4">
         Ask me anything about your emails.
       </p>

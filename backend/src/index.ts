@@ -28,7 +28,7 @@ const agentSessions: AgentSession[] = [];
 app.use(
   "*", // or replace with "*" to enable cors for all routes
   cors({
-    origin: ["http://localhost:3000"], // replace with your origin
+    origin: ["http://localhost:3000", "https://turimail.vercel.app/"], // replace with your origin
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["POST", "GET", "OPTIONS"],
     exposeHeaders: [
@@ -205,9 +205,9 @@ app.post("/agent", async (c) => {
 // For Cloudflare Workers
 export default {
   fetch(request: Request, env: CloudflareBindings, ctx: ExecutionContext) {
-    return app.fetch(request, env, ctx)
+    return app.fetch(request, env, ctx);
   },
-}
+};
 
 // For Bun or local development
 // export default {

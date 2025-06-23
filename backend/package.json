@@ -4,15 +4,14 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --env-file-.env.local --watch src/index.ts",
+    "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "db:gen": "bun drizzle-kit generate --config=drizzle.config.ts",
     "db:push": "bun drizzle-kit push --config=drizzle.config.ts",
     "db:studio": "bun drizzle-kit studio",
     "db:viz": "bun run drizzle-lab visualizer",
     "deploy": "bun run cf-gen-types && wrangler secret bulk .dev.vars && wrangler deploy --minify",
-    "cf-gen-types": "wrangler types --env-interface CloudflareBindings",
-    "better-auth-gen-schema": "bunx @better-auth/cli@latest generate --config ./src/lib/auth.ts --output ./src/lib/db/schema/auth.ts"
+    "cf-gen-types": "wrangler types --env-interface CloudflareBindings"
   },
   "devDependencies": {
     "@types/bun": "latest",
