@@ -22,7 +22,7 @@ export default function Home() {
         provider: "google",
         callbackURL: `${
           process.env.NODE_ENV == "production"
-            ? process.env.FRONTEND_BASE_URL
+            ? process.env.NEXT_PUBLIC_FRONTEND_BASE_URL
             : "http://localhost:3000"
         }/home`,
       });
