@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "start": "bun run src/index.ts",
+    "dev": "bun run --watch --env-file=.env.local src/index.ts",
+    "start": "bun run --env-file=.env.local src/index.ts",
     "db:gen": "bun drizzle-kit generate --config=drizzle.config.ts",
     "db:push": "bun drizzle-kit push --config=drizzle.config.ts",
     "db:studio": "bun drizzle-kit studio",

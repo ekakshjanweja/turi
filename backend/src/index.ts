@@ -3,6 +3,7 @@ import { auth } from "./lib/auth";
 import type { AgentSession, Message } from "./lib/types/types";
 import { streamSSE } from "hono/streaming";
 import { cors } from "hono/cors";
+import { PORT } from "./lib/config";
 
 // Lazy imports to reduce startup time
 const lazyGmailService = async () => {
@@ -30,13 +31,13 @@ app.use(
   cors({
     origin: ["http://localhost:3000", "https://turimail.vercel.app"],
     allowHeaders: [
-      "Content-Type", 
-      "Authorization", 
+      "Content-Type",
+      "Authorization",
       "X-Requested-With",
       "Accept",
       "Origin",
       "Access-Control-Request-Method",
-      "Access-Control-Request-Headers"
+      "Access-Control-Request-Headers",
     ],
     allowMethods: ["POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"],
     exposeHeaders: [
@@ -214,16 +215,21 @@ app.post("/agent", async (c) => {
   }
 });
 
-// For Cloudflare Workers
-export default {
-  fetch(request: Request, env: CloudflareBindings, ctx: ExecutionContext) {
-    return app.fetch(request, env, ctx);
-  },
-};
+const server =
+  process.env.NODE_ENV === "production"
+    ? {
+        fetch(
+          request: Request,
+          env: CloudflareBindings,
+          ctx: ExecutionContext
+        ) {
+          return app.fetch(request, env, ctx);
+        },
+      }
+    : {
+        port: PORT,
+        fetch: app.fetch,
+        idleTimeout: 0,
+      };
 
-// For Bun or local development
-// export default {
-//   port: PORT,
-//   fetch: app.fetch,
-//   idleTimeout: 0,
-// };
+export default server;
