@@ -1,5 +1,4 @@
 import { createAuthClient } from "better-auth/react";
-import { getSessionToken } from "./utils";
 
 export const auth = createAuthClient({
   baseURL:
