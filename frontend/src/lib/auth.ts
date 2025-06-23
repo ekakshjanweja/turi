@@ -10,7 +10,7 @@ export const auth = createAuthClient({
   fetchOptions: {
     credentials: "include",
     headers: {
-      Cookie: getSessionToken(),
+      "Cookie": getSessionToken(),
     },
   },
 });
