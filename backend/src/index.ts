@@ -28,7 +28,7 @@ const agentSessions: AgentSession[] = [];
 app.use(
   "*", // or replace with "*" to enable cors for all routes
   cors({
-    origin: ["http://localhost:3000", "https://turimail.vercel.app/"], // replace with your origin
+    origin: ["http://localhost:3000", "https://turimail.vercel.app"], // replace with your origin
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["POST", "GET", "OPTIONS"],
     exposeHeaders: [

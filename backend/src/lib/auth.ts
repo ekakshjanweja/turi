@@ -12,7 +12,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:3000",
     "http://localhost:8000",
-    "https://turimail.vercel.app/",
+    "https://turimail.vercel.app",
   ],
   socialProviders: {
     google: {
