@@ -11,8 +11,10 @@ export default function Home() {
   const { data: session, isPending } = auth.useSession();
 
   useEffect(() => {
-    if (session?.user) {
-      router.push("/home");
+    if (!isPending) {
+      if (session?.user) {
+        router.push("/home");
+      }
     }
   }, [session, router]);
 
@@ -22,7 +24,8 @@ export default function Home() {
         provider: "google",
         callbackURL: `${
           process.env.NODE_ENV == "production"
-            ? process.env.NEXT_PUBLIC_FRONTEND_BASE_URL || "https://turimail.vercel.app"
+            ? process.env.NEXT_PUBLIC_FRONTEND_BASE_URL ||
+              "https://turimail.vercel.app"
             : "http://localhost:3000"
         }/home`,
       });
