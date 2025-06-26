@@ -101,6 +101,8 @@ app.get("/agent", (c) => {
 
   const sessionId = user.id;
 
+  const message = c.req.query("message");
+
   return streamSSE(c, async (stream) => {
     let agentSession = agentSessions.find((s) => s.id === sessionId);
 
@@ -157,12 +159,16 @@ app.get("/agent", (c) => {
       agentSession.agent.clearMessages();
     }
 
-    const message: Message = {
+    const msg: Message = {
       type: "CONNECTED",
       content: "Agent session started",
     };
 
-    stream.writeSSE({ data: JSON.stringify(message), event: "system" });
+    stream.writeSSE({ data: JSON.stringify(msg), event: "system" });
+
+    if (message) {
+      await agentSession.agent.handleUserInput(message);
+    }
 
     await stream.sleep(1000000);
 

@@ -9,6 +9,7 @@ export type AgentSession = {
   sseConnection: SSEStreamingApi;
   audio: boolean;
 };
+
 export type MessageType =
   | "AUDIO"
   | "AI_RESPONSE"
