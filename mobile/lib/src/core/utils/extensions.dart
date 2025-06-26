@@ -10,6 +10,8 @@ extension ThemeX on BuildContext {
   C get darkColors => C.dark();
   C get invertedColors => isDarkMode ? C.light() : C.dark();
 
+  ColorScheme get colorScheme => Theme.of(this).colorScheme;
+
   AppTextTheme get textTheme => AppTextTheme.fromColors(colors);
 }
 
