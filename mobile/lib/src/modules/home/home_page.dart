@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:turi_mobile/src/core/services/api/models/method_type.dart';
@@ -27,6 +26,7 @@ class _HomePageState extends State<HomePage> {
   ValueNotifier<bool> thinkingNotifier = ValueNotifier<bool>(false);
   ValueNotifier<bool> connectedNotifier = ValueNotifier<bool>(false);
   ValueNotifier<bool> errorNotifier = ValueNotifier<bool>(false);
+  ValueNotifier<bool> newConversationNotifier = ValueNotifier<bool>(true);
 
   final TextEditingController controller = TextEditingController();
   final ScrollController scrollController = ScrollController();
@@ -160,18 +160,16 @@ class _HomePageState extends State<HomePage> {
                           ),
                           decoration: BoxDecoration(
                             color: messages[index].isUser
-                                ? context.colorScheme.primaryContainer
-                                      .withValues(alpha: 0.3)
-                                : context.colorScheme.secondaryContainer
-                                      .withValues(alpha: 0.3),
+                                ? context.colorScheme.tertiaryContainer
+                                : context.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             messages[index].content,
                             style: context.textTheme.bodyMedium.copyWith(
                               color: messages[index].isUser
-                                  ? context.colorScheme.onPrimaryContainer
-                                  : context.colorScheme.onSecondaryContainer,
+                                  ? context.colorScheme.onTertiaryContainer
+                                  : context.colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -214,7 +212,8 @@ class _HomePageState extends State<HomePage> {
                               "/agent",
                               queryParameters: {
                                 "audio": "false",
-                                "clear": "true",
+                                "clear": newConversationNotifier.value
+                                    .toString(),
                                 "message": controller.text.trim(),
                               },
                               method: MethodType.get,
@@ -258,6 +257,7 @@ class _HomePageState extends State<HomePage> {
                                 errorNotifier.value = false;
                                 controller.clear();
                                 connectedNotifier.value = true;
+                                newConversationNotifier.value = false;
                               },
                             );
                           },

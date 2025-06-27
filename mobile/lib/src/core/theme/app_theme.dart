@@ -1,6 +1,7 @@
 import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 import "package:turi_mobile/src/core/theme/app_text_theme.dart";
+import "package:turi_mobile/src/core/theme/colors/app_color_scheme.dart";
 import "package:turi_mobile/src/core/theme/colors/colors.dart";
 
 class AppTheme {
@@ -37,8 +38,7 @@ class AppTheme {
   static ThemeData get light => ThemeData(
     brightness: Brightness.light,
     useMaterial3: true,
-    // colorScheme: AppColorScheme.light().colorScheme,
-    colorSchemeSeed: lightColors.primary,
+    colorScheme: AppColorScheme.light().colorScheme,
     fontFamily: fontFamily,
     scaffoldBackgroundColor: lightColors.background,
     switchTheme: SwitchThemeData(
@@ -57,14 +57,14 @@ class AppTheme {
     ),
     appBarTheme: appBarTheme(lightColors),
     bottomSheetTheme: bottomSheetTheme(lightColors),
+    progressIndicatorTheme: progressIndicatorTheme(lightColors),
     filledButtonTheme: filledButtonTheme(lightColors),
   );
 
   static ThemeData get dark => ThemeData(
     brightness: Brightness.dark,
     useMaterial3: true,
-    // colorScheme: AppColorScheme.dark().colorScheme,
-    colorSchemeSeed: darkColors.primary,
+    colorScheme: AppColorScheme.dark().colorScheme,
     fontFamily: fontFamily,
     scaffoldBackgroundColor: darkColors.background,
     switchTheme: SwitchThemeData(
@@ -83,6 +83,7 @@ class AppTheme {
     ),
     appBarTheme: appBarTheme(darkColors),
     bottomSheetTheme: bottomSheetTheme(darkColors),
+    progressIndicatorTheme: progressIndicatorTheme(darkColors),
     filledButtonTheme: filledButtonTheme(darkColors),
   );
 
@@ -131,44 +132,15 @@ class AppTheme {
         ),
       );
 
-  static ProgressIndicatorThemeData progressIndicatorTheme(
-    C colors,
-    AppTextTheme textTheme,
-  ) => ProgressIndicatorThemeData(color: colors.primary);
+  static ProgressIndicatorThemeData progressIndicatorTheme(C colors) =>
+      ProgressIndicatorThemeData(color: colors.primary);
 
   static FilledButtonThemeData filledButtonTheme(C colors) =>
       FilledButtonThemeData(
         style: ButtonStyle(
-          foregroundColor: WidgetStateProperty.all(colors.foreground),
-          backgroundColor: WidgetStateProperty.all(colors.primary),
-          overlayColor: WidgetStateProperty.all(
-            colors.primary.withValues(alpha: 0.5),
-          ),
-          padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
-            const EdgeInsets.symmetric(horizontal: 12),
-          ),
-          textStyle: WidgetStateProperty.all<TextStyle>(
-            AppTextTheme.fromColors(colors).labelLarge,
-          ),
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
       );
-
-  static IconButtonThemeData iconButtonTheme(C colors) => IconButtonThemeData(
-    style: ButtonStyle(
-      foregroundColor: WidgetStateProperty.all(colors.foreground),
-      backgroundColor: WidgetStateProperty.all(colors.primary),
-      overlayColor: WidgetStateProperty.all(
-        colors.primary.withValues(alpha: 0.5),
-      ),
-      padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
-        const EdgeInsets.all(8),
-      ),
-      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    ),
-  );
 }

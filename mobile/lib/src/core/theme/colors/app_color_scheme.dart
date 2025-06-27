@@ -30,8 +30,8 @@ class AppColorScheme {
         surfaceContainer: colors.popover,
         surfaceTint: colors.primary,
         inversePrimary: colors.accent,
-        shadow: const Color(0x1A000000),
-        scrim: const Color(0x80000000),
+        shadow: colors.ring,
+        scrim: colors.muted,
       ),
     );
   }
@@ -60,8 +60,8 @@ class AppColorScheme {
         surfaceContainer: colors.popover,
         surfaceTint: colors.primary,
         inversePrimary: colors.accent,
-        shadow: const Color(0x1A000000),
-        scrim: const Color(0x80000000),
+        shadow: colors.ring,
+        scrim: colors.muted,
       ),
     );
   }
