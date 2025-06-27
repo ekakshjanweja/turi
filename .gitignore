@@ -68,3 +68,6 @@ bun.lockb
 package-lock.json
 yarn.lock
 bun.lock
+
+key.properties
+upload-keystore.jks
