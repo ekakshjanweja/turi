@@ -19,7 +19,7 @@ class AuthRepo {
   ];
 
   static final GoogleSignIn googleSignIn = GoogleSignIn(
-    clientId: AppConfig.googleAndroidClientId,
+    // clientId: AppConfig.googleAndroidClientId,
     serverClientId: AppConfig.googleServerClientId,
     scopes: scopes,
   );
