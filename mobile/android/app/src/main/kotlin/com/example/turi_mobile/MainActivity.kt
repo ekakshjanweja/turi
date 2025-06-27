@@ -1,4 +1,4 @@
-package com.example.turi_mobile
+package com.turi.mail
 
 import io.flutter.embedding.android.FlutterActivity
 
