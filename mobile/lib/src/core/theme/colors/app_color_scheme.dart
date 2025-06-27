@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:turi_mobile/src/core/theme/colors/colors.dart';
+import 'package:turi_mail/src/core/theme/colors/colors.dart';
 
 class AppColorScheme {
   final ColorScheme colorScheme;

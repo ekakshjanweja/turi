@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:turi_mobile/src/core/router/app_router.dart';
-import 'package:turi_mobile/src/core/theme/app_theme.dart';
-import 'package:turi_mobile/src/core/theme/theme_notifier.dart';
+import 'package:turi_mail/src/core/router/app_router.dart';
+import 'package:turi_mail/src/core/theme/app_theme.dart';
+import 'package:turi_mail/src/core/theme/theme_notifier.dart';
 
 class TuriApp extends StatefulWidget {
   const TuriApp({super.key});

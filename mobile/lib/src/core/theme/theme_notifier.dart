@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
-import "package:turi_mobile/src/core/services/local_stoage/kv_store.dart";
-import "package:turi_mobile/src/core/services/local_stoage/kv_store_keys.dart";
+import "package:turi_mail/src/core/services/local_stoage/kv_store.dart";
+import "package:turi_mail/src/core/services/local_stoage/kv_store_keys.dart";
 
 class ThemeNotifier {
   static final ThemeNotifier _instance = ThemeNotifier._internal();

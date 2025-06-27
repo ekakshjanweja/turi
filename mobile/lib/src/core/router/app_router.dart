@@ -1,9 +1,9 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:turi_mobile/src/core/router/app_routes.dart';
-import 'package:turi_mobile/src/modules/auth/provider/auth_provider.dart';
-import 'package:turi_mobile/src/modules/auth/ui/pages/auth_page.dart';
-import 'package:turi_mobile/src/modules/home/home_page.dart';
+import 'package:turi_mail/src/core/router/app_routes.dart';
+import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
+import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
+import 'package:turi_mail/src/modules/home/home_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:turi_mobile/src/core/theme/theme_notifier.dart';
-import 'package:turi_mobile/src/core/utils/extensions.dart';
+import 'package:turi_mail/src/core/theme/theme_notifier.dart';
+import 'package:turi_mail/src/core/utils/extensions.dart';
 
 class ThemeModeBottomSheet extends StatefulWidget {
   const ThemeModeBottomSheet({super.key});

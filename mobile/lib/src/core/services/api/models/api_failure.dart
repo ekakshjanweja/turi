@@ -1,5 +1,5 @@
 import "dart:convert";
-import "package:turi_mobile/src/core/services/api/enums/error_type.dart";
+import "package:turi_mail/src/core/services/api/enums/error_type.dart";
 
 class Failure {
   final ErrorType errorType;

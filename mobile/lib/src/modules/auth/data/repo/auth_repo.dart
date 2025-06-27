@@ -2,9 +2,9 @@ import 'dart:developer';
 
 import 'package:better_auth_flutter/better_auth_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:turi_mobile/src/core/config/config.dart';
-import 'package:turi_mobile/src/core/services/api/enums/error_type.dart';
-import 'package:turi_mobile/src/core/services/api/models/api_failure.dart';
+import 'package:turi_mail/src/core/config/config.dart';
+import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
+import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
 
 class AuthRepo {
   static final betterAuthClient = BetterAuth.instance.client;

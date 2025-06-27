@@ -1,8 +1,8 @@
 import 'package:better_auth_flutter/better_auth_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:turi_mobile/src/core/services/api/enums/error_type.dart';
-import 'package:turi_mobile/src/core/services/api/models/api_failure.dart';
-import 'package:turi_mobile/src/modules/auth/data/repo/auth_repo.dart';
+import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
+import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
+import 'package:turi_mail/src/modules/auth/data/repo/auth_repo.dart';
 
 class AuthProvider extends ChangeNotifier {
   AuthProvider() {

@@ -3,10 +3,10 @@ import "dart:io";
 import "package:cookie_jar/cookie_jar.dart";
 import "package:http/http.dart" as http;
 import "package:path_provider/path_provider.dart";
-import "package:turi_mobile/src/core/config/config.dart";
-import "package:turi_mobile/src/core/services/api/enums/error_type.dart";
-import "package:turi_mobile/src/core/services/api/models/api_failure.dart";
-import "package:turi_mobile/src/core/services/api/models/method_type.dart";
+import "package:turi_mail/src/core/config/config.dart";
+import "package:turi_mail/src/core/services/api/enums/error_type.dart";
+import "package:turi_mail/src/core/services/api/models/api_failure.dart";
+import "package:turi_mail/src/core/services/api/models/method_type.dart";
 
 class Api {
   static final hc = http.Client();

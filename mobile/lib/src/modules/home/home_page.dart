@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:turi_mobile/src/core/services/api/models/method_type.dart';
-import 'package:turi_mobile/src/core/services/api/sse.dart';
-import 'package:turi_mobile/src/core/utils/extensions.dart';
-import 'package:turi_mobile/src/modules/auth/provider/auth_provider.dart';
-import 'package:turi_mobile/src/modules/home/message.dart';
-import 'package:turi_mobile/src/modules/home/navbar.dart';
+import 'package:turi_mail/src/core/services/api/models/method_type.dart';
+import 'package:turi_mail/src/core/services/api/sse.dart';
+import 'package:turi_mail/src/core/utils/extensions.dart';
+import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
+import 'package:turi_mail/src/modules/home/message.dart';
+import 'package:turi_mail/src/modules/home/navbar.dart';
 
 class HomePage extends StatefulWidget {
   static const String routeName = '/home';
