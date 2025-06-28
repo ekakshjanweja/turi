@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
@@ -14,11 +16,46 @@ class MessageInput extends StatefulWidget {
 }
 
 class _MessageInputState extends State<MessageInput> {
-  @override
-  void dispose() {
+  void sendMessage() async {
     final cp = context.read<ChatProvider>();
-    cp.streamSubscription?.cancel();
-    super.dispose();
+
+    if (cp.inputController.text.trim().isEmpty) return;
+
+    cp.messages.add(
+      Message(content: cp.inputController.text.trim(), isUser: true),
+    );
+    cp.inputController.clear();
+
+    cp.streamSubscription = await Sse.sendRequest(
+      "/agent",
+      queryParameters: {
+        "audio": "false",
+        "clear": cp.newConversation.toString(),
+        "message": cp.messages.last.content,
+      },
+      method: MethodType.get,
+      onError: (error) {
+        cp.connected = false;
+        cp.error = true;
+        log("Error in SSE stream: $error", name: "SSE LOGS");
+      },
+      onChunk: (content) async {
+        cp.addMessage(Message(content: content, isUser: false));
+        cp.thinking = false;
+        log("Received chunk: $content", name: "SSE LOGS");
+      },
+      onThinking: (content) {
+        cp.thinking = true;
+        log("Thinking: $content", name: "SSE LOGS");
+      },
+      onAudio: (base64Audio) {},
+      onConnected: () {
+        cp.error = false;
+        cp.connected = true;
+        cp.newConversation = false;
+        log("SSE stream connected", name: "SSE LOGS");
+      },
+    );
   }
 
   @override
@@ -49,47 +86,7 @@ class _MessageInputState extends State<MessageInput> {
                 ),
                 if (cp.inputController.text.isNotEmpty)
                   IconButton.filled(
-                    onPressed: () async {
-                      if (cp.inputController.text.trim().isEmpty) return;
-
-                      cp.messages.add(
-                        Message(
-                          content: cp.inputController.text.trim(),
-                          isUser: true,
-                        ),
-                      );
-                      cp.inputController.clear();
-
-                      cp.streamSubscription = await Sse.sendRequest(
-                        "/agent",
-                        queryParameters: {
-                          "audio": "false",
-                          "clear": cp.newConversation.toString(),
-                          "message": cp.inputController.text.trim(),
-                        },
-                        method: MethodType.get,
-                        onError: (error) {
-                          cp.connected = false;
-                          cp.error = true;
-                        },
-                        onChunk: (content) async {
-                          cp.addMessage(
-                            Message(content: content, isUser: false),
-                          );
-                          cp.thinking = false;
-                        },
-                        onThinking: (content) {
-                          cp.thinking = true;
-                        },
-                        onAudio: (base64Audio) {},
-                        onConnected: () {
-                          cp.thinking = true;
-                          cp.error = false;
-                          cp.connected = true;
-                          cp.newConversation = false;
-                        },
-                      );
-                    },
+                    onPressed: sendMessage,
                     icon: Icon(Icons.send, size: 24),
                     style: ButtonStyle(
                       padding: WidgetStateProperty.all<EdgeInsetsGeometry>(

@@ -27,7 +27,7 @@ const app = new Hono<{
 const agentSessions: AgentSession[] = [];
 
 app.use(
-  "*", // or replace with "*" to enable cors for all routes
+  "*", // or replace with "*" to enable cors for a routes
   cors({
     origin: ["http://localhost:3000", "https://turimail.vercel.app"],
     allowHeaders: [

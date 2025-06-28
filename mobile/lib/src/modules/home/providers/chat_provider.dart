@@ -17,7 +17,7 @@ class ChatProvider extends ChangeNotifier {
   StreamSubscription? _streamSubscription;
   StreamSubscription? get streamSubscription => _streamSubscription;
   set streamSubscription(StreamSubscription? value) {
-    _streamSubscription?.cancel();
+    _streamSubscription?.cancel(); // Cancel previous subscription if exists
     _streamSubscription = value;
     notifyListeners();
   }
@@ -60,14 +60,22 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addMessage(Message message) {
+  void addMessage(Message message)async {
     _messages.add(message);
     notifyListeners();
-    scrollController.animateTo(
-      scrollController.position.maxScrollExtent,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
+
+    await Future.delayed(Duration(milliseconds: 100));
+
+    // Delay scroll until after UI rebuild
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   void clearMessages() {
@@ -75,12 +83,11 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void reset() {
-    _messages.clear();
-    _thinking = false;
-    _connected = false;
-    _error = false;
-    _newConversation = true;
-    notifyListeners();
+  @override
+  void dispose() {
+    _streamSubscription?.cancel();
+    inputController.dispose();
+    scrollController.dispose();
+    super.dispose();
   }
 }
