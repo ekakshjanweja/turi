@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 
 export function Navbar() {
   const router = useRouter();
+  const { data: session, isPending } = auth.useSession();
 
   const signOut = async () => {
     try {
@@ -28,9 +29,11 @@ export function Navbar() {
         {/* Right side buttons */}
         <div className="flex items-center gap-2">
           <ModeToggle />
-          <Button variant="outline" size="sm" onClick={signOut}>
-            Logout
-          </Button>
+          {session && !isPending && (
+            <Button variant="outline" size="sm" onClick={signOut}>
+              Logout
+            </Button>
+          )}
         </div>
       </div>
     </nav>
