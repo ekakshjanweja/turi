@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:turi_mail/src/modules/home/message.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/message.dart';
 
 class ChatProvider extends ChangeNotifier {
   ChatProvider() {

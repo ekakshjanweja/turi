@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:turi_mail/src/modules/home/chat_bubble.dart';
-import 'package:turi_mail/src/modules/home/chat_provider.dart';
-import 'package:turi_mail/src/modules/home/fade.dart';
-import 'package:turi_mail/src/modules/home/message_input.dart';
-import 'package:turi_mail/src/modules/home/navbar.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/chat_bubble.dart';
+import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/fade.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/message_input.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/navbar/navbar.dart';
 
 class HomePage extends StatefulWidget {
   static const String routeName = '/home';

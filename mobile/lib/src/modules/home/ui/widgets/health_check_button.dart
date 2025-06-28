@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:turi_mail/src/core/services/api/api.dart';
-import '../../core/services/api/models/method_type.dart';
+import '../../../../core/services/api/models/method_type.dart';
 
 class HealthCheckButton extends StatelessWidget {
   const HealthCheckButton({super.key});

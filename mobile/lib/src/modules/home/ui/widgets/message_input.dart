@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
-import 'package:turi_mail/src/modules/home/chat_provider.dart';
-import 'package:turi_mail/src/modules/home/message.dart';
+import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/message.dart';
 
 class MessageInput extends StatefulWidget {
   const MessageInput({super.key});

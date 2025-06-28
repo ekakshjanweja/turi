@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
-import 'package:turi_mail/src/modules/home/home_page.dart';
+import 'package:turi_mail/src/modules/home/ui/pages/home_page.dart';
 
 class AppRoutes {
   static const String initialRoute = AuthPage.routeName;

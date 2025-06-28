@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
-import 'package:turi_mail/src/modules/home/home_page.dart';
+import 'package:turi_mail/src/modules/home/ui/pages/home_page.dart';
 
 class AuthPage extends StatefulWidget {
   static const String routeName = '/auth';

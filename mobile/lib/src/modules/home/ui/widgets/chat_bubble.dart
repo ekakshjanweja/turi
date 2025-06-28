@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
-import 'package:turi_mail/src/modules/home/message.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/message.dart';
 
 class ChatBubble extends StatelessWidget {
   const ChatBubble({super.key, required this.message});
