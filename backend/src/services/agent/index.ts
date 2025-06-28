@@ -82,231 +82,241 @@ export class Agent {
   }
 
   public async handleUserInput(input: string) {
-    await this.sendMessage({
-      type: "THINKING",
-      content: "Thinking about your request...",
-    });
-
-    this.messages.push({
-      role: "user",
-      content: input,
-    });
-    this.messageCount++;
-
-    const result = await generateText({
-      model: google("gemini-2.0-flash"),
-      // model: openai("gpt-4.1-mini"),
-      messages: this.messages,
-      tools: {
-        send_email: {
-          description: "Send an email to a recipient. Or draft an email.",
-          parameters: SendEmailSchema,
-          execute: async (args) => {
-            const sendArgs = SendEmailSchema.parse(args);
-
-            const response = await this.gmailService.sendEmail(sendArgs);
-
-            if (!response) throw new Error("Tool execution failed: send_email");
-
-            return response.content.text;
-          },
-        },
-        read_email: {
-          description:
-            "Read an email by ID or reference. If you don't have a specific messageId, you can use emailReference to describe the email (e.g., 'email from John', 'latest email', 'email about project'). The system will find the email and read its content. Supports 'first', 'second', 'third' to refer to the last shown list.",
-          parameters: ReadEmailSchema,
-          execute: async (args) => {
-            const readArgs = ReadEmailSchema.parse(args);
-            if (readArgs.emailReference) {
-              const resolvedId = await resolveOrdinalEmailReferenceAI(
-                readArgs.emailReference,
-                this.lastEmailList
-              );
-              if (resolvedId) {
-                readArgs.messageId = resolvedId;
-                delete readArgs.emailReference;
-              }
-            }
-            const response = await this.gmailService.readEmails(readArgs);
-            if (!response) throw new Error("Tool execution failed: read_email");
-            return response.content.text;
-          },
-        },
-        search_email: {
-          description: "Searches for emails using Gmail search syntax",
-          parameters: SearchEmailsSchema,
-          execute: async (args) => {
-            const searchArgs = SearchEmailsSchema.parse(args);
-            const response = await this.gmailService.searchEmails(searchArgs);
-            if (!response)
-              throw new Error("Tool execution failed: search_email");
-            // Track the last list of emails for ordinal reference
-            if (
-              response.content &&
-              response.content.text &&
-              response.content.text.emails
-            ) {
-              this.lastEmailList = response.content.text.emails;
-            } else {
-              this.lastEmailList = [];
-            }
-            return response.content.text;
-          },
-        },
-        list_email_labels: {
-          description: "Retrieves all available Gmail labels",
-          parameters: ListEmailLabelsSchema,
-          execute: async () => {
-            const response = await this.gmailService.listEmailLabels();
-
-            if (!response) {
-              throw new Error("Tool execution failed: list_email_labels");
-            }
-
-            return response.content.text;
-          },
-        },
-        create_email_label: {
-          description: "Creates a new Gmail label",
-          parameters: CreateLabelSchema,
-          execute: async (args: any) => {
-            const createArgs = CreateLabelSchema.parse(args);
-
-            const response = await this.gmailService.createEmailLabel(
-              createArgs
-            );
-
-            if (!response) {
-              throw new Error("Tool execution failed: create_email_label");
-            }
-
-            return response.content.text;
-          },
-        },
-        update_email_label: {
-          description: "Updates an existing Gmail label",
-          parameters: UpdateLabelSchema,
-          execute: async (args: any) => {
-            const updateArgs = UpdateLabelSchema.parse(args);
-
-            const response = await this.gmailService.updateEmailLabel(
-              updateArgs
-            );
-
-            if (!response) {
-              throw new Error(
-                "Failed to update label or Gmail service not initialized."
-              );
-            }
-
-            return response.content.text;
-          },
-        },
-        delete_email_label: {
-          description: "Deletes a Gmail label",
-          parameters: DeleteLabelSchema,
-          execute: async (args: any) => {
-            const deleteArgs = DeleteLabelSchema.parse(args);
-
-            const response = await this.gmailService.deleteEmailLabel(
-              deleteArgs
-            );
-
-            if (!response) {
-              throw new Error("Tool execution failed: delete_email_label");
-            }
-
-            return response.content.text;
-          },
-        },
-        get_or_create_email_label: {
-          description:
-            "Gets an existing Gmail label by name or creates it if it doesn't exist",
-          parameters: GetOrCreateLabelSchema,
-          execute: async (args: any) => {
-            const getOrCreateArgs = GetOrCreateLabelSchema.parse(args);
-
-            const response = await this.gmailService.getOrCreateEmailLabel(
-              getOrCreateArgs
-            );
-
-            if (!response) {
-              throw new Error(
-                "Tool execution failed: get_or_create_email_label"
-              );
-            }
-
-            return response.content.text;
-          },
-        },
-      },
-    });
-
-    // Handle the response properly according to AI SDK patterns
-    if (result.toolCalls && result.toolCalls.length > 0) {
-      // Add assistant message with tool calls
-      this.messages.push({
-        role: "assistant",
-        content: result.toolCalls,
+    try {
+      await this.sendMessage({
+        type: "THINKING",
+        content: "Thinking about your request...",
       });
 
-      // Add tool results
-      if (result.toolResults && result.toolResults.length > 0) {
-        this.messages.push({
-          role: "tool",
-          content: result.toolResults,
-        });
-      }
+      this.messages.push({
+        role: "user",
+        content: input,
+      });
+      this.messageCount++;
 
-      // Generate a follow-up response to explain the tool results
-      const followUp = await generateText({
+      const result = await generateText({
         model: google("gemini-2.0-flash"),
-        messages: [
-          ...this.messages,
-          {
-            role: "user" as const,
-            content: HUMANIZE_AGENT_SYSTEM_PROMPT,
+        // model: openai("gpt-4.1-mini"),
+        messages: this.messages,
+        tools: {
+          send_email: {
+            description: "Send an email to a recipient. Or draft an email.",
+            parameters: SendEmailSchema,
+            execute: async (args) => {
+              const sendArgs = SendEmailSchema.parse(args);
+
+              const response = await this.gmailService.sendEmail(sendArgs);
+
+              if (!response)
+                throw new Error("Tool execution failed: send_email");
+
+              return response.content.text;
+            },
           },
-        ],
+          read_email: {
+            description:
+              "Read an email by ID or reference. If you don't have a specific messageId, you can use emailReference to describe the email (e.g., 'email from John', 'latest email', 'email about project'). The system will find the email and read its content. Supports 'first', 'second', 'third' to refer to the last shown list.",
+            parameters: ReadEmailSchema,
+            execute: async (args) => {
+              const readArgs = ReadEmailSchema.parse(args);
+              if (readArgs.emailReference) {
+                const resolvedId = await resolveOrdinalEmailReferenceAI(
+                  readArgs.emailReference,
+                  this.lastEmailList
+                );
+                if (resolvedId) {
+                  readArgs.messageId = resolvedId;
+                  delete readArgs.emailReference;
+                }
+              }
+              const response = await this.gmailService.readEmails(readArgs);
+              if (!response)
+                throw new Error("Tool execution failed: read_email");
+              return response.content.text;
+            },
+          },
+          search_email: {
+            description: "Searches for emails using Gmail search syntax",
+            parameters: SearchEmailsSchema,
+            execute: async (args) => {
+              const searchArgs = SearchEmailsSchema.parse(args);
+              const response = await this.gmailService.searchEmails(searchArgs);
+              if (!response)
+                throw new Error("Tool execution failed: search_email");
+              // Track the last list of emails for ordinal reference
+              if (
+                response.content &&
+                response.content.text &&
+                response.content.text.emails
+              ) {
+                this.lastEmailList = response.content.text.emails;
+              } else {
+                this.lastEmailList = [];
+              }
+              return response.content.text;
+            },
+          },
+          list_email_labels: {
+            description: "Retrieves all available Gmail labels",
+            parameters: ListEmailLabelsSchema,
+            execute: async () => {
+              const response = await this.gmailService.listEmailLabels();
+
+              if (!response) {
+                throw new Error("Tool execution failed: list_email_labels");
+              }
+
+              return response.content.text;
+            },
+          },
+          create_email_label: {
+            description: "Creates a new Gmail label",
+            parameters: CreateLabelSchema,
+            execute: async (args: any) => {
+              const createArgs = CreateLabelSchema.parse(args);
+
+              const response = await this.gmailService.createEmailLabel(
+                createArgs
+              );
+
+              if (!response) {
+                throw new Error("Tool execution failed: create_email_label");
+              }
+
+              return response.content.text;
+            },
+          },
+          update_email_label: {
+            description: "Updates an existing Gmail label",
+            parameters: UpdateLabelSchema,
+            execute: async (args: any) => {
+              const updateArgs = UpdateLabelSchema.parse(args);
+
+              const response = await this.gmailService.updateEmailLabel(
+                updateArgs
+              );
+
+              if (!response) {
+                throw new Error(
+                  "Failed to update label or Gmail service not initialized."
+                );
+              }
+
+              return response.content.text;
+            },
+          },
+          delete_email_label: {
+            description: "Deletes a Gmail label",
+            parameters: DeleteLabelSchema,
+            execute: async (args: any) => {
+              const deleteArgs = DeleteLabelSchema.parse(args);
+
+              const response = await this.gmailService.deleteEmailLabel(
+                deleteArgs
+              );
+
+              if (!response) {
+                throw new Error("Tool execution failed: delete_email_label");
+              }
+
+              return response.content.text;
+            },
+          },
+          get_or_create_email_label: {
+            description:
+              "Gets an existing Gmail label by name or creates it if it doesn't exist",
+            parameters: GetOrCreateLabelSchema,
+            execute: async (args: any) => {
+              const getOrCreateArgs = GetOrCreateLabelSchema.parse(args);
+
+              const response = await this.gmailService.getOrCreateEmailLabel(
+                getOrCreateArgs
+              );
+
+              if (!response) {
+                throw new Error(
+                  "Tool execution failed: get_or_create_email_label"
+                );
+              }
+
+              return response.content.text;
+            },
+          },
+        },
       });
 
-      this.messages.push({
-        role: "assistant",
-        content: followUp.text,
-      });
+      // Handle the response properly according to AI SDK patterns
+      if (result.toolCalls && result.toolCalls.length > 0) {
+        // Add assistant message with tool calls
+        this.messages.push({
+          role: "assistant",
+          content: result.toolCalls,
+        });
 
-      if (this.audioEnabled) {
-        const audio = await tts(followUp.text);
+        // Add tool results
+        if (result.toolResults && result.toolResults.length > 0) {
+          this.messages.push({
+            role: "tool",
+            content: result.toolResults,
+          });
+        }
+
+        // Generate a follow-up response to explain the tool results
+        const followUp = await generateText({
+          model: google("gemini-2.0-flash"),
+          messages: [
+            ...this.messages,
+            {
+              role: "user" as const,
+              content: HUMANIZE_AGENT_SYSTEM_PROMPT,
+            },
+          ],
+        });
+
+        this.messages.push({
+          role: "assistant",
+          content: followUp.text,
+        });
+
+        if (this.audioEnabled) {
+          const audio = await tts(followUp.text);
+
+          await this.sendMessage({
+            type: "AUDIO",
+            content: audio,
+          });
+        }
 
         await this.sendMessage({
-          type: "AUDIO",
-          content: audio,
+          type: "AI_RESPONSE",
+          content: followUp.text,
         });
-      }
+      } else {
+        // No tools called, just add the regular response
+        this.messages.push({
+          role: "assistant",
+          content: result.text,
+        });
 
-      await this.sendMessage({
-        type: "AI_RESPONSE",
-        content: followUp.text,
-      });
-    } else {
-      // No tools called, just add the regular response
-      this.messages.push({
-        role: "assistant",
-        content: result.text,
-      });
+        if (this.audioEnabled) {
+          const audio = await tts(result.text);
 
-      if (this.audioEnabled) {
-        const audio = await tts(result.text);
+          await this.sendMessage({
+            type: "AUDIO",
+            content: audio,
+          });
+        }
 
         await this.sendMessage({
-          type: "AUDIO",
-          content: audio,
+          type: "AI_RESPONSE",
+          content: result.text,
         });
       }
-
-      await this.sendMessage({
-        type: "AI_RESPONSE",
-        content: result.text,
+    } catch (error) {
+      this.sendMessage({
+        type: "ERROR",
+        content:
+          "Error: " + (error instanceof Error ? error.message : String(error)),
       });
     }
   }

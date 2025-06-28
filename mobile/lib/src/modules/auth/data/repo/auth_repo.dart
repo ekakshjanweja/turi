@@ -129,6 +129,8 @@ class AuthRepo {
 
   static Future<Failure?> signOut() async {
     try {
+      await googleSignIn.signOut();
+
       final error = await betterAuthClient.signOut();
 
       if (error != null) {
@@ -137,8 +139,6 @@ class AuthRepo {
           message: error.code.message,
         );
       }
-
-      await googleSignIn.signOut();
 
       return null;
     } catch (e) {

@@ -1,4 +1,4 @@
-enum MessageType { audio, aiResponse, thinking, connected, user }
+enum MessageType { audio, aiResponse, thinking, connected, user, error }
 
 extension MessageTypeId on MessageType {
   String get id {
@@ -13,6 +13,8 @@ extension MessageTypeId on MessageType {
         return "CONNECTED";
       case MessageType.user:
         return "USER";
+      case MessageType.error:
+        return "ERROR";
     }
   }
 }

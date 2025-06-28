@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/error_bottomsheet.dart';
 
 class StatusButton extends StatelessWidget {
   final bool showDotView;
@@ -22,7 +23,7 @@ class StatusButton extends StatelessWidget {
           backgroundColor = Colors.transparent;
           textColor = context.colorScheme.secondary;
           iconColor = context.colorScheme.secondary;
-        } else if (cp.error) {
+        } else if (cp.error != null) {
           buttonText = "error";
           backgroundColor = context.colorScheme.error;
           textColor = context.colorScheme.error;
@@ -41,23 +42,40 @@ class StatusButton extends StatelessWidget {
 
         if (showDotView) {
           // Show alternate view with a dot and text
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: iconColor,
-                  shape: BoxShape.circle,
-                ),
+          return GestureDetector(
+            onTap: () {
+              final errorMessage = cp.error;
+              if (errorMessage != null) {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (context) {
+                    return ErrorBottomSheet(error: errorMessage);
+                  },
+                );
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: iconColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    buttonText,
+                    style: context.textTheme.bodySmall.copyWith(color: textColor),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                buttonText,
-                style: context.textTheme.bodySmall.copyWith(color: textColor),
-              ),
-            ],
+            ),
           );
         }
 

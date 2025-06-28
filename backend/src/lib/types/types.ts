@@ -15,7 +15,8 @@ export type MessageType =
   | "AI_RESPONSE"
   | "THINKING"
   | "CONNECTED"
-  | "USER";
+  | "USER"
+  | "ERROR";
 
 export type Message = {
   type: MessageType;

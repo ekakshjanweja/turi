@@ -46,9 +46,9 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _error = false;
-  bool get error => _error;
-  set error(bool value) {
+  String? _error;
+  String? get error => _error;
+  set error(String? value) {
     _error = value;
     notifyListeners();
   }
@@ -60,7 +60,7 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addMessage(Message message)async {
+  void addMessage(Message message) async {
     _messages.add(message);
     notifyListeners();
 
@@ -89,5 +89,15 @@ class ChatProvider extends ChangeNotifier {
     inputController.dispose();
     scrollController.dispose();
     super.dispose();
+  }
+
+  void reset() {
+    _messages.clear();
+    _error = null;
+    _thinking = false;
+    _connected = false;
+    _newConversation = true;
+    _streamSubscription?.cancel();
+    notifyListeners();
   }
 }

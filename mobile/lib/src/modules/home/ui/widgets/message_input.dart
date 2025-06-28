@@ -47,7 +47,7 @@ class _MessageInputState extends State<MessageInput> {
       method: MethodType.get,
       onError: (error) {
         cp.connected = false;
-        cp.error = true;
+        cp.error = error;
         log("Error in SSE stream: $error", name: "SSE LOGS");
       },
       onChunk: (content) async {
@@ -61,7 +61,7 @@ class _MessageInputState extends State<MessageInput> {
       },
       onAudio: (base64Audio) {},
       onConnected: () {
-        cp.error = false;
+        cp.error = null;
         cp.connected = true;
         cp.newConversation = false;
         log("SSE stream connected", name: "SSE LOGS");

@@ -117,6 +117,11 @@ class Sse {
                     break;
                   case MessageType.user:
                     break;
+                  case MessageType.error:
+                    final content = parsedJson["content"] as String;
+
+                    onError(content);
+                    break;
                 }
               }
             });

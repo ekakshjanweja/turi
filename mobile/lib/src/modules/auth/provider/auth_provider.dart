@@ -29,7 +29,10 @@ class AuthProvider extends ChangeNotifier {
   Future<Failure?> onAuth() async {
     final (result, error) = await AuthRepo.signInWithGoogle();
 
-    if (error != null) return error;
+    if (error != null) {
+      signOut();
+      return error;
+    }
 
     user = result;
     return null;
