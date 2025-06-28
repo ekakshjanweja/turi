@@ -97,8 +97,8 @@ export class Agent {
     this.messageCount++;
 
     const result = await generateText({
-      // model: google("gemini-exp-1206"),
-      model: openai("gpt-4.1-mini"),
+      model: google("gemini-2.0-flash"),
+      // model: openai("gpt-4.1-mini"),
       messages: this.messages,
       tools: {
         send_email: {
