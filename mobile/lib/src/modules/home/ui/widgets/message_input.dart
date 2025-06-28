@@ -2,8 +2,10 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:solar_icon_pack/solar_bold_icons.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
+import 'package:turi_mail/src/core/services/voice/stt_provider.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/message.dart';
@@ -16,6 +18,15 @@ class MessageInput extends StatefulWidget {
 }
 
 class _MessageInputState extends State<MessageInput> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      final stt = context.read<STTProvider>();
+      stt.init();
+    });
+  }
+
   void sendMessage() async {
     final cp = context.read<ChatProvider>();
 
@@ -84,21 +95,39 @@ class _MessageInputState extends State<MessageInput> {
                     style: context.textTheme.bodyMedium,
                   ),
                 ),
-                if (cp.inputController.text.isNotEmpty)
-                  IconButton.filled(
-                    onPressed: sendMessage,
-                    icon: Icon(Icons.send, size: 24),
-                    style: ButtonStyle(
-                      padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
-                        EdgeInsets.all(16),
-                      ),
-                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+
+                IconButton.filled(
+                  onPressed: cp.inputController.text.isNotEmpty
+                      ? sendMessage
+                      : () async {
+                          log("Starting STT", name: "STT LOGS");
+                          final stt = context.read<STTProvider>();
+
+                          await stt.startListening(
+                            onResult: (result) {
+                              log("Result: ${result.recognizedWords}");
+
+                              cp.inputController.text = result.recognizedWords;
+                            },
+                          );
+                        },
+                  icon: Icon(
+                    cp.inputController.text.isNotEmpty
+                        ? SolarBoldIcons.mapArrowRight
+                        : SolarBoldIcons.microphone,
+                    size: 24,
+                  ),
+                  style: ButtonStyle(
+                    padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
+                      EdgeInsets.all(16),
+                    ),
+                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),
+                ),
               ],
             ),
           ),

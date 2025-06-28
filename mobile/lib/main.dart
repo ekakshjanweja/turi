@@ -7,6 +7,7 @@ import 'package:turi_mail/src/core/config/config.dart';
 import 'package:turi_mail/src/core/services/api/api.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
 import 'package:turi_mail/src/core/services/local_stoage/kv_store.dart';
+import 'package:turi_mail/src/core/services/voice/stt_provider.dart';
 import 'package:turi_mail/src/modules/auth/data/repo/auth_repo.dart';
 import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
@@ -19,6 +20,7 @@ void main(List<String> args) async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => STTProvider()),
       ],
       child: const TuriApp(),
     ),
@@ -26,7 +28,7 @@ void main(List<String> args) async {
 }
 
 Future<void> bootstrap() async {
-  await dotenv.load(fileName: ".env.local");
+  await dotenv.load(fileName: ".env");
   await better_auth.BetterAuth.init(
     baseUrl: Uri(
       scheme: AppConfig.scheme,
