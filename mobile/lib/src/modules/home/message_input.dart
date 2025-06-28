@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
@@ -54,6 +52,14 @@ class _MessageInputState extends State<MessageInput> {
                     onPressed: () async {
                       if (cp.inputController.text.trim().isEmpty) return;
 
+                      cp.messages.add(
+                        Message(
+                          content: cp.inputController.text.trim(),
+                          isUser: true,
+                        ),
+                      );
+                      cp.inputController.clear();
+
                       cp.streamSubscription = await Sse.sendRequest(
                         "/agent",
                         queryParameters: {
@@ -70,7 +76,6 @@ class _MessageInputState extends State<MessageInput> {
                           cp.addMessage(
                             Message(content: content, isUser: false),
                           );
-                          await Future.delayed(Duration(milliseconds: 100));
                           cp.thinking = false;
                         },
                         onThinking: (content) {
@@ -78,15 +83,8 @@ class _MessageInputState extends State<MessageInput> {
                         },
                         onAudio: (base64Audio) {},
                         onConnected: () {
-                          cp.messages.add(
-                            Message(
-                              content: cp.inputController.text.trim(),
-                              isUser: true,
-                            ),
-                          );
                           cp.thinking = true;
                           cp.error = false;
-                          cp.inputController.clear();
                           cp.connected = true;
                           cp.newConversation = false;
                         },
