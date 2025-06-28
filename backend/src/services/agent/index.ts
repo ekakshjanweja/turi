@@ -15,9 +15,11 @@ import {
   SendEmailSchema,
   UpdateLabelSchema,
 } from "../gmail/schema";
-import type { Message } from "../../lib/types/types";
+import type { Message, EmailSummary } from "../../lib/types/types";
 import { tts } from "./eleven-labs";
 import type { SSEStreamingApi } from "hono/streaming";
+import { openai } from "@ai-sdk/openai";
+import { resolveOrdinalEmailReferenceAI } from "./helpers";
 
 export class Agent {
   private stream: SSEStreamingApi;
@@ -25,6 +27,7 @@ export class Agent {
   private messageCount: number;
   private gmailService: GmailService;
   private audioEnabled: boolean;
+  private lastEmailList: EmailSummary[] = [];
 
   constructor(
     stream: SSEStreamingApi,
@@ -79,6 +82,9 @@ export class Agent {
   }
 
   public async handleUserInput(input: string) {
+    console.log("Handling user input:", input);
+    console.log("Current messages:", this.messages.length);
+
     await this.sendMessage({
       type: "THINKING",
       content: "Thinking about your request...",
@@ -91,7 +97,8 @@ export class Agent {
     this.messageCount++;
 
     const result = await generateText({
-      model: google("gemini-2.0-flash"),
+      // model: google("gemini-exp-1206"),
+      model: openai("gpt-4.1-mini"),
       messages: this.messages,
       tools: {
         send_email: {
@@ -109,15 +116,22 @@ export class Agent {
         },
         read_email: {
           description:
-            "Read an email by ID or reference. If you don't have a specific messageId, you can use emailReference to describe the email (e.g., 'email from John', 'latest email', 'email about project'). The system will find the email and read its content.",
+            "Read an email by ID or reference. If you don't have a specific messageId, you can use emailReference to describe the email (e.g., 'email from John', 'latest email', 'email about project'). The system will find the email and read its content. Supports 'first', 'second', 'third' to refer to the last shown list.",
           parameters: ReadEmailSchema,
           execute: async (args) => {
             const readArgs = ReadEmailSchema.parse(args);
-
+            if (readArgs.emailReference) {
+              const resolvedId = await resolveOrdinalEmailReferenceAI(
+                readArgs.emailReference,
+                this.lastEmailList
+              );
+              if (resolvedId) {
+                readArgs.messageId = resolvedId;
+                delete readArgs.emailReference;
+              }
+            }
             const response = await this.gmailService.readEmails(readArgs);
-
             if (!response) throw new Error("Tool execution failed: read_email");
-
             return response.content.text;
           },
         },
@@ -126,12 +140,19 @@ export class Agent {
           parameters: SearchEmailsSchema,
           execute: async (args) => {
             const searchArgs = SearchEmailsSchema.parse(args);
-
             const response = await this.gmailService.searchEmails(searchArgs);
-
             if (!response)
               throw new Error("Tool execution failed: search_email");
-
+            // Track the last list of emails for ordinal reference
+            if (
+              response.content &&
+              response.content.text &&
+              response.content.text.emails
+            ) {
+              this.lastEmailList = response.content.text.emails;
+            } else {
+              this.lastEmailList = [];
+            }
             return response.content.text;
           },
         },

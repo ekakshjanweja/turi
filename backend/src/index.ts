@@ -3,7 +3,7 @@ import { auth } from "./lib/auth";
 import type { AgentSession, Message } from "./lib/types/types";
 import { streamSSE } from "hono/streaming";
 import { cors } from "hono/cors";
-import { PORT } from "./lib/config";
+import { DATABASE_URL, PORT } from "./lib/config";
 
 // Lazy imports to reduce startup time
 const lazyGmailService = async () => {
