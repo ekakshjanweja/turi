@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:solar_icon_pack/solar_icon_pack.dart';
+import 'package:turi_mail/src/core/constants/app_assets.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
 import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
@@ -17,14 +19,17 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Padding(
         padding: const EdgeInsets.only(left: 12),
-        child: Text('Turi', style: context.textTheme.titleSmall),
+        child: Image.asset(
+          context.isDarkMode ? AppAssets.logodark : AppAssets.logolight,
+          height: 20,
+        ),
       ),
       actions: [
         IconButton(
           padding: EdgeInsets.zero,
           icon: Icon(
-            context.isDarkMode ? Icons.brightness_5 : Icons.brightness_3,
-            size: 16,
+            context.isDarkMode ? SolarBoldIcons.sun : SolarBoldIcons.moon,
+            size: 20,
           ),
           onPressed: () {
             showModalBottomSheet(
@@ -35,7 +40,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
         ),
         IconButton(
           padding: EdgeInsets.zero,
-          icon: const Icon(Icons.logout, size: 16),
+          icon: const Icon(SolarBoldIcons.logout, size: 20),
           onPressed: () async {
             final ap = context.read<AuthProvider>();
 

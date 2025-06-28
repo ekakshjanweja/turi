@@ -22,7 +22,7 @@ void main(List<String> args) async {
 }
 
 Future<void> bootstrap() async {
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: ".env.local");
   await better_auth.BetterAuth.init(
     baseUrl: Uri(
       scheme: AppConfig.scheme,
