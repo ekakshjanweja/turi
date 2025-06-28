@@ -5,6 +5,7 @@ import { google } from "googleapis";
 import { OAuth2Client } from "googleapis-common";
 import type { EmailContent, GmailMessagePart, GmailLabel } from "./types";
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../../lib/config";
+import { auth } from "../../lib/auth";
 
 export async function configureOAuth2Client(
   userId: string
@@ -16,6 +17,7 @@ export async function configureOAuth2Client(userId: string) {
   try {
     const userAccounts = await db
       .select({
+        id: accountSchema.id,
         accessToken: accountSchema.accessToken,
         refreshToken: accountSchema.refreshToken,
         accessTokenExpiresAt: accountSchema.accessTokenExpiresAt,
@@ -64,6 +66,7 @@ export async function configureOAuth2Client(userId: string) {
         const error = new Error(
           "Token might be expiring soon. Relying on googleapis client to handle refresh if needed."
         );
+
         return { error };
       }
     }

@@ -111,11 +111,39 @@ app.get("/agent", (c) => {
 
     let clear = c.req.query("clear") === "true";
 
-    if (!agentSession) {
-      const GmailService = await lazyGmailService();
-      const gmailService = new GmailService();
+    const GmailService = await lazyGmailService();
+    const gmailService = new GmailService();
+    try {
       await gmailService.init(user.id);
+    } catch (error) {
+      const accounts = await auth.api.listUserAccounts({
+        query: {
+          userId: user.id,
+        },
+      });
 
+      if (accounts[0]) {
+        console.log("Refreshing token");
+
+        await auth.api.refreshToken({
+          body: {
+            providerId: "google",
+            userId: user.id,
+            accountId: accounts[0].id,
+          },
+        });
+      }
+
+      stream.writeSSE({
+        data: JSON.stringify({
+          type: "ERROR",
+          content: "Failed to initialize Gmail service",
+        }),
+        event: "system",
+      });
+    }
+
+    if (!agentSession) {
       const Agent = await lazyAgent();
       const agent = new Agent(stream, gmailService, audioEnabled);
 
@@ -132,6 +160,7 @@ app.get("/agent", (c) => {
     } else {
       agentSession.sseConnection = stream;
       agentSession.agent.updateStream(stream);
+      agentSession.gmailService = gmailService;
     }
 
     if (agentSession.audio !== audioEnabled) {

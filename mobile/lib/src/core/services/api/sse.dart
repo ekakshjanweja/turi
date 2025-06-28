@@ -9,6 +9,7 @@ import "package:path_provider/path_provider.dart";
 import "package:turi_mail/src/core/config/config.dart";
 import "package:turi_mail/src/core/services/api/enums/message_type.dart";
 import "package:turi_mail/src/core/services/api/models/method_type.dart";
+import "package:turi_mail/src/modules/auth/data/repo/auth_repo.dart";
 
 class Sse {
   static final hc = http.Client();
@@ -79,7 +80,7 @@ class Sse {
         return response.stream
             .transform(const Utf8Decoder())
             .transform(const LineSplitter())
-            .listen((event) {
+            .listen((event) async {
               if (event.trim().isEmpty) return;
 
               if (event.startsWith("data:")) {
@@ -120,11 +121,40 @@ class Sse {
                   case MessageType.error:
                     final content = parsedJson["content"] as String;
 
+                    if (content.toLowerCase().contains(
+                      "No refresh token".toLowerCase(),
+                    )) {
+                      log("No refresh token");
+                    }
+
                     onError(content);
                     break;
                 }
               }
             });
+      case 401:
+        if (retry < 3) {
+          await Future.delayed(const Duration(seconds: 1));
+          return Sse.sendRequest(
+            path,
+            method: method,
+            host: host,
+            body: body,
+            headers: headers,
+            queryParameters: queryParameters,
+            onError: onError,
+            onChunk: onChunk,
+            onThinking: onThinking,
+            onAudio: onAudio,
+            onConnected: onConnected,
+            retry: retry + 1,
+          );
+        } else {
+          onError("Unauthorized");
+          await AuthRepo.signOut();
+          return null;
+        }
+
       default:
         onError("Error: ${response.statusCode} - ${response.reasonPhrase}");
         return null;
