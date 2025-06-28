@@ -97,57 +97,62 @@ export default function Home() {
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  const connectToSSE = useCallback((clear: boolean) => {
-    eventSourceRef.current = new EventSource(
-      `http://localhost:8000/agent?audio=${audio}${clear ? "&clear=true" : ""}`,
-      {
-        withCredentials: true,
-      }
-    );
+  const connectToSSE = useCallback(
+    (clear: boolean) => {
+      eventSourceRef.current = new EventSource(
+        `http://localhost:8000/agent?audio=${audio}${
+          clear ? "&clear=true" : ""
+        }`,
+        {
+          withCredentials: true,
+        }
+      );
 
-    eventSourceRef.current.onopen = () => {
-      console.log("SSE connection opened");
-      setIsConnected(true);
-    };
+      eventSourceRef.current.onopen = () => {
+        console.log("SSE connection opened");
+        setIsConnected(true);
+      };
 
-    eventSourceRef.current.addEventListener("message", (event) => {
-      const message: Message = JSON.parse(event.data);
+      eventSourceRef.current.addEventListener("message", (event) => {
+        const message: Message = JSON.parse(event.data);
 
-      if (message.type !== "AUDIO") {
-        setMessages((prev) => {
-          if (message.type !== "THINKING") {
-            const filteredMessages = prev.filter(
-              (msg) => msg.type !== "THINKING"
-            );
+        if (message.type !== "AUDIO") {
+          setMessages((prev) => {
+            if (message.type !== "THINKING") {
+              const filteredMessages = prev.filter(
+                (msg) => msg.type !== "THINKING"
+              );
+              return [
+                ...filteredMessages,
+                {
+                  ...message,
+                  id: Date.now().toString(),
+                  timestamp: new Date().toISOString(),
+                },
+              ];
+            }
             return [
-              ...filteredMessages,
+              ...prev,
               {
                 ...message,
                 id: Date.now().toString(),
                 timestamp: new Date().toISOString(),
               },
             ];
-          }
-          return [
-            ...prev,
-            {
-              ...message,
-              id: Date.now().toString(),
-              timestamp: new Date().toISOString(),
-            },
-          ];
-        });
-      } else {
-        playAudio(message.content as AudioContent);
-      }
-    });
+          });
+        } else {
+          playAudio(message.content as AudioContent);
+        }
+      });
 
-    eventSourceRef.current.onerror = (error) => {
-      console.error("SSE error:", error);
-      setIsConnected(false);
-      eventSourceRef.current?.close();
-    };
-  }, [audio, setMessages, setIsConnected]);
+      eventSourceRef.current.onerror = (error) => {
+        console.error("SSE error:", error);
+        setIsConnected(false);
+        eventSourceRef.current?.close();
+      };
+    },
+    [audio, setMessages, setIsConnected]
+  );
 
   useEffect(() => {
     connectToSSE(true);
@@ -282,17 +287,17 @@ export default function Home() {
     }
   };
 
-  if (isPending) {
-    return <Loader />;
-  }
+  // if (isPending) {
+  //   return <Loader />;
+  // }
 
-  if (!session?.user) {
-    return (
-      <>
-        <p>Unauthorized</p>
-      </>
-    );
-  }
+  // if (!session?.user) {
+  //   return (
+  //     <>
+  //       <p>Unauthorized</p>
+  //     </>
+  //   );
+  // }
 
   return (
     <div className="flex flex-col max-w-3xl mx-auto p-4 h-full">
