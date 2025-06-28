@@ -13,7 +13,6 @@ import {
   PromptInputActions,
   PromptInputTextarea,
 } from "@/components/ui/prompt-input";
-import { auth } from "@/lib/auth";
 import { AudioContent, Message } from "@/lib/types";
 import { ArrowUp, Clock, Square, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -21,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Placeholder } from "@/components/placeholder";
 
 export default function Home() {
-  const { data: session, isPending } = auth.useSession();
+  // const { data: session, isPending } = auth.useSession();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [audio, setAudio] = useState<boolean>(false);
