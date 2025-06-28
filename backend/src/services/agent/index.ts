@@ -82,9 +82,6 @@ export class Agent {
   }
 
   public async handleUserInput(input: string) {
-    console.log("Handling user input:", input);
-    console.log("Current messages:", this.messages.length);
-
     await this.sendMessage({
       type: "THINKING",
       content: "Thinking about your request...",

@@ -1,66 +1,81 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
-import 'package:turi_mail/src/core/utils/value_listenable_builder_3.dart';
+import 'package:turi_mail/src/modules/home/chat_provider.dart';
 
 class StatusButton extends StatelessWidget {
-  final ValueNotifier<bool> thinkingNotifier;
-  final ValueNotifier<bool> connectedNotifier;
-  final ValueNotifier<bool> errorNotifier;
+  final bool showDotView;
 
-  const StatusButton({
-    super.key,
-    required this.thinkingNotifier,
-    required this.connectedNotifier,
-    required this.errorNotifier,
-  });
+  const StatusButton({super.key, this.showDotView = true});
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder3(
-      first: connectedNotifier,
-      second: errorNotifier,
-      third: thinkingNotifier,
-      builder: (context, connected, error, thinking, _) {
+    return Consumer<ChatProvider>(
+      builder: (context, cp, _) {
         String buttonText;
         Color backgroundColor;
         Color textColor;
+        Color iconColor;
 
-        if (thinking) {
-          buttonText = "Thinking...";
+        if (cp.thinking) {
+          buttonText = "thinking";
           backgroundColor = Colors.transparent;
-          textColor = context.colorScheme.onSurface;
-        } else if (error) {
-          buttonText = "Oops! An error occurred";
+          textColor = context.colorScheme.secondary;
+          iconColor = context.colorScheme.secondary;
+        } else if (cp.error) {
+          buttonText = "error";
           backgroundColor = context.colorScheme.error;
-          textColor = context.colorScheme.onError;
-        } else if (connected) {
-          buttonText = "Connected";
+          textColor = context.colorScheme.error;
+          iconColor = context.colorScheme.error;
+        } else if (cp.connected) {
+          buttonText = "connected";
           backgroundColor = context.colorScheme.primary;
-          textColor = context.colorScheme.onSurface;
+          textColor = context.colorScheme.primary;
+          iconColor = context.colorScheme.primary;
         } else {
-          buttonText = "Disconnected";
+          buttonText = "disconnected";
           backgroundColor = context.colorScheme.secondary;
           textColor = context.colorScheme.onSurface;
+          iconColor = context.colorScheme.onSurface;
         }
 
+        if (showDotView) {
+          // Show alternate view with a dot and text
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: iconColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                buttonText,
+                style: context.textTheme.bodySmall.copyWith(color: textColor),
+              ),
+            ],
+          );
+        }
+
+        // Default button view
         return FilledButton(
           style: ButtonStyle(
             backgroundColor: WidgetStateProperty.all(Colors.transparent),
             shape: WidgetStateProperty.all(
               RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(color: backgroundColor, width: 1.5),
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(color: backgroundColor, width: 1),
               ),
             ),
-            padding: WidgetStateProperty.all(
-              EdgeInsets.symmetric(vertical: 0, horizontal: 4),
-            ),
           ),
-
           onPressed: null,
           child: Text(
             buttonText,
-            style: context.textTheme.labelSmall.copyWith(color: textColor),
+            style: context.textTheme.labelMedium.copyWith(color: textColor),
           ),
         );
       },

@@ -6,6 +6,7 @@ import 'package:turi_mail/src/core/constants/app_assets.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
 import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
+import 'package:turi_mail/src/modules/home/status_button.dart';
 import 'package:turi_mail/src/modules/home/theme_mode_bottomsheet.dart';
 
 class Navbar extends StatelessWidget implements PreferredSizeWidget {
@@ -25,6 +26,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
+        StatusButton(),
         IconButton(
           padding: EdgeInsets.zero,
           icon: Icon(

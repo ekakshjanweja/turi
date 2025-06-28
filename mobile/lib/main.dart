@@ -9,13 +9,17 @@ import 'package:turi_mail/src/core/services/api/sse.dart';
 import 'package:turi_mail/src/core/services/local_stoage/kv_store.dart';
 import 'package:turi_mail/src/modules/auth/data/repo/auth_repo.dart';
 import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
+import 'package:turi_mail/src/modules/home/chat_provider.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await bootstrap();
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+      ],
       child: const TuriApp(),
     ),
   );
