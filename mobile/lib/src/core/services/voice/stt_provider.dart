@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/widgets.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -21,13 +22,17 @@ class STTProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> init() async {
+  Future<void> init({
+    required void Function(SpeechRecognitionError error) onError,
+  }) async {
     if (initialized) return;
 
     _initialized = await stt.initialize(
       debugLogging: true,
       onError: (error) {
-        log("Error in STT: $error", name: "STT LOGS");
+        isListening = false;
+        initialized = false;
+        onError(error);
       },
       onStatus: (status) {},
       options: [],
@@ -36,9 +41,12 @@ class STTProvider extends ChangeNotifier {
 
   Future<void> startListening({
     required Function(SpeechRecognitionResult result) onResult,
+    required void Function(SpeechRecognitionError error) onError,
     int? listenForMinutes,
   }) async {
-    if (!initialized) return;
+    if (!initialized) {
+      await init(onError: onError);
+    }
 
     final locales = await stt.locales();
 

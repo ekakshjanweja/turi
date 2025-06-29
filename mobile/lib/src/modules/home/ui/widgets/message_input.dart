@@ -17,13 +17,11 @@ class _MessageInputState extends State<MessageInput> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      final stt = context.read<STTProvider>();
-      await stt.init();
-      startSTT();
+      await startSTT();
     });
   }
 
-  void startSTT() async {
+  Future<void> startSTT() async {
     final cp = context.read<ChatProvider>();
     final stt = context.read<STTProvider>();
 
@@ -42,6 +40,7 @@ class _MessageInputState extends State<MessageInput> {
           );
         }
       },
+      onError: (error) {},
     );
   }
 
