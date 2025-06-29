@@ -9,8 +9,7 @@ environment:
   sdk: ^3.8.1
 
 dependencies:
-  better_auth_flutter: 
-    path: ../../better_auth_flutter
+  better_auth_flutter: ^0.0.7
   cookie_jar: ^4.0.8
   cupertino_icons: ^1.0.8
   flutter:

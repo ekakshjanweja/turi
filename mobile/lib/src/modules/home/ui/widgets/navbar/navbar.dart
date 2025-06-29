@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:turi_mail/src/core/constants/app_assets.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/navbar/status_button.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/navbar/user_avatar.dart';
+import 'package:turi_mail/src/core/ui/user_avatar/user_avatar.dart';
 
 class Navbar extends StatelessWidget implements PreferredSizeWidget {
   const Navbar({super.key});
@@ -22,7 +22,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       // automaticallyImplyLeading: false,
-      actions: [StatusButton(), UserAvatar()],
+      actions: [StatusButton(), UserAvatar(isNavbar: true)],
     );
   }
 }

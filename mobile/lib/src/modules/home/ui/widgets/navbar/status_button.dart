@@ -4,7 +4,7 @@ import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/error_bottomsheet.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/chat_settings_bottom_sheet.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/chat/chat_settings_bottom_sheet.dart';
 
 class StatusButton extends StatelessWidget {
   final bool showDotView;

@@ -4,11 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
 import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/chat_bubble.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/chat/chat_bubble.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/chat_empty_state.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/chat/chat_empty_state.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/fade.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/message_input.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/chat/message_input.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/navbar/navbar.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/thinking_indicator.dart';
 
@@ -79,49 +79,52 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             child: Opacity(
                               opacity: _listAnimation.value,
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisAlignment: cp.messages.isNotEmpty
+                                    ? MainAxisAlignment.start
+                                    : MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: cp.messages.isEmpty
-                                        ? ChatEmptyState()
-                                        : Fade(
-                                            fadeTop: true,
-                                            fadeBottom: true,
-                                            fadeHeight: 0.05,
-                                            fadeStrength: 0.98,
-                                            fadeCurve: Curves.easeOutQuart,
-                                            fadeSteps: 8,
-                                            child: ListView.builder(
-                                              controller: cp.scrollController,
-                                              padding: const EdgeInsets.only(
-                                                top: 24,
-                                                bottom: 16,
-                                              ),
-                                              itemCount: cp.messages.length,
-                                              physics:
-                                                  const BouncingScrollPhysics(),
-                                              itemBuilder: (context, index) {
-                                                final message =
-                                                    cp.messages[index];
-                                                return Padding(
-                                                  padding: EdgeInsets.only(
-                                                    bottom:
-                                                        index ==
-                                                            cp.messages.length -
-                                                                1
-                                                        ? 8
-                                                        : 16,
-                                                    top: index == 0 ? 0 : 8,
-                                                  ),
-                                                  child: ChatBubble(
-                                                    message: message,
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
+                                  Offstage(
+                                    offstage: cp.messages.isNotEmpty,
+                                    child: ChatEmptyState(),
                                   ),
+                                  if (cp.messages.isNotEmpty)
+                                    Expanded(
+                                      child: Fade(
+                                        fadeTop: true,
+                                        fadeBottom: true,
+                                        fadeHeight: 0.05,
+                                        fadeStrength: 0.98,
+                                        fadeCurve: Curves.easeOutQuart,
+                                        fadeSteps: 8,
+                                        child: ListView.builder(
+                                          controller: cp.scrollController,
+                                          padding: const EdgeInsets.only(
+                                            top: 24,
+                                            bottom: 16,
+                                          ),
+                                          itemCount: cp.messages.length,
+                                          physics:
+                                              const BouncingScrollPhysics(),
+                                          itemBuilder: (context, index) {
+                                            final message = cp.messages[index];
+                                            return Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom:
+                                                    index ==
+                                                        cp.messages.length - 1
+                                                    ? 8
+                                                    : 16,
+                                                top: index == 0 ? 0 : 8,
+                                              ),
+                                              child: ChatBubble(
+                                                message: message,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),

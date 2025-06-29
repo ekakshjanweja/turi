@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/message.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/chat/message.dart';
 
 class ChatProvider extends ChangeNotifier {
   ChatProvider() {
@@ -81,7 +81,7 @@ class ChatProvider extends ChangeNotifier {
   }) async {
     if (inputController.text.isEmpty) return;
 
-    messages.add(Message(content: inputController.text.trim(), isUser: true));
+    addMessage(Message(content: inputController.text.trim(), isUser: true));
     inputController.clear();
 
     streamSubscription = await Sse.sendRequest(
