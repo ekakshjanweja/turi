@@ -19,12 +19,14 @@ class StatusButton extends StatelessWidget {
         Color textColor;
         Color iconColor;
 
-        if (cp.thinking) {
-          buttonText = "thinking";
-          backgroundColor = Colors.transparent;
-          textColor = context.colorScheme.secondary;
-          iconColor = context.colorScheme.secondary;
-        } else if (cp.error != null) {
+        // if (cp.thinking) {
+        //   buttonText = "thinking";
+        //   backgroundColor = Colors.transparent;
+        //   textColor = context.colorScheme.secondary;
+        //   iconColor = context.colorScheme.secondary;
+        // } else
+        
+         if (cp.error != null) {
           buttonText = "error";
           backgroundColor = context.colorScheme.error;
           textColor = context.colorScheme.error;
