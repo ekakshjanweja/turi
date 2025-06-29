@@ -80,7 +80,10 @@ class ChatProvider extends ChangeNotifier {
     });
   }
 
-  void sendMessage({required VoidCallback onDone}) async {
+  void sendMessage({
+    required VoidCallback onDone,
+    required VoidCallback onEnd,
+  }) async {
     if (inputController.text.isEmpty) return;
 
     messages.add(Message(content: inputController.text.trim(), isUser: true));
@@ -101,7 +104,6 @@ class ChatProvider extends ChangeNotifier {
       onChunk: (content) async {
         addMessage(Message(content: content, isUser: false));
         thinking = false;
-        onDone();
       },
       onThinking: (content) {
         thinking = true;
@@ -111,6 +113,12 @@ class ChatProvider extends ChangeNotifier {
         error = null;
         connected = true;
         newConversation = false;
+      },
+      onDone: () {
+        onDone();
+      },
+      onEnd: () {
+        onEnd();
       },
       onUnauthorized: () {},
     );

@@ -68,6 +68,7 @@ class STTProvider extends ChangeNotifier {
     if (!initialized) return;
 
     await stt.stop();
+    isListening = false;
   }
 
   void reset() {

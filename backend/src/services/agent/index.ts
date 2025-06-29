@@ -19,7 +19,7 @@ import type { Message, EmailSummary } from "../../lib/types/types";
 import { tts } from "./eleven-labs";
 import type { SSEStreamingApi } from "hono/streaming";
 import { openai } from "@ai-sdk/openai";
-import { resolveOrdinalEmailReferenceAI } from "./helpers";
+import { detectEndChatIntent, resolveOrdinalEmailReferenceAI } from "./helpers";
 
 export class Agent {
   private stream: SSEStreamingApi;
@@ -93,6 +93,29 @@ export class Agent {
         content: input,
       });
       this.messageCount++;
+
+      // Check if user wants to end the chat
+      if (detectEndChatIntent(input)) {
+        await this.sendMessage({
+          type: "AI_RESPONSE",
+          content:
+            "Goodbye! Thanks for using turi. Have a great day! You can always continue chatting by pressing the mic button.",
+        });
+
+        await this.sendMessage({
+          type: "END",
+          content: "Chat session ended",
+        });
+
+        // Add farewell to conversation history
+        this.messages.push({
+          role: "assistant",
+          content:
+            "Goodbye! Thanks for using turi. Have a great day! You can always continue chatting by pressing the mic button.",
+        });
+
+        return; // Exit early, don't process further
+      }
 
       const result = await generateText({
         model: google("gemini-2.0-flash"),
@@ -291,6 +314,11 @@ export class Agent {
           type: "AI_RESPONSE",
           content: followUp.text,
         });
+
+        await this.sendMessage({
+          type: "DONE",
+          content: "",
+        });
       } else {
         // No tools called, just add the regular response
         this.messages.push({
@@ -310,6 +338,11 @@ export class Agent {
         await this.sendMessage({
           type: "AI_RESPONSE",
           content: result.text,
+        });
+
+        await this.sendMessage({
+          type: "DONE",
+          content: "",
         });
       }
     } catch (error) {

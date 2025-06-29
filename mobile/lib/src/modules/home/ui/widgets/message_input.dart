@@ -37,6 +37,9 @@ class _MessageInputState extends State<MessageInput> {
             onDone: () {
               startSTT();
             },
+            onEnd: () {
+              stt.stopListening();
+            },
           );
         }
       },
@@ -52,9 +55,14 @@ class _MessageInputState extends State<MessageInput> {
 
   void sendMessage() async {
     final cp = context.read<ChatProvider>();
+    final stt = context.read<STTProvider>();
+
     cp.sendMessage(
       onDone: () {
         startSTT();
+      },
+      onEnd: () {
+        stt.stopListening();
       },
     );
   }
