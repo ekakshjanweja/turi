@@ -36,6 +36,8 @@ class Sse {
     required void Function(String base64Audio) onAudio,
     required VoidCallback onConnected,
     required VoidCallback onUnauthorized,
+    required VoidCallback onDone,
+    required VoidCallback onEnd,
     int retry = 0,
   }) async {
     headers ??= {};
@@ -119,6 +121,9 @@ class Sse {
                     break;
                   case MessageType.user:
                     break;
+                  case MessageType.done:
+                    onDone();
+                    break;
                   case MessageType.error:
                     final content = parsedJson["content"] as String;
 
@@ -130,6 +135,9 @@ class Sse {
                     }
 
                     onError(content);
+                    break;
+                  case MessageType.end:
+                    onEnd();
                     break;
                 }
               }
@@ -150,6 +158,8 @@ class Sse {
             onAudio: onAudio,
             onConnected: onConnected,
             onUnauthorized: onUnauthorized,
+            onDone: onDone,
+            onEnd: onEnd,
             retry: retry + 1,
           );
         } else {

@@ -16,7 +16,9 @@ export type MessageType =
   | "THINKING"
   | "CONNECTED"
   | "USER"
-  | "ERROR";
+  | "ERROR"
+  | "DONE"
+  | "END";
 
 export type Message = {
   type: MessageType;

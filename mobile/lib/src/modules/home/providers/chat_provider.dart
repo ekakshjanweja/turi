@@ -1,6 +1,9 @@
 import 'dart:async';
-
+import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:turi_mail/src/core/services/api/models/method_type.dart';
+import 'package:turi_mail/src/core/services/api/sse.dart';
+import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/message.dart';
 
 class ChatProvider extends ChangeNotifier {
@@ -33,17 +36,10 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _thinking = false;
-  bool get thinking => _thinking;
-  set thinking(bool value) {
-    _thinking = value;
-    notifyListeners();
-  }
-
-  bool _connected = false;
-  bool get connected => _connected;
-  set connected(bool value) {
-    _connected = value;
+  ChatStatus _status = ChatStatus.disconnected;
+  ChatStatus get status => _status;
+  set status(ChatStatus value) {
+    _status = value;
     notifyListeners();
   }
 
@@ -79,6 +75,50 @@ class ChatProvider extends ChangeNotifier {
     });
   }
 
+  void sendMessage({
+    required VoidCallback onDone,
+    required VoidCallback onEnd,
+  }) async {
+    if (inputController.text.isEmpty) return;
+
+    messages.add(Message(content: inputController.text.trim(), isUser: true));
+    inputController.clear();
+
+    streamSubscription = await Sse.sendRequest(
+      "/agent",
+      queryParameters: {
+        "audio": "false",
+        "clear": newConversation.toString(),
+        "message": messages.last.content,
+      },
+      method: MethodType.get,
+      onError: (err) {
+        error = err;
+        status = ChatStatus.error;
+        log("Error: $error", error: error);
+      },
+      onChunk: (content) async {
+        addMessage(Message(content: content, isUser: false));
+        status = ChatStatus.connected;
+      },
+      onThinking: (content) {
+        status = ChatStatus.thinking;
+      },
+      onAudio: (base64Audio) {},
+      onConnected: () {
+        status = ChatStatus.connected;
+        newConversation = false;
+      },
+      onDone: () {
+        onDone();
+      },
+      onEnd: () {
+        onEnd();
+      },
+      onUnauthorized: () {},
+    );
+  }
+
   @override
   void dispose() {
     _streamSubscription?.cancel();
@@ -91,8 +131,7 @@ class ChatProvider extends ChangeNotifier {
   void reset() {
     _messages.clear();
     _error = null;
-    _thinking = false;
-    _connected = false;
+    _status = ChatStatus.disconnected;
     _newConversation = true;
     _streamSubscription?.cancel();
     focusNode.unfocus();
