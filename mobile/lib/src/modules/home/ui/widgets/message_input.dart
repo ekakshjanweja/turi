@@ -19,7 +19,7 @@ class _MessageInputState extends State<MessageInput> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       //TODO: Add through on click for the first time
 
-      await startSTT();
+      // await startSTT();
     });
   }
 

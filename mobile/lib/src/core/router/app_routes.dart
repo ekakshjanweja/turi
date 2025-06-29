@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
 import 'package:turi_mail/src/modules/home/ui/pages/home_page.dart';
+import 'package:turi_mail/src/modules/profile/ui/pages/profile_page.dart';
 
 class AppRoutes {
   static const String initialRoute = AuthPage.routeName;
@@ -8,14 +9,19 @@ class AppRoutes {
 
   static final List<RouteBase> routes = [
     GoRoute(
+      path: AuthPage.routeName,
+      name: AuthPage.routeName,
+      builder: (context, state) => AuthPage(),
+    ),
+    GoRoute(
       path: HomePage.routeName,
       name: HomePage.routeName,
       builder: (context, state) => HomePage(),
     ),
     GoRoute(
-      path: AuthPage.routeName,
-      name: AuthPage.routeName,
-      builder: (context, state) => AuthPage(),
+      path: ProfilePage.routeName,
+      name: ProfilePage.routeName,
+      builder: (context, state) => ProfilePage(),
     ),
   ];
 }

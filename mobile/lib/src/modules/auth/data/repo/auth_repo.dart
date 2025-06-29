@@ -145,4 +145,29 @@ class AuthRepo {
       return Failure(errorType: ErrorType.unKnownError, message: e.toString());
     }
   }
+
+  static Future<(String?, Failure?)> deleteUser() async {
+    try {
+      await googleSignIn.signOut();
+
+      final (result, error) = await betterAuthClient.deleteUser();
+
+      if (error != null) {
+        return (
+          null,
+          Failure(
+            errorType: ErrorType.betterAuthError,
+            message: error.code.message,
+          ),
+        );
+      }
+
+      return (result, null);
+    } catch (e) {
+      return (
+        null,
+        Failure(errorType: ErrorType.unKnownError, message: e.toString()),
+      );
+    }
+  }
 }

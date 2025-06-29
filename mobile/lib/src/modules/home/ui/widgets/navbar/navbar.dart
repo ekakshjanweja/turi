@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:turi_mail/src/core/constants/app_assets.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/navbar/logout_button.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/navbar/status_button.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/navbar/theme_switcher_button.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/navbar/user_avatar.dart';
 
 class Navbar extends StatelessWidget implements PreferredSizeWidget {
   const Navbar({super.key});
@@ -14,6 +13,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      leadingWidth: 36,
       title: Padding(
         padding: const EdgeInsets.only(left: 12),
         child: Image.asset(
@@ -21,7 +21,8 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
           height: 20,
         ),
       ),
-      actions: [StatusButton(), ThemeSwitcherButton(), LogoutButton()],
+      // automaticallyImplyLeading: false,
+      actions: [StatusButton(), UserAvatar()],
     );
   }
 }

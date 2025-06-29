@@ -62,6 +62,12 @@ export function loadEnv() {
       "ELEVENLABS_API_KEY is not set. Please set it in your environment variables."
     );
   }
+
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error(
+      "RESEND_API_KEY is not set. Please set it in your environment variables."
+    );
+  }
 }
 
 // Server Configuration
@@ -95,3 +101,7 @@ export const GOOGLE_GENERATIVE_AI_API_KEY =
 // ElevenLabs
 
 export const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY!;
+
+// Resend
+
+export const RESEND_API_KEY = process.env.RESEND_API_KEY!;

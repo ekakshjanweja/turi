@@ -39,6 +39,11 @@ class StatusButton extends StatelessWidget {
           backgroundColor = context.colorScheme.primary;
           textColor = context.colorScheme.primary;
           iconColor = context.colorScheme.primary;
+        } else if (cp.status == ChatStatus.thinking) {
+          buttonText = "connected";
+          backgroundColor = context.colorScheme.primary;
+          textColor = context.colorScheme.primary;
+          iconColor = context.colorScheme.primary;
         } else if (cp.status == ChatStatus.disconnected) {
           buttonText = "disconnected";
           backgroundColor = context.colorScheme.secondary;

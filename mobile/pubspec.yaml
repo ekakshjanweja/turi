@@ -1,13 +1,16 @@
 name: turi_mail
 description: "Effortless email, just say it."
 
+publish_to: none
+
 version: 0.0.5+5
 
 environment:
   sdk: ^3.8.1
 
 dependencies:
-  better_auth_flutter: ^0.0.6
+  better_auth_flutter: 
+    path: ../../better_auth_flutter
   cookie_jar: ^4.0.8
   cupertino_icons: ^1.0.8
   flutter:

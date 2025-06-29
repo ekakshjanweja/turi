@@ -1,8 +1,9 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db";
-import { BETTER_AUTH_SECRET, BETTER_AUTH_URL } from "./config";
+import { BETTER_AUTH_SECRET, BETTER_AUTH_URL, RESEND_API_KEY } from "./config";
 import { openAPI } from "better-auth/plugins";
+import { Resend } from "resend";
 
 interface GoogleTokenResponse {
   access_token: string;
@@ -65,6 +66,31 @@ export const auth = betterAuth({
           refreshToken: data.refresh_token || refreshToken, // Google may not always return a new refresh token
           expiresIn: data.expires_in,
         };
+      },
+    },
+  },
+  user: {
+    deleteUser: {
+      enabled: true,
+      sendDeleteAccountVerification: async ({ user, url, token }, request) => {
+        const resend = new Resend(RESEND_API_KEY);
+
+        await resend.emails.send({
+          from: "Turi Mail <no-reply@turi.stormej.me>",
+          to: [user.email],
+          subject: "Delete your Turi Mail account",
+          html: `
+                <h1>Delete your Turi Mail account</h1>
+                <p>Hello ${user.name},</p>
+                <p>We received a request to delete your Turi Mail account. Click the link below to confirm:</p>
+                <a href="${url}" style="color: #dc2626; text-decoration: underline;">
+                  Delete Account
+                </a>
+                <p>If you didn't request this, you can safely ignore this email.</p>
+                <p>This link will expire in 24 hours.</p>
+                <p>Best regards,<br>The Turi Mail Team</p>
+              `,
+        });
       },
     },
   },
