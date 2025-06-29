@@ -1,6 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:turi_mail/src/core/services/api/models/method_type.dart';
+import 'package:turi_mail/src/core/services/api/sse.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/message.dart';
 
 class ChatProvider extends ChangeNotifier {
@@ -77,6 +78,42 @@ class ChatProvider extends ChangeNotifier {
         );
       }
     });
+  }
+
+  void sendMessage({required VoidCallback onDone}) async {
+    if (inputController.text.isEmpty) return;
+
+    messages.add(Message(content: inputController.text.trim(), isUser: true));
+    inputController.clear();
+
+    streamSubscription = await Sse.sendRequest(
+      "/agent",
+      queryParameters: {
+        "audio": "false",
+        "clear": newConversation.toString(),
+        "message": messages.last.content,
+      },
+      method: MethodType.get,
+      onError: (error) {
+        connected = false;
+        error = error;
+      },
+      onChunk: (content) async {
+        addMessage(Message(content: content, isUser: false));
+        thinking = false;
+        onDone();
+      },
+      onThinking: (content) {
+        thinking = true;
+      },
+      onAudio: (base64Audio) {},
+      onConnected: () {
+        error = null;
+        connected = true;
+        newConversation = false;
+      },
+      onUnauthorized: () {},
+    );
   }
 
   @override

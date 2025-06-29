@@ -14,6 +14,13 @@ class STTProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isListening = false;
+  bool get isListening => _isListening;
+  set isListening(bool value) {
+    _isListening = value;
+    notifyListeners();
+  }
+
   Future<void> init() async {
     if (initialized) return;
 
@@ -44,9 +51,7 @@ class STTProvider extends ChangeNotifier {
     await stt.listen(
       onResult: onResult,
       listenFor: Duration(minutes: listenForMinutes ?? 1),
-      onSoundLevelChange: (level) {
-        log("Sound level: $level", name: "STT LOGS");
-      },
+      onSoundLevelChange: (level) {},
       listenOptions: SpeechListenOptions(),
     );
   }
@@ -55,5 +60,11 @@ class STTProvider extends ChangeNotifier {
     if (!initialized) return;
 
     await stt.stop();
+  }
+
+  void reset() {
+    _isListening = false;
+    _initialized = false;
+    notifyListeners();
   }
 }
