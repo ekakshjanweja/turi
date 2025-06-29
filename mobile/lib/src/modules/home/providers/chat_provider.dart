@@ -1,10 +1,29 @@
 import 'dart:async';
-import 'dart:developer';
+import 'dart:developer' as dev;
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/chat/message.dart';
+
+const List<String> voiceSuggestions = [
+  "Help me with my emails",
+  "Read my latest messages",
+  "What emails do I have from work?",
+  "Show me important emails",
+  "Check for unread messages",
+  "Find emails from yesterday",
+  "Schedule a meeting",
+  "Draft an email to my team",
+  "Search for emails about the project",
+  "What's in my inbox?",
+  "Show me emails from this week",
+  "Find my recent conversations",
+  "Help me organize my emails",
+  "What meetings do I have today?",
+  "Send a quick reply",
+];
 
 class ChatProvider extends ChangeNotifier {
   ChatProvider() {
@@ -57,22 +76,19 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addMessage(Message message) async {
-    _messages.add(message);
+  String? _voiceSuggestion;
+  String? get voiceSuggestion => _voiceSuggestion;
+  set voiceSuggestion(String? value) {
+    _voiceSuggestion = value;
     notifyListeners();
+  }
 
-    await Future.delayed(Duration(milliseconds: 100));
-
-    // Delay scroll until after UI rebuild
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scrollController.hasClients) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+  Timer? _voiceSuggestionTimer;
+  Timer? get voiceSuggestionTimer => _voiceSuggestionTimer;
+  set voiceSuggestionTimer(Timer? value) {
+    _voiceSuggestionTimer?.cancel();
+    _voiceSuggestionTimer = value;
+    notifyListeners();
   }
 
   void sendMessage({
@@ -95,7 +111,7 @@ class ChatProvider extends ChangeNotifier {
       onError: (err) {
         error = err;
         status = ChatStatus.error;
-        log("Error: $error", error: error);
+        dev.log("Error: $error", error: error);
       },
       onChunk: (content) async {
         addMessage(Message(content: content, isUser: false));
@@ -116,6 +132,39 @@ class ChatProvider extends ChangeNotifier {
         onEnd();
       },
       onUnauthorized: () {},
+    );
+  }
+
+  void addMessage(Message message) async {
+    _messages.add(message);
+    notifyListeners();
+
+    await Future.delayed(Duration(milliseconds: 100));
+
+    // Delay scroll until after UI rebuild
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void updateVoiceSuggestion() {
+    final random = Random();
+
+    String newSuggestion;
+    do {
+      newSuggestion = voiceSuggestions[random.nextInt(voiceSuggestions.length)];
+    } while (newSuggestion == _voiceSuggestion && voiceSuggestions.length > 1);
+    voiceSuggestion = newSuggestion;
+
+    voiceSuggestionTimer = Timer.periodic(
+      const Duration(seconds: 4),
+      (_) => updateVoiceSuggestion(),
     );
   }
 

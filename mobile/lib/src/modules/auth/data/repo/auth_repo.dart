@@ -129,6 +129,8 @@ class AuthRepo {
 
   static Future<Failure?> signOut() async {
     try {
+      await Future.delayed(const Duration(milliseconds: 500));
+
       await googleSignIn.signOut();
 
       final error = await betterAuthClient.signOut();
@@ -148,6 +150,8 @@ class AuthRepo {
 
   static Future<(String?, Failure?)> deleteUser() async {
     try {
+      await Future.delayed(const Duration(milliseconds: 500));
+
       await googleSignIn.signOut();
 
       final (result, error) = await betterAuthClient.deleteUser();

@@ -10,6 +10,7 @@ class ProfileTile extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.trailing,
+    this.isLoading = false,
   });
 
   final bool isRed;
@@ -18,11 +19,12 @@ class ProfileTile extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final Widget? trailing;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: isLoading ? null : onTap,
       child: Container(
         decoration: BoxDecoration(
           color: context.colorScheme.surfaceContainerHighest,
@@ -71,7 +73,13 @@ class ProfileTile extends StatelessWidget {
                   ],
                 ),
               ),
-              if (trailing != null) trailing!,
+              if (trailing != null && !isLoading) trailing!,
+              if (isLoading)
+                SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: const CircularProgressIndicator(),
+                ),
             ],
           ),
         ),

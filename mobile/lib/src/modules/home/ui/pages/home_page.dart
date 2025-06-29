@@ -78,55 +78,57 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             offset: Offset(0, 20 * (1 - _listAnimation.value)),
                             child: Opacity(
                               opacity: _listAnimation.value,
-                              child: Column(
-                                mainAxisAlignment: cp.messages.isNotEmpty
-                                    ? MainAxisAlignment.start
-                                    : MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Offstage(
-                                    offstage: cp.messages.isNotEmpty,
-                                    child: ChatEmptyState(),
-                                  ),
-                                  if (cp.messages.isNotEmpty)
-                                    Expanded(
-                                      child: Fade(
-                                        fadeTop: true,
-                                        fadeBottom: true,
-                                        fadeHeight: 0.05,
-                                        fadeStrength: 0.98,
-                                        fadeCurve: Curves.easeOutQuart,
-                                        fadeSteps: 8,
-                                        child: ListView.builder(
-                                          controller: cp.scrollController,
-                                          padding: const EdgeInsets.only(
-                                            top: 24,
-                                            bottom: 16,
-                                          ),
-                                          itemCount: cp.messages.length,
-                                          physics:
-                                              const BouncingScrollPhysics(),
-                                          itemBuilder: (context, index) {
-                                            final message = cp.messages[index];
-                                            return Padding(
-                                              padding: EdgeInsets.only(
-                                                bottom:
-                                                    index ==
-                                                        cp.messages.length - 1
-                                                    ? 8
-                                                    : 16,
-                                                top: index == 0 ? 0 : 8,
-                                              ),
-                                              child: ChatBubble(
-                                                message: message,
-                                              ),
-                                            );
-                                          },
-                                        ),
+                              child: cp.messages.isEmpty
+                                  ? Center(
+                                      child: SingleChildScrollView(
+                                        padding: const EdgeInsets.all(16),
+                                        child: ChatEmptyState(),
                                       ),
+                                    )
+                                  : Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Fade(
+                                            fadeTop: true,
+                                            fadeBottom: true,
+                                            fadeHeight: 0.05,
+                                            fadeStrength: 0.98,
+                                            fadeCurve: Curves.easeOutQuart,
+                                            fadeSteps: 8,
+                                            child: ListView.builder(
+                                              controller: cp.scrollController,
+                                              padding: const EdgeInsets.only(
+                                                top: 24,
+                                                bottom: 16,
+                                              ),
+                                              itemCount: cp.messages.length,
+                                              physics:
+                                                  const BouncingScrollPhysics(),
+                                              itemBuilder: (context, index) {
+                                                final message =
+                                                    cp.messages[index];
+                                                return Padding(
+                                                  padding: EdgeInsets.only(
+                                                    bottom:
+                                                        index ==
+                                                            cp.messages.length -
+                                                                1
+                                                        ? 8
+                                                        : 16,
+                                                    top: index == 0 ? 0 : 8,
+                                                  ),
+                                                  child: ChatBubble(
+                                                    message: message,
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                ],
-                              ),
                             ),
                           );
                         },

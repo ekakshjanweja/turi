@@ -54,57 +54,67 @@ class ProfilePage extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            ProfileTile(
-              title: "Sign Out",
-              icon: SolarBoldIcons.logout,
-              onTap: () async {
-                final ap = context.read<AuthProvider>();
-                final error = await ap.signOut();
+            Consumer<AuthProvider>(
+              builder: (context, ap, _) {
+                return ProfileTile(
+                  isLoading: ap.isSigningOut,
+                  title: "Sign Out",
+                  icon: SolarBoldIcons.logout,
+                  onTap: () async {
+                    final ap = context.read<AuthProvider>();
+                    final error = await ap.signOut();
 
-                if (error != null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(error.message)));
-                  return;
-                }
+                    if (error != null) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error.message)));
+                      return;
+                    }
 
-                context.go(AuthPage.routeName);
+                    context.go(AuthPage.routeName);
+                  },
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                );
               },
-              trailing: Icon(
-                Icons.chevron_right,
-                color: context.colorScheme.onSurfaceVariant,
-              ),
             ),
 
             const SizedBox(height: 12),
 
-            ProfileTile(
-              isRed: true,
-              title: "Delete Account",
-              icon: SolarBoldIcons.trashBin,
-              onTap: () async {
-                final ap = context.read<AuthProvider>();
-                final (message, error) = await ap.deleteUser();
+            Consumer<AuthProvider>(
+              builder: (context, ap, _) {
+                return ProfileTile(
+                  isLoading: ap.isDeleting,
+                  isRed: true,
+                  title: "Delete Account",
+                  icon: SolarBoldIcons.trashBin,
+                  onTap: () async {
+                    final ap = context.read<AuthProvider>();
+                    final (message, error) = await ap.deleteUser();
 
-                if (error != null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(error.message)));
-                  return;
-                }
+                    if (error != null) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error.message)));
+                      return;
+                    }
 
-                if (message != null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(message)));
-                }
+                    if (message != null) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(message)));
+                    }
 
-                context.go(AuthPage.routeName);
+                    context.go(AuthPage.routeName);
+                  },
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: context.colorScheme.error,
+                  ),
+                );
               },
-              trailing: Icon(
-                Icons.chevron_right,
-                color: context.colorScheme.error,
-              ),
             ),
 
             const SizedBox(height: 24),

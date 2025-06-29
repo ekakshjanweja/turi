@@ -53,23 +53,40 @@ class _AuthPageState extends State<AuthPage> {
               ),
 
               SafeArea(
-                child: FilledButton(
-                  onPressed: () async {
-                    final ap = context.read<AuthProvider>();
+                child: Consumer<AuthProvider>(
+                  builder: (context, ap, _) {
+                    if (ap.isLoading) {
+                      return SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: const CircularProgressIndicator(),
+                      );
+                    } else {
+                      return FilledButton(
+                        onPressed: ap.isLoading
+                            ? null
+                            : () async {
+                                final ap = context.read<AuthProvider>();
 
-                    final error = await ap.onAuth();
+                                final error = await ap.onAuth();
 
-                    if (error != null) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(error.message)));
-                      log("Auth error: ${error.message}", error: error);
-                      return;
+                                if (error != null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(error.message)),
+                                  );
+                                  log(
+                                    "Auth error: ${error.message}",
+                                    error: error,
+                                  );
+                                  return;
+                                }
+
+                                context.go(HomePage.routeName);
+                              },
+                        child: const Text('Sign In With Google'),
+                      );
                     }
-
-                    context.go(HomePage.routeName);
                   },
-                  child: const Text('Sign In With Google'),
                 ),
               ),
             ],

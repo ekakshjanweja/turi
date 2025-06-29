@@ -43,6 +43,7 @@ class STTProvider extends ChangeNotifier {
     required Function(SpeechRecognitionResult result) onResult,
     required void Function(SpeechRecognitionError error) onError,
     int? listenForMinutes,
+    required void Function(double level) onSoundLevelChange,
   }) async {
     if (!initialized) {
       await init(onError: onError);
@@ -59,7 +60,7 @@ class STTProvider extends ChangeNotifier {
     await stt.listen(
       onResult: onResult,
       listenFor: Duration(minutes: listenForMinutes ?? 1),
-      onSoundLevelChange: (level) {},
+      onSoundLevelChange: onSoundLevelChange,
       listenOptions: SpeechListenOptions(),
     );
   }
