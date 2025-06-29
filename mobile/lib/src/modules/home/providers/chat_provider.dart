@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
+import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/message.dart';
 
 class ChatProvider extends ChangeNotifier {
@@ -34,17 +36,10 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _thinking = false;
-  bool get thinking => _thinking;
-  set thinking(bool value) {
-    _thinking = value;
-    notifyListeners();
-  }
-
-  bool _connected = false;
-  bool get connected => _connected;
-  set connected(bool value) {
-    _connected = value;
+  ChatStatus _status = ChatStatus.disconnected;
+  ChatStatus get status => _status;
+  set status(ChatStatus value) {
+    _status = value;
     notifyListeners();
   }
 
@@ -97,21 +92,21 @@ class ChatProvider extends ChangeNotifier {
         "message": messages.last.content,
       },
       method: MethodType.get,
-      onError: (error) {
-        connected = false;
-        error = error;
+      onError: (err) {
+        error = err;
+        status = ChatStatus.error;
+        log("Error: $error", error: error);
       },
       onChunk: (content) async {
         addMessage(Message(content: content, isUser: false));
-        thinking = false;
+        status = ChatStatus.connected;
       },
       onThinking: (content) {
-        thinking = true;
+        status = ChatStatus.thinking;
       },
       onAudio: (base64Audio) {},
       onConnected: () {
-        error = null;
-        connected = true;
+        status = ChatStatus.connected;
         newConversation = false;
       },
       onDone: () {
@@ -136,8 +131,7 @@ class ChatProvider extends ChangeNotifier {
   void reset() {
     _messages.clear();
     _error = null;
-    _thinking = false;
-    _connected = false;
+    _status = ChatStatus.disconnected;
     _newConversation = true;
     _streamSubscription?.cancel();
     focusNode.unfocus();

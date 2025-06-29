@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/chat_bubble.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/chat_empty_state.dart';
@@ -114,7 +115,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   right: 16,
                   child: Consumer<ChatProvider>(
                     builder: (context, cp, _) {
-                      return cp.thinking
+                      return cp.status == ChatStatus.thinking
                           ? ThinkingIndicator()
                           : const SizedBox.shrink();
                     },

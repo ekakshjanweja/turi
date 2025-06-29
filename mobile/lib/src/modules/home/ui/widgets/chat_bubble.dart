@@ -17,6 +17,7 @@ class ChatBubble extends StatelessWidget {
           left: message.isUser ? 48 : 0,
           right: message.isUser ? 0 : 48,
         ),
+        constraints: BoxConstraints(maxWidth: context.w * 0.6),
         child: Material(
           elevation: 2,
           shadowColor: context.colorScheme.shadow.withAlpha(50),
@@ -56,10 +57,11 @@ class ChatBubble extends StatelessWidget {
                     ),
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  message.content,
+                  message.content.trim(),
                   style: context.textTheme.bodyMedium.copyWith(
                     color: message.isUser
                         ? context.colorScheme.onPrimary
@@ -71,8 +73,8 @@ class ChatBubble extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const Spacer(),
                     Container(
                       width: 6,
                       height: 6,

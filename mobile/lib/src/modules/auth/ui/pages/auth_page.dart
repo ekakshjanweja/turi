@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:turi_mail/src/core/constants/app_assets.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/pages/home_page.dart';
@@ -24,37 +25,55 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 20),
-            Text(
-              'Welcome\nto Turi',
-              style: context.textTheme.displaySmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: () async {
-                final ap = context.read<AuthProvider>();
+      body: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Center(
+          child: Column(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      context.isDarkMode
+                          ? AppAssets.logodark
+                          : AppAssets.logolight,
+                      height: 64,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Effortless email, just say it.",
+                      style: context.textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
 
-                final error = await ap.onAuth();
+              SafeArea(
+                child: FilledButton(
+                  onPressed: () async {
+                    final ap = context.read<AuthProvider>();
 
-                if (error != null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(error.message)));
-                  log("Auth error: ${error.message}", error: error);
-                  return;
-                }
+                    final error = await ap.onAuth();
 
-                context.go(HomePage.routeName);
-              },
-              child: const Text('Sign In With Google'),
-            ),
-          ],
+                    if (error != null) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error.message)));
+                      log("Auth error: ${error.message}", error: error);
+                      return;
+                    }
+
+                    context.go(HomePage.routeName);
+                  },
+                  child: const Text('Sign In With Google'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

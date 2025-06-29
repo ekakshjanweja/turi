@@ -1,7 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:turi_mail/src/core/services/voice/stt_provider.dart';
+import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 
-class ChatEmptyState extends StatelessWidget {
+class ChatEmptyState extends StatefulWidget {
   const ChatEmptyState({super.key});
+
+  @override
+  State<ChatEmptyState> createState() => _ChatEmptyStateState();
+}
+
+class _ChatEmptyStateState extends State<ChatEmptyState> {
+  Future<void> startSTT() async {
+    final cp = context.read<ChatProvider>();
+    final stt = context.read<STTProvider>();
+
+    stt.isListening = true;
+
+    await stt.startListening(
+      onResult: (result) {
+        cp.inputController.text = result.recognizedWords;
+        stt.isListening = false;
+
+        if (result.finalResult) {
+          cp.sendMessage(
+            onDone: () {
+              startSTT();
+            },
+            onEnd: () {
+              stt.stopListening();
+            },
+          );
+        }
+      },
+      onError: (error) {},
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

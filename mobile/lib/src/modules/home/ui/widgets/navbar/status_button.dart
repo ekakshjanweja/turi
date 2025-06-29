@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
+import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/error_bottomsheet.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/chat_settings_bottom_sheet.dart';
@@ -19,23 +20,30 @@ class StatusButton extends StatelessWidget {
         Color textColor;
         Color iconColor;
 
+        //TODO: Add thinking status later if required
+
         // if (cp.thinking) {
         //   buttonText = "thinking";
         //   backgroundColor = Colors.transparent;
         //   textColor = context.colorScheme.secondary;
         //   iconColor = context.colorScheme.secondary;
         // } else
-        
-         if (cp.error != null) {
+
+        if (cp.status == ChatStatus.error) {
           buttonText = "error";
           backgroundColor = context.colorScheme.error;
           textColor = context.colorScheme.error;
           iconColor = context.colorScheme.error;
-        } else if (cp.connected) {
+        } else if (cp.status == ChatStatus.connected) {
           buttonText = "connected";
           backgroundColor = context.colorScheme.primary;
           textColor = context.colorScheme.primary;
           iconColor = context.colorScheme.primary;
+        } else if (cp.status == ChatStatus.disconnected) {
+          buttonText = "disconnected";
+          backgroundColor = context.colorScheme.secondary;
+          textColor = context.colorScheme.onSurface;
+          iconColor = context.colorScheme.onSurface;
         } else {
           buttonText = "disconnected";
           backgroundColor = context.colorScheme.secondary;
@@ -47,16 +55,15 @@ class StatusButton extends StatelessWidget {
           // Show alternate view with a dot and text
           return GestureDetector(
             onTap: () {
-              final errorMessage = cp.error;
-              if (errorMessage != null) {
+              if (cp.status == ChatStatus.error) {
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
                   builder: (context) {
-                    return ErrorBottomSheet(error: errorMessage);
+                    return ErrorBottomSheet(error: cp.error ?? "Unknown error");
                   },
                 );
-              } else if (cp.connected) {
+              } else if (cp.status == ChatStatus.connected) {
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
