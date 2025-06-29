@@ -35,6 +35,7 @@ class Sse {
     required void Function(String content) onThinking,
     required void Function(String base64Audio) onAudio,
     required VoidCallback onConnected,
+    required VoidCallback onUnauthorized,
     int retry = 0,
   }) async {
     headers ??= {};
@@ -124,7 +125,8 @@ class Sse {
                     if (content.toLowerCase().contains(
                       "No refresh token".toLowerCase(),
                     )) {
-                      log("No refresh token");
+                      onUnauthorized();
+                      break;
                     }
 
                     onError(content);
@@ -147,6 +149,7 @@ class Sse {
             onThinking: onThinking,
             onAudio: onAudio,
             onConnected: onConnected,
+            onUnauthorized: onUnauthorized,
             retry: retry + 1,
           );
         } else {

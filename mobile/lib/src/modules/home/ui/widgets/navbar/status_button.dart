@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/error_bottomsheet.dart';
+import 'package:turi_mail/src/modules/home/ui/widgets/chat_settings_bottom_sheet.dart';
 
 class StatusButton extends StatelessWidget {
   final bool showDotView;
@@ -53,6 +54,14 @@ class StatusButton extends StatelessWidget {
                     return ErrorBottomSheet(error: errorMessage);
                   },
                 );
+              } else if (cp.connected) {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (context) {
+                    return const ChatSettingsBottomSheet();
+                  },
+                );
               }
             },
             child: Padding(
@@ -71,7 +80,9 @@ class StatusButton extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     buttonText,
-                    style: context.textTheme.bodySmall.copyWith(color: textColor),
+                    style: context.textTheme.bodySmall.copyWith(
+                      color: textColor,
+                    ),
                   ),
                 ],
               ),

@@ -19,7 +19,6 @@ class STTProvider extends ChangeNotifier {
 
     _initialized = await stt.initialize(
       debugLogging: true,
-      finalTimeout: Duration(seconds: 10),
       onError: (error) {
         log("Error in STT: $error", name: "STT LOGS");
       },

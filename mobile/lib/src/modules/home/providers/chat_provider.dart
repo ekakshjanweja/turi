@@ -24,6 +24,7 @@ class ChatProvider extends ChangeNotifier {
 
   final TextEditingController inputController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+  final FocusNode focusNode = FocusNode();
 
   List<Message> _messages = [];
   List<Message> get messages => _messages;
@@ -78,16 +79,12 @@ class ChatProvider extends ChangeNotifier {
     });
   }
 
-  void clearMessages() {
-    _messages.clear();
-    notifyListeners();
-  }
-
   @override
   void dispose() {
     _streamSubscription?.cancel();
     inputController.dispose();
     scrollController.dispose();
+    focusNode.dispose();
     super.dispose();
   }
 
@@ -98,6 +95,7 @@ class ChatProvider extends ChangeNotifier {
     _connected = false;
     _newConversation = true;
     _streamSubscription?.cancel();
+    focusNode.unfocus();
     notifyListeners();
   }
 }

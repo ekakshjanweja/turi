@@ -21,10 +21,24 @@ class _MessageInputState extends State<MessageInput> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       final stt = context.read<STTProvider>();
-      stt.init();
+      await stt.init();
+      startSTT();
     });
+  }
+
+  void startSTT() async {
+    final cp = context.read<ChatProvider>();
+    final stt = context.read<STTProvider>();
+
+    await stt.startListening(
+      onResult: (result) {
+        log("Result: ${result.recognizedWords}");
+
+        cp.inputController.text = result.recognizedWords;
+      },
+    );
   }
 
   void sendMessage() async {
@@ -66,6 +80,7 @@ class _MessageInputState extends State<MessageInput> {
         cp.newConversation = false;
         log("SSE stream connected", name: "SSE LOGS");
       },
+      onUnauthorized: () {},
     );
   }
 
@@ -81,6 +96,7 @@ class _MessageInputState extends State<MessageInput> {
               children: [
                 Expanded(
                   child: TextField(
+                    focusNode: cp.focusNode,
                     controller: cp.inputController,
                     decoration: InputDecoration(
                       hintText: "Type a message...",
@@ -99,18 +115,7 @@ class _MessageInputState extends State<MessageInput> {
                 IconButton.filled(
                   onPressed: cp.inputController.text.isNotEmpty
                       ? sendMessage
-                      : () async {
-                          log("Starting STT", name: "STT LOGS");
-                          final stt = context.read<STTProvider>();
-
-                          await stt.startListening(
-                            onResult: (result) {
-                              log("Result: ${result.recognizedWords}");
-
-                              cp.inputController.text = result.recognizedWords;
-                            },
-                          );
-                        },
+                      : startSTT,
                   icon: Icon(
                     cp.inputController.text.isNotEmpty
                         ? SolarBoldIcons.mapArrowRight
