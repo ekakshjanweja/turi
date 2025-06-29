@@ -69,32 +69,41 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   Expanded(
                                     child: cp.messages.isEmpty
                                         ? ChatEmptyState()
-                                        : ListView.builder(
-                                            controller: cp.scrollController,
-                                            padding: const EdgeInsets.only(
-                                              top: 24,
-                                              bottom: 16,
+                                        : Fade(
+                                            fadeTop: true,
+                                            fadeBottom: true,
+                                            fadeHeight: 0.05,
+                                            fadeStrength: 0.98,
+                                            fadeCurve: Curves.easeOutQuart,
+                                            fadeSteps: 8,
+                                            child: ListView.builder(
+                                              controller: cp.scrollController,
+                                              padding: const EdgeInsets.only(
+                                                top: 24,
+                                                bottom: 16,
+                                              ),
+                                              itemCount: cp.messages.length,
+                                              physics:
+                                                  const BouncingScrollPhysics(),
+                                              itemBuilder: (context, index) {
+                                                final message =
+                                                    cp.messages[index];
+                                                return Padding(
+                                                  padding: EdgeInsets.only(
+                                                    bottom:
+                                                        index ==
+                                                            cp.messages.length -
+                                                                1
+                                                        ? 8
+                                                        : 16,
+                                                    top: index == 0 ? 0 : 8,
+                                                  ),
+                                                  child: ChatBubble(
+                                                    message: message,
+                                                  ),
+                                                );
+                                              },
                                             ),
-                                            itemCount: cp.messages.length,
-                                            physics:
-                                                const BouncingScrollPhysics(),
-                                            itemBuilder: (context, index) {
-                                              final message =
-                                                  cp.messages[index];
-                                              return Padding(
-                                                padding: EdgeInsets.only(
-                                                  bottom:
-                                                      index ==
-                                                          cp.messages.length - 1
-                                                      ? 8
-                                                      : 16,
-                                                  top: index == 0 ? 0 : 8,
-                                                ),
-                                                child: ChatBubble(
-                                                  message: message,
-                                                ),
-                                              );
-                                            },
                                           ),
                                   ),
                                 ],
@@ -106,8 +115,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     },
                   ),
                 ),
-
-                Fade(),
 
                 Positioned(
                   bottom: 0,
@@ -121,8 +128,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     },
                   ),
                 ),
-
-                Fade(isTop: false),
               ],
             ),
           ),
