@@ -7,6 +7,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:path/path.dart' as path;
+import 'package:turi_mail/src/core/services/voice/audio_service.dart';
 
 class AudioServiceProvider extends ChangeNotifier {
   final AudioRecorder _audioRecorder = AudioRecorder();
@@ -30,6 +31,13 @@ class AudioServiceProvider extends ChangeNotifier {
   File? get audioFile => _audioFile;
   set audioFile(File? value) {
     _audioFile = value;
+    notifyListeners();
+  }
+
+  String? _transcription;
+  String? get transcription => _transcription;
+  set transcription(String? value) {
+    _transcription = value;
     notifyListeners();
   }
 
@@ -107,6 +115,16 @@ class AudioServiceProvider extends ChangeNotifier {
       log('Audio file saved at: $filePath');
     }
     isRecording = false;
+
+    if (audioFile != null) {
+      final (result, error) = await AudioService.uploadAudioFile(audioFile!);
+
+      if (error != null) {
+        log('Error uploading audio file: ${error.message}');
+        return;
+      }
+      transcription = result?.transcription;
+    }
   }
 
   Future<bool> managePermissions() async {

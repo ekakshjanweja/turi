@@ -29,6 +29,7 @@ class AudioPage extends StatelessWidget {
                   onPressed: () => asp.playAudio(),
                   child: Text(asp.isPlaying ? 'Stop Playing' : 'Play'),
                 ),
+                Text(asp.transcription ?? ''),
               ],
             ),
           ),

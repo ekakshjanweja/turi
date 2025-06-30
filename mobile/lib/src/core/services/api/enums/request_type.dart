@@ -1,0 +1,1 @@
+enum RequestType { multipart, json }
