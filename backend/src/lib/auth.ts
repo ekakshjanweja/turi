@@ -1,7 +1,13 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db";
-import { BETTER_AUTH_SECRET, BETTER_AUTH_URL, RESEND_API_KEY } from "./config";
+import {
+  BETTER_AUTH_SECRET,
+  BETTER_AUTH_URL,
+  RESEND_API_KEY,
+  BACKEND_URL,
+  FRONTEND_URL,
+} from "./config";
 import { openAPI } from "better-auth/plugins";
 import { Resend } from "resend";
 
@@ -25,6 +31,19 @@ export const auth = betterAuth({
     "https://turimail.vercel.app",
   ],
   plugins: [openAPI()],
+  session: {
+    // Keep freshAge at 0 since we're using email verification for deletion
+    freshAge: 0,
+    // Extend session duration to prevent issues with delete flows
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+      // Allow deletion even if user has multiple linked accounts
+      allowUnlinkingAll: true,
+    },
+  },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -72,8 +91,12 @@ export const auth = betterAuth({
   user: {
     deleteUser: {
       enabled: true,
+      // Use custom verification to avoid session issues with email callbacks
       sendDeleteAccountVerification: async ({ user, url, token }, request) => {
         const resend = new Resend(RESEND_API_KEY);
+
+        // Create custom delete URL that doesn't require active session
+        const customDeleteUrl = `${BACKEND_URL}/api/auth/delete-user-confirm?token=${token}&callbackURL=${encodeURIComponent(`${FRONTEND_URL}/auth/delete-result`)}`;
 
         await resend.emails.send({
           from: "Turi Mail <no-reply@turi.stormej.me>",
@@ -83,7 +106,7 @@ export const auth = betterAuth({
                 <h1>Delete your Turi Mail account</h1>
                 <p>Hello ${user.name},</p>
                 <p>We received a request to delete your Turi Mail account. Click the link below to confirm:</p>
-                <a href="${url}" style="color: #dc2626; text-decoration: underline;">
+                <a href="${customDeleteUrl}" style="color: #dc2626; text-decoration: underline;">
                   Delete Account
                 </a>
                 <p>If you didn't request this, you can safely ignore this email.</p>
@@ -91,6 +114,14 @@ export const auth = betterAuth({
                 <p>Best regards,<br>The Turi Mail Team</p>
               `,
         });
+      },
+      beforeDelete: async (user, request) => {
+        // Optional: Add any cleanup logic before deletion
+        console.log(`Preparing to delete user: ${user.email}`);
+      },
+      afterDelete: async (user, request) => {
+        // Optional: Add any cleanup logic after deletion
+        console.log(`User deleted successfully: ${user.email}`);
       },
     },
   },
