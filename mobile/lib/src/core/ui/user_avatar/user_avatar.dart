@@ -17,6 +17,8 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = GoRouter.of(context).state;
+    final isProfile = state.matchedLocation == ProfilePage.routeName;
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
         final user = authProvider.user;
@@ -28,7 +30,7 @@ class UserAvatar extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(avatarSize / 2),
               onTap: () {
-                if (!isNavbar) return;
+                if (!isNavbar || isProfile) return;
 
                 context.push(ProfilePage.routeName);
               },
