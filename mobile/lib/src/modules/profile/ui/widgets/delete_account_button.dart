@@ -21,7 +21,7 @@ class DeleteAccountButton extends StatelessWidget {
       onPressed: () async {
         final ap = context.read<AuthProvider>();
 
-        final (message, error) = await ap.deleteUser();
+        final (message, error) = await ap.requestDeleteUser();
 
         if (error != null) {
           ScaffoldMessenger.of(

@@ -96,7 +96,7 @@ export const auth = betterAuth({
         const resend = new Resend(RESEND_API_KEY);
 
         // Create custom delete URL that doesn't require active session
-        const customDeleteUrl = `${BACKEND_URL}/api/auth/delete-user-confirm?token=${token}&callbackURL=${encodeURIComponent(`${FRONTEND_URL}/auth/delete-result`)}`;
+        const customDeleteUrl = `${BACKEND_URL}api/auth/delete-user-confirm?token=${token}&callbackURL=${encodeURIComponent(`${FRONTEND_URL}/auth/delete-result`)}`;
 
         await resend.emails.send({
           from: "Turi Mail <no-reply@turi.stormej.me>",
