@@ -109,20 +109,4 @@ class AuthProvider extends ChangeNotifier {
     isDeleting = false;
     return (result, null);
   }
-
-  Future<(String?, Failure?)> verifyDeleteUser(String otp) async {
-    isDeleting = true;
-
-    final (result, error) = await AuthRepo.verifyDeleteUser(otp);
-
-    if (error != null) {
-      isDeleting = false;
-      return (null, error);
-    }
-
-    user = null;
-    session = null;
-    isDeleting = false;
-    return (result, null);
-  }
 }

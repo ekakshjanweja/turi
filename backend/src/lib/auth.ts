@@ -111,6 +111,7 @@ export const auth = betterAuth({
                 <a href="${deleteURL}" style="color: #dc2626; text-decoration: underline;">
                   Delete Account
                 </a>
+                <p>${url}</p>
                 <p>If you didn't request this, you can safely ignore this email.</p>
                 <p>This link will expire in 24 hours.</p>
                 <p>Best regards,<br>The Turi Mail Team</p>

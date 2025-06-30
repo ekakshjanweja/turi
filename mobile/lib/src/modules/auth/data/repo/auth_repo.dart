@@ -1,9 +1,6 @@
-import 'dart:convert';
 import 'dart:developer';
-
 import 'package:better_auth_flutter/better_auth_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
 import 'package:turi_mail/src/core/config/config.dart';
 import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
 import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
@@ -167,68 +164,6 @@ class AuthRepo {
       }
 
       return ("Verification code sent to your email", null);
-    } catch (e) {
-      return (
-        null,
-        Failure(errorType: ErrorType.unKnownError, message: e.toString()),
-      );
-    }
-  }
-
-  static Future<(String?, Failure?)> verifyDeleteUser(String otp) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Get the session to include authorization headers
-      final (session, sessionError) = await betterAuthClient.getSession();
-      if (sessionError != null || session == null) {
-        return (
-          null,
-          Failure(
-            errorType: ErrorType.betterAuthError,
-            message: "Session not found",
-          ),
-        );
-      }
-
-      final sessionToken = session.$1?.token;
-      if (sessionToken == null) {
-        return (
-          null,
-          Failure(
-            errorType: ErrorType.betterAuthError,
-            message: "Session token not found",
-          ),
-        );
-      }
-
-      // Construct backend URL
-      final port = AppConfig.port != null ? ':${AppConfig.port}' : '';
-      final backendUrl = '${AppConfig.scheme}://${AppConfig.host}$port';
-
-      final response = await http.post(
-        Uri.parse("$backendUrl/api/auth/verify-delete-otp"),
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': 'better-auth.session_token=$sessionToken',
-        },
-        body: jsonEncode({"otp": otp}),
-      );
-
-      if (response.statusCode == 200) {
-        await googleSignIn.signOut();
-        final responseData = jsonDecode(response.body);
-        return (responseData['message'] as String? ?? "Account deleted successfully", null);
-      } else {
-        final errorData = jsonDecode(response.body);
-        return (
-          null,
-          Failure(
-            errorType: ErrorType.betterAuthError,
-            message: errorData['error'] as String? ?? "Failed to verify OTP",
-          ),
-        );
-      }
     } catch (e) {
       return (
         null,
