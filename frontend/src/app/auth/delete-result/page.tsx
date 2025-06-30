@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 
-export default function DeleteResultPage() {
+function DeleteResultContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [result, setResult] = useState<{
@@ -20,17 +20,19 @@ export default function DeleteResultPage() {
     if (success === "account_deleted") {
       setResult({
         type: "success",
-        message: "Your account has been successfully deleted. We're sorry to see you go!",
+        message:
+          "Your account has been successfully deleted. We're sorry to see you go!",
       });
     } else if (error) {
       let errorMessage = "An unknown error occurred.";
-      
+
       switch (error) {
         case "missing_token":
           errorMessage = "The deletion link is missing required information.";
           break;
         case "invalid_or_expired_token":
-          errorMessage = "The deletion link has expired or is invalid. Please request a new one.";
+          errorMessage =
+            "The deletion link has expired or is invalid. Please request a new one.";
           break;
         case "invalid_token_type":
           errorMessage = "This link is not valid for account deletion.";
@@ -72,62 +74,80 @@ export default function DeleteResultPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8">
-        <div className="text-center">
-          {result.type === "loading" && (
-            <>
-              <AlertCircle className="mx-auto h-12 w-12 text-blue-500 animate-pulse" />
-              <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-                Processing...
-              </h2>
-            </>
-          )}
+    <div className="text-center">
+      {result.type === "loading" && (
+        <>
+          <AlertCircle className="mx-auto h-12 w-12 text-blue-500 animate-pulse" />
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+            Processing...
+          </h2>
+        </>
+      )}
 
-          {result.type === "success" && (
-            <>
-              <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
-              <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-                Account Deleted
-              </h2>
-            </>
-          )}
+      {result.type === "success" && (
+        <>
+          <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+            Account Deleted
+          </h2>
+        </>
+      )}
 
-          {result.type === "error" && (
-            <>
-              <XCircle className="mx-auto h-12 w-12 text-red-500" />
-              <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-                Deletion Failed
-              </h2>
-            </>
-          )}
+      {result.type === "error" && (
+        <>
+          <XCircle className="mx-auto h-12 w-12 text-red-500" />
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+            Deletion Failed
+          </h2>
+        </>
+      )}
 
-          <p className="mt-4 text-sm text-gray-600">{result.message}</p>
+      <p className="mt-4 text-sm text-gray-600">{result.message}</p>
 
-          <div className="mt-8 space-y-4">
-            {result.type === "success" && (
-              <Button onClick={handleGoHome} className="w-full">
-                Go to Homepage
-              </Button>
-            )}
+      <div className="mt-8 space-y-4">
+        {result.type === "success" && (
+          <Button onClick={handleGoHome} className="w-full">
+            Go to Homepage
+          </Button>
+        )}
 
-            {result.type === "error" && (
-              <>
-                <Button onClick={handleRetryDelete} className="w-full">
-                  Try Again
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={handleGoHome} 
-                  className="w-full"
-                >
-                  Go to Homepage
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+        {result.type === "error" && (
+          <>
+            <Button onClick={handleRetryDelete} className="w-full">
+              Try Again
+            </Button>
+            <Button variant="outline" onClick={handleGoHome} className="w-full">
+              Go to Homepage
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
-} 
+}
+
+function LoadingFallback() {
+  return (
+    <div className="text-center">
+      <div className="mx-auto h-12 w-12 text-blue-500 animate-pulse">
+        <div className="rounded-full bg-blue-500 w-full h-full"></div>
+      </div>
+      <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+        Loading...
+      </h2>
+      <p className="mt-4 text-sm text-gray-600">Processing your request...</p>
+    </div>
+  );
+}
+
+export default function DeleteResultPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-8">
+        <Suspense fallback={<LoadingFallback />}>
+          <DeleteResultContent />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
