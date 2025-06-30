@@ -8,7 +8,8 @@ enum ErrorType {
   ),
   unAuthorized("You are not authorized to perform this action."),
   invalidInput("The input provided is invalid."),
-  serverError("An error occurred on the server. Please try again later.");
+  serverError("An error occurred on the server. Please try again later."),
+  failedToDeleteUser("Failed to delete user.");
 
   final String message;
   const ErrorType(this.message);

@@ -96,17 +96,17 @@ class AuthProvider extends ChangeNotifier {
     return null;
   }
 
-  Future<(String?, Failure?)> requestDeleteUser() async {
+  Future<Failure?> deleteUser() async {
     isDeleting = true;
 
-    final (result, error) = await AuthRepo.requestDeleteUser();
+    final error = await AuthRepo.deleteUser();
 
     if (error != null) {
       isDeleting = false;
-      return (null, error);
+      return error;
     }
 
     isDeleting = false;
-    return (result, null);
+    return null;
   }
 }

@@ -4,6 +4,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:turi_mail/src/core/config/config.dart';
 import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
 import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
+import 'package:turi_mail/src/core/services/api/api.dart' as api_service;
+import 'package:turi_mail/src/core/services/api/models/method_type.dart'
+    as api_service_method_type;
 
 class AuthRepo {
   static final betterAuthClient = BetterAuth.instance.client;
@@ -147,28 +150,23 @@ class AuthRepo {
     }
   }
 
-  static Future<(String?, Failure?)> requestDeleteUser() async {
+  static Future<Failure?> deleteUser() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final (result, error) = await betterAuthClient.deleteUser();
+      final (result, error) = await api_service.Api.sendRequest(
+        "/delete",
+        method: api_service_method_type.MethodType.get,
+      );
 
       if (error != null) {
-        return (
-          null,
-          Failure(
-            errorType: ErrorType.betterAuthError,
-            message: error.code.message,
-          ),
+        return Failure(
+          errorType: ErrorType.failedToDeleteUser,
+          message: error.message,
         );
       }
 
-      return ("Verification code sent to your email", null);
+      return null;
     } catch (e) {
-      return (
-        null,
-        Failure(errorType: ErrorType.unKnownError, message: e.toString()),
-      );
+      return Failure(errorType: ErrorType.unKnownError, message: e.toString());
     }
   }
 }

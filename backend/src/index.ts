@@ -4,6 +4,7 @@ import type { AgentSession, Message } from "./lib/types/types";
 import { streamSSE } from "hono/streaming";
 import { cors } from "hono/cors";
 import { DATABASE_URL, PORT } from "./lib/config";
+import { deleteUser } from "./lib/delete-user";
 
 // Lazy imports to reduce startup time
 const lazyGmailService = async () => {
@@ -69,40 +70,34 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
-app.get("/api/delete", async (c) => {
-  const callbackURL = "https://turimail.vercel.app/delete";
+app.get("/delete", async (c) => {
+  const user = c.get("user");
+  const session = c.get("session");
+
+  if (!user || !session) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
 
   try {
-    const token = c.req.query("token");
+    await deleteUser({ user, session });
 
-    if (!token) {
-      return c.redirect(
-        `${callbackURL}?success=false&error=missing_token&message=${encodeURIComponent("Missing Token")}`
-      );
-    }
-
-    const { success, message } = await auth.api.deleteUser({ body: { token } });
-
-    if (!success) {
-      return c.redirect(
-        `${callbackURL}?success=false&error=server_error&message=${encodeURIComponent(message || "Unknown error")}`
-      );
-    }
-
-    return c.redirect(
-      `${callbackURL}?success=true&message=${encodeURIComponent(message || "Account deleted successfully")}`
-    );
+    return c.json({ message: "User deleted successfully" }, 200);
   } catch (error) {
-    return c.redirect(
-      `${callbackURL}?success=false&error=server_error&message=${encodeURIComponent(error instanceof Error ? error.message : JSON.stringify(error))}`
+    return c.json(
+      { error: error instanceof Error ? error.message : JSON.stringify(error) },
+      500
     );
   }
 });
 
 app.get("/health", (c) => {
+  console.log("[HEALTH] Health check request received");
+
   try {
+    console.log("[HEALTH] Health check successful - service is running");
     return c.json({ status: "ok" });
   } catch (error) {
+    console.error("[HEALTH] Health check failed:", error);
     return c.json(
       {
         status: "error",

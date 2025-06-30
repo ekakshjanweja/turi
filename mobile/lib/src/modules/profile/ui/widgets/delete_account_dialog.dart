@@ -24,7 +24,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
       final ap = context.read<AuthProvider>();
 
       // Request deletion (sends email)
-      final (message, error) = await ap.requestDeleteUser();
+      final error = await ap.deleteUser();
 
       if (error != null) {
         setState(() {
@@ -37,13 +37,6 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
           ).showSnackBar(SnackBar(content: Text(error.message)));
         }
         return;
-      }
-
-      // Show success message
-      if (message != null && mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
       }
 
       // Log out the user
