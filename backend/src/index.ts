@@ -65,159 +65,36 @@ app.use("*", async (c, next) => {
   return next();
 });
 
-app.options("/api/auth/*", (c) => {
-  return c.text("", 200);
-});
-
 app.on(["POST", "GET"], "/api/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
-// Custom delete user confirmation endpoint that doesn't require active session
-app.get("/api/auth/delete-user-confirm", async (c) => {
+app.get("/api/delete", async (c) => {
+  const callbackURL = "https://turimail.vercel.app/delete";
+
   try {
     const token = c.req.query("token");
-    const callbackURL = c.req.query("callbackURL") || "https://turimail.vercel.app/auth/delete-result";
 
     if (!token) {
-      return c.redirect(`${callbackURL}?error=missing_token`);
+      return c.redirect(
+        `${callbackURL}?success=false&error=missing_token&message=${encodeURIComponent("Missing Token")}`
+      );
     }
 
-    // Import required modules
-    const { db } = await import("./lib/db");
-    const { verification, user: userSchema, account, session } = await import("./lib/db/schema/auth");
-    const { eq, and, gt } = await import("drizzle-orm");
+    const { success, message } = await auth.api.deleteUser({ body: { token } });
 
-    // Find valid token - Better Auth uses the token directly as the value
-    const [verificationRecord] = await db
-      .select()
-      .from(verification)
-      .where(
-        and(
-          eq(verification.value, token),
-          gt(verification.expiresAt, new Date())
-        )
-      )
-      .limit(1);
-
-    if (!verificationRecord) {
-      return c.redirect(`${callbackURL}?error=invalid_or_expired_token`);
+    if (!success) {
+      return c.redirect(
+        `${callbackURL}?success=false&error=server_error&message=${encodeURIComponent(message || "Unknown error")}`
+      );
     }
 
-    // Better Auth stores delete user identifier as "delete-user" 
-    // and the user id is embedded in the identifier
-    if (!verificationRecord.identifier.startsWith("delete-user")) {
-      return c.redirect(`${callbackURL}?error=invalid_token_type`);
-    }
-
-    // Extract user ID from identifier pattern (could be "delete-user" or "delete-user:{userId}")
-    let userId: string | undefined;
-    
-    if (verificationRecord.identifier === "delete-user") {
-      // If no user ID in identifier, we need to look up the user another way
-      // For Better Auth, this shouldn't happen, but let's handle it gracefully
-      return c.redirect(`${callbackURL}?error=cannot_identify_user`);
-    } else if (verificationRecord.identifier.includes(":")) {
-      // Pattern: "delete-user:{userId}"
-      const parts = verificationRecord.identifier.split(":");
-      userId = parts[1];
-    } else {
-      // Fallback - treat everything after "delete-user" as user id
-      const extracted = verificationRecord.identifier.replace("delete-user", "").replace(/^[-_]/, "");
-      userId = extracted || undefined;
-    }
-
-    if (!userId) {
-      return c.redirect(`${callbackURL}?error=invalid_user_id`);
-    }
-
-    // Get user info for logging
-    const [userToDelete] = await db
-      .select({ email: userSchema.email })
-      .from(userSchema)
-      .where(eq(userSchema.id, userId))
-      .limit(1);
-
-    if (!userToDelete) {
-      return c.redirect(`${callbackURL}?error=user_not_found`);
-    }
-
-    // Delete verification record first
-    await db.delete(verification).where(eq(verification.id, verificationRecord.id));
-
-    // Delete user sessions
-    await db.delete(session).where(eq(session.userId, userId));
-
-    // Delete user accounts
-    await db.delete(account).where(eq(account.userId, userId));
-
-    // Delete user (this should be last)
-    await db.delete(userSchema).where(eq(userSchema.id, userId));
-
-    console.log(`User deleted successfully via email confirmation: ${userToDelete.email}`);
-
-    return c.redirect(`${callbackURL}?success=account_deleted`);
+    return c.redirect(
+      `${callbackURL}?success=true&message=${encodeURIComponent(message || "Account deleted successfully")}`
+    );
   } catch (error) {
-    console.error("Delete user confirmation error:", error);
-    const callbackURL = c.req.query("callbackURL") || "https://turimail.vercel.app/auth/delete-result";
-    return c.redirect(`${callbackURL}?error=server_error`);
-  }
-});
-
-app.post("/api/auth/verify-delete-otp", async (c) => {
-  const user = c.get("user");
-  const session = c.get("session");
-
-  if (!user || !session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  try {
-    const body = await c.req.json();
-    const { otp } = body;
-
-    if (!otp || typeof otp !== "string") {
-      return c.json({ error: "OTP is required" }, 400);
-    }
-
-    // Import required modules at the top level would be better, but adding here for clarity
-    const { db } = await import("./lib/db");
-    const { verification } = await import("./lib/db/schema/auth");
-    const { eq, and, gt } = await import("drizzle-orm");
-
-    // Find valid OTP for this user
-    const [verificationRecord] = await db
-      .select()
-      .from(verification)
-      .where(
-        and(
-          eq(verification.identifier, `delete_account_${user.id}`),
-          eq(verification.value, otp),
-          gt(verification.expiresAt, new Date())
-        )
-      )
-      .limit(1);
-
-    if (!verificationRecord) {
-      return c.json({ error: "Invalid or expired OTP" }, 400);
-    }
-
-    // Delete the verification record
-    await db.delete(verification).where(eq(verification.id, verificationRecord.id));
-
-    // Delete user from database (this will cascade delete sessions and accounts)
-    const { user: userSchema } = await import("./lib/db/schema/auth");
-    await db.delete(userSchema).where(eq(userSchema.id, user.id));
-
-    return c.json({ message: "Account deleted successfully" });
-  } catch (error) {
-    console.error("Delete OTP verification error:", error);
-    return c.json(
-      {
-        error: "Failed to verify OTP",
-        message: error instanceof Error ? error.message : JSON.stringify(error),
-      },
-      500
+    return c.redirect(
+      `${callbackURL}?success=false&error=server_error&message=${encodeURIComponent(error instanceof Error ? error.message : JSON.stringify(error))}`
     );
   }
 });

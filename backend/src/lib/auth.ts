@@ -1,3 +1,5 @@
+"use client";
+
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db";
@@ -96,7 +98,7 @@ export const auth = betterAuth({
         const resend = new Resend(RESEND_API_KEY);
 
         // Create custom delete URL that doesn't require active session
-        const customDeleteUrl = `${BACKEND_URL}api/auth/delete-user-confirm?token=${token}&callbackURL=${encodeURIComponent(`${FRONTEND_URL}/auth/delete-result`)}`;
+        const deleteURL = `${BACKEND_URL}api/delete?token=${token}`;
 
         await resend.emails.send({
           from: "Turi Mail <no-reply@turi.stormej.me>",
@@ -106,7 +108,7 @@ export const auth = betterAuth({
                 <h1>Delete your Turi Mail account</h1>
                 <p>Hello ${user.name},</p>
                 <p>We received a request to delete your Turi Mail account. Click the link below to confirm:</p>
-                <a href="${customDeleteUrl}" style="color: #dc2626; text-decoration: underline;">
+                <a href="${deleteURL}" style="color: #dc2626; text-decoration: underline;">
                   Delete Account
                 </a>
                 <p>If you didn't request this, you can safely ignore this email.</p>
@@ -114,14 +116,6 @@ export const auth = betterAuth({
                 <p>Best regards,<br>The Turi Mail Team</p>
               `,
         });
-      },
-      beforeDelete: async (user, request) => {
-        // Optional: Add any cleanup logic before deletion
-        console.log(`Preparing to delete user: ${user.email}`);
-      },
-      afterDelete: async (user, request) => {
-        // Optional: Add any cleanup logic after deletion
-        console.log(`User deleted successfully: ${user.email}`);
       },
     },
   },
