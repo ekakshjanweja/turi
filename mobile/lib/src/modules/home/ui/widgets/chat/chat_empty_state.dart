@@ -6,7 +6,6 @@ import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/voice_button.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/voice_hints.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/waveform.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 
 class ChatEmptyState extends StatefulWidget {
