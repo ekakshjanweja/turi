@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:turi_mail/src/core/constants/app_assets.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
-import 'package:turi_mail/src/modules/audio/audio_page.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/navbar/status_button.dart';
 import 'package:turi_mail/src/core/ui/user_avatar/user_avatar.dart';
 
@@ -24,13 +22,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       // automaticallyImplyLeading: false,
-      actions: [
-        StatusButton(),
-        UserAvatar(isNavbar: true),
-        IconButton(onPressed: () {
-          context.push(AudioPage.routeName);
-        }, icon: Icon(Icons.play_arrow)),
-      ],
+      actions: [StatusButton(), UserAvatar(isNavbar: true)],
     );
   }
 }

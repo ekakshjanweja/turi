@@ -48,9 +48,14 @@ class AudioServiceProvider extends ChangeNotifier {
     );
   }
 
-  StreamController<String> _transcriptionController =
+  final StreamController<String> _transcriptionController =
       StreamController<String>.broadcast();
   Stream<String> get transcription => _transcriptionController.stream;
+
+  // Amplitude stream for sharing amplitude data
+  final StreamController<double> _amplitudeController =
+      StreamController<double>.broadcast();
+  Stream<double> get amplitudeStream => _amplitudeController.stream;
 
   final AudioRecorder _audioRecorder = AudioRecorder();
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -84,6 +89,13 @@ class AudioServiceProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isTranscribing = false;
+  bool get isTranscribing => _isTranscribing;
+  set isTranscribing(bool value) {
+    _isTranscribing = value;
+    notifyListeners();
+  }
+
   Future<void> startRecording() async {
     final hasPermission = await _audioRecorder.hasPermission();
 
@@ -107,6 +119,7 @@ class AudioServiceProvider extends ChangeNotifier {
         encoder: AudioEncoder.aacLc,
         bitRate: 128000,
         sampleRate: 44100,
+        numChannels: 1,
       ),
       path: filePath,
     );
@@ -121,7 +134,11 @@ class AudioServiceProvider extends ChangeNotifier {
     amplitudeSubscription = _audioRecorder
         .onAmplitudeChanged(Duration(milliseconds: 100))
         .listen((amp) async {
+          // Send amplitude to voice activity detection
           _voiceActivityDetection.processAmplitude(amp.current);
+
+          // Also broadcast amplitude to any listeners (like waveform)
+          _amplitudeController.add(amp.current);
         });
   }
 
@@ -159,17 +176,28 @@ class AudioServiceProvider extends ChangeNotifier {
         log("Audio trimmed successfully: ${audioFile!.path}");
       }
     }
-
-    await transcribe();
   }
 
   Future<Failure?> transcribe() async {
+    if (isTranscribing) {
+      return Failure(
+        errorType: ErrorType.unKnownError,
+        message: "Already transcribing",
+      );
+    }
+
+    isTranscribing = true;
+
     if (audioFile != null) {
       final (result, error) = await AudioRepo.uploadAudioFile(audioFile!);
 
-      if (error != null) return error;
+      if (error != null) {
+        isTranscribing = false;
+        return error;
+      }
 
       if (result == null) {
+        isTranscribing = false;
         return Failure(
           errorType: ErrorType.unKnownError,
           message: "No transcription result",
@@ -177,6 +205,9 @@ class AudioServiceProvider extends ChangeNotifier {
       }
 
       _transcriptionController.add(result.transcription);
+      isTranscribing = false;
+
+      reset();
 
       return null;
     }
@@ -221,6 +252,12 @@ class AudioServiceProvider extends ChangeNotifier {
     isPlaying = false;
   }
 
+  void reset() {
+    _audioFile = null;
+    amplitudeSubscription?.cancel();
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _voiceActivityDetection.dispose();
@@ -229,6 +266,7 @@ class AudioServiceProvider extends ChangeNotifier {
     _audioPlayer.dispose();
     _audioFile = null;
     _transcriptionController.close();
+    _amplitudeController.close();
     super.dispose();
   }
 }
