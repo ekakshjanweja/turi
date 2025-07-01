@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:solar_icon_pack/solar_bold_icons.dart';
-import 'package:turi_mail/src/core/services/voice/stt_provider.dart';
+import 'package:turi_mail/src/core/services/audio/providers/stt_provider.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';

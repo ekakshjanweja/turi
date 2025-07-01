@@ -8,10 +8,10 @@ import 'package:record/record.dart';
 import 'package:path/path.dart' as path;
 import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
 import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
-import 'package:turi_mail/src/core/services/voice/audio_service.dart';
-import 'package:turi_mail/src/modules/audio/voice_activity_detection/audio_time_state.dart';
-import 'package:turi_mail/src/modules/audio/utils.dart';
-import 'package:turi_mail/src/modules/audio/voice_activity_detection/voice_activity_detection.dart';
+import 'package:turi_mail/src/core/services/audio/audio_repo.dart';
+import 'package:turi_mail/src/core/services/audio/voice_activity_detection/audio_time_state.dart';
+import 'package:turi_mail/src/core/services/audio/helpers/audio_utils.dart';
+import 'package:turi_mail/src/core/services/audio/voice_activity_detection/voice_activity_detection.dart';
 
 class AudioServiceProvider extends ChangeNotifier {
   // Voice Activity Detection instance
@@ -48,6 +48,10 @@ class AudioServiceProvider extends ChangeNotifier {
     );
   }
 
+  StreamController<String> _transcriptionController =
+      StreamController<String>.broadcast();
+  Stream<String> get transcription => _transcriptionController.stream;
+
   final AudioRecorder _audioRecorder = AudioRecorder();
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -80,16 +84,6 @@ class AudioServiceProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String? _transcription;
-  String? get transcription => _transcription;
-  set transcription(String? value) {
-    _transcription = value;
-    notifyListeners();
-  }
-
-  Timer? _recordingTimer;
-  final int _maxRecordingDuration = 60 * 3;
-
   Future<void> startRecording() async {
     final hasPermission = await _audioRecorder.hasPermission();
 
@@ -107,10 +101,6 @@ class AudioServiceProvider extends ChangeNotifier {
       "${dir.path}/recordings",
       'audio_recording_${DateTime.now().millisecondsSinceEpoch}.m4a',
     );
-
-    _recordingTimer = Timer(Duration(seconds: _maxRecordingDuration), () {
-      stopRecording();
-    });
 
     await _audioRecorder.start(
       RecordConfig(
@@ -142,9 +132,6 @@ class AudioServiceProvider extends ChangeNotifier {
 
     amplitudeSubscription?.cancel();
     amplitudeSubscription = null;
-
-    _recordingTimer?.cancel();
-    _recordingTimer = null;
 
     _voiceActivityDetection.stop();
 
@@ -178,11 +165,19 @@ class AudioServiceProvider extends ChangeNotifier {
 
   Future<Failure?> transcribe() async {
     if (audioFile != null) {
-      final (result, error) = await AudioService.uploadAudioFile(audioFile!);
+      final (result, error) = await AudioRepo.uploadAudioFile(audioFile!);
 
       if (error != null) return error;
 
-      transcription = result?.transcription;
+      if (result == null) {
+        return Failure(
+          errorType: ErrorType.unKnownError,
+          message: "No transcription result",
+        );
+      }
+
+      _transcriptionController.add(result.transcription);
+
       return null;
     }
 
@@ -228,13 +223,12 @@ class AudioServiceProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _recordingTimer?.cancel();
     _voiceActivityDetection.dispose();
     amplitudeSubscription?.cancel();
     _audioRecorder.dispose();
     _audioPlayer.dispose();
     _audioFile = null;
-    _transcription = null;
+    _transcriptionController.close();
     super.dispose();
   }
 }

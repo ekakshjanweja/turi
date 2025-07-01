@@ -5,11 +5,9 @@ import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/enums/request_type.dart';
 import 'package:turi_mail/src/core/services/api/models/multipart_body.dart';
-import 'package:turi_mail/src/core/services/voice/audio_transcription_result.dart';
+import 'package:turi_mail/src/core/services/audio/models/audio_transcription_result.dart';
 
-class AudioService {
-  /// Upload an audio file to the speech-to-text endpoint
-  /// Returns transcription and file metadata on success
+class AudioRepo {
   static Future<(AudioTranscriptionResult?, Failure?)> uploadAudioFile(
     File audioFile, {
     Function(int sent, int total)? onProgress,
@@ -90,24 +88,5 @@ class AudioService {
     }
 
     return (response as Map<String, dynamic>, null);
-  }
-
-  /// Validate audio file format
-  static bool isValidAudioFile(File file) {
-    final validExtensions = ['.wav', '.mp3', '.webm', '.ogg', '.m4a', '.aac'];
-    final fileName = file.path.toLowerCase();
-
-    return validExtensions.any((ext) => fileName.endsWith(ext));
-  }
-
-  /// Get human readable file size
-  static String getFileSize(int bytes) {
-    if (bytes < 1024) {
-      return '$bytes B';
-    } else if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    } else {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    }
   }
 }

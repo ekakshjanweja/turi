@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:turi_mail/src/modules/audio/audio_service_provider.dart';
+import 'package:turi_mail/src/core/services/audio/providers/audio_service_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/navbar/navbar.dart';
 
 class AudioPage extends StatefulWidget {
@@ -12,6 +12,8 @@ class AudioPage extends StatefulWidget {
 }
 
 class _AudioPageState extends State<AudioPage> {
+  final ValueNotifier<String?> _transcription = ValueNotifier<String?>(null);
+
   @override
   void initState() {
     super.initState();
@@ -19,7 +21,17 @@ class _AudioPageState extends State<AudioPage> {
       final asp = context.read<AudioServiceProvider>();
 
       await asp.startRecording();
+
+      asp.transcription.listen((data) {
+        _transcription.value = data;
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _transcription.dispose();
+    super.dispose();
   }
 
   @override
@@ -32,19 +44,14 @@ class _AudioPageState extends State<AudioPage> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                // TextButton(
-                //   onPressed: () => asp.isRecording
-                //       ? asp.stopRecording()
-                //       : asp.startRecording(),
-                //   child: Text(
-                //     asp.isRecording ? 'Stop Recording' : 'Start Recording',
-                //   ),
-                // ),
-                // TextButton(
-                //   onPressed: () => asp.playAudio(),
-                //   child: Text(asp.isPlaying ? 'Stop Playing' : 'Play'),
-                // ),
-                Text(asp.transcription ?? ''),
+                ValueListenableBuilder(
+                  valueListenable: _transcription,
+                  builder: (context, value, _) {
+                    if (value == null) return const SizedBox.shrink();
+
+                    return Text(value);
+                  },
+                ),
               ],
             ),
           ),

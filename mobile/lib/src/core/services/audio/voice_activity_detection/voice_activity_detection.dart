@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/foundation.dart';
-import 'package:turi_mail/src/modules/audio/voice_activity_detection/audio_time_state.dart';
+import 'package:turi_mail/src/core/services/audio/voice_activity_detection/audio_time_state.dart';
 
 /// Voice Activity Detection class that monitors amplitude changes
 /// and detects speech start/stop events with silence timeout handling
