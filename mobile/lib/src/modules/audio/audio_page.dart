@@ -3,9 +3,24 @@ import 'package:provider/provider.dart';
 import 'package:turi_mail/src/modules/audio/audio_service_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/navbar/navbar.dart';
 
-class AudioPage extends StatelessWidget {
+class AudioPage extends StatefulWidget {
   static const String routeName = '/audio';
   const AudioPage({super.key});
+
+  @override
+  State<AudioPage> createState() => _AudioPageState();
+}
+
+class _AudioPageState extends State<AudioPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final asp = context.read<AudioServiceProvider>();
+
+      await asp.startRecording();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,18 +32,18 @@ class AudioPage extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                TextButton(
-                  onPressed: () => asp.isRecording
-                      ? asp.stopRecording()
-                      : asp.startRecording(),
-                  child: Text(
-                    asp.isRecording ? 'Stop Recording' : 'Start Recording',
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => asp.playAudio(),
-                  child: Text(asp.isPlaying ? 'Stop Playing' : 'Play'),
-                ),
+                // TextButton(
+                //   onPressed: () => asp.isRecording
+                //       ? asp.stopRecording()
+                //       : asp.startRecording(),
+                //   child: Text(
+                //     asp.isRecording ? 'Stop Recording' : 'Start Recording',
+                //   ),
+                // ),
+                // TextButton(
+                //   onPressed: () => asp.playAudio(),
+                //   child: Text(asp.isPlaying ? 'Stop Playing' : 'Play'),
+                // ),
                 Text(asp.transcription ?? ''),
               ],
             ),

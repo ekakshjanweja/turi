@@ -1,17 +1,63 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
-
+import 'dart:developer';
 import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:path/path.dart' as path;
+import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
+import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
 import 'package:turi_mail/src/core/services/voice/audio_service.dart';
+import 'package:turi_mail/src/modules/audio/voice_activity_detection/audio_time_state.dart';
+import 'package:turi_mail/src/modules/audio/utils.dart';
+import 'package:turi_mail/src/modules/audio/voice_activity_detection/voice_activity_detection.dart';
 
 class AudioServiceProvider extends ChangeNotifier {
+  // Voice Activity Detection instance
+  late final VoiceActivityDetection _voiceActivityDetection;
+
+  /// Getter for accessing audio time state from VAD
+  AudioTimeState get audioTimeState => _voiceActivityDetection.audioTimeState;
+
+  /// Getter for accessing VAD configuration
+  VoiceActivityDetection get voiceActivityDetection => _voiceActivityDetection;
+
+  AudioServiceProvider() {
+    AudioUtils.clearRecordingsFolder();
+    _initializeVoiceActivityDetection();
+  }
+
+  void _initializeVoiceActivityDetection() {
+    _voiceActivityDetection = VoiceActivityDetection(
+      onSpeechStart: () {
+        log('Speech started');
+      },
+      onSilenceTimeout: () {
+        log('Silence timeout');
+        stopRecording();
+      },
+      onTrimStartDetected: (trimStartTime) {
+        log('Trim start detected');
+        notifyListeners();
+      },
+      speechThreshold: -40.0,
+      silenceThreshold: -50.0,
+      initialPauseToleranceSeconds: 10,
+      pauseToleranceSeconds: 5,
+    );
+  }
+
   final AudioRecorder _audioRecorder = AudioRecorder();
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  StreamSubscription<Amplitude>? _amplitudeSubscription;
+  StreamSubscription<Amplitude>? get amplitudeSubscription =>
+      _amplitudeSubscription;
+  set amplitudeSubscription(StreamSubscription<Amplitude>? value) {
+    _amplitudeSubscription = value;
+    notifyListeners();
+  }
 
   bool _isRecording = false;
   bool get isRecording => _isRecording;
@@ -44,41 +90,8 @@ class AudioServiceProvider extends ChangeNotifier {
   Timer? _recordingTimer;
   final int _maxRecordingDuration = 60 * 3;
 
-  AudioServiceProvider() {
-    _clearRecordingsFolder();
-  }
-
-  Future<void> _clearRecordingsFolder() async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final recordingsDir = Directory("${dir.path}/recordings");
-
-      if (await recordingsDir.exists()) {
-        // Delete all files in the recordings directory
-        await for (final entity in recordingsDir.list()) {
-          if (entity is File) {
-            await entity.delete();
-            log('Deleted recording: ${entity.path}');
-          }
-        }
-        log('Cleared all recordings from folder');
-      } else {
-        await recordingsDir.create(recursive: true);
-        log('Created recordings directory');
-      }
-    } catch (e) {
-      log('Error clearing recordings folder: $e');
-    }
-  }
-
-  void _startRecordingTimer() {
-    _recordingTimer = Timer(Duration(seconds: _maxRecordingDuration), () {
-      stopRecording();
-    });
-  }
-
   Future<void> startRecording() async {
-    final hasPermission = await managePermissions();
+    final hasPermission = await _audioRecorder.hasPermission();
 
     if (!hasPermission) return;
 
@@ -92,48 +105,94 @@ class AudioServiceProvider extends ChangeNotifier {
 
     final filePath = path.join(
       "${dir.path}/recordings",
-      'audio_recording_${DateTime.now().millisecondsSinceEpoch}.wav',
+      'audio_recording_${DateTime.now().millisecondsSinceEpoch}.m4a',
     );
 
-    _startRecordingTimer();
+    _recordingTimer = Timer(Duration(seconds: _maxRecordingDuration), () {
+      stopRecording();
+    });
 
-    await _audioRecorder.start(RecordConfig(), path: filePath);
+    await _audioRecorder.start(
+      RecordConfig(
+        encoder: AudioEncoder.aacLc,
+        bitRate: 128000,
+        sampleRate: 44100,
+      ),
+      path: filePath,
+    );
 
+    // Set recording state to true
     isRecording = true;
+
+    // Start voice activity detection
+    final recordingStartTime = DateTime.now();
+    _voiceActivityDetection.start(recordingStartTime: recordingStartTime);
+
+    amplitudeSubscription = _audioRecorder
+        .onAmplitudeChanged(Duration(milliseconds: 100))
+        .listen((amp) async {
+          _voiceActivityDetection.processAmplitude(amp.current);
+        });
   }
 
   Future<void> stopRecording() async {
-    if (!_isRecording) return;
+    if (!_isRecording) {
+      return;
+    }
+
+    amplitudeSubscription?.cancel();
+    amplitudeSubscription = null;
 
     _recordingTimer?.cancel();
     _recordingTimer = null;
+
+    _voiceActivityDetection.stop();
 
     final filePath = await _audioRecorder.stop();
 
     if (filePath != null) {
       audioFile = File(filePath);
-      log('Audio file saved at: $filePath');
     }
+
     isRecording = false;
 
+    // Only trim if we have all required timestamps
+    if (_voiceActivityDetection.recordingStartTime != null &&
+        _voiceActivityDetection.trimStartTime != null &&
+        _voiceActivityDetection.trimEndTime != null) {
+      final trimmed = await AudioUtils.trimAudio(
+        file: audioFile!,
+        startTime: _voiceActivityDetection.recordingStartTime!,
+        trimStartTime: _voiceActivityDetection.trimStartTime!,
+        trimEndTime: _voiceActivityDetection.trimEndTime!,
+      );
+
+      if (trimmed != null) {
+        audioFile = trimmed;
+        log("Audio trimmed successfully: ${audioFile!.path}");
+      }
+    }
+
+    await transcribe();
+  }
+
+  Future<Failure?> transcribe() async {
     if (audioFile != null) {
       final (result, error) = await AudioService.uploadAudioFile(audioFile!);
 
-      if (error != null) {
-        log('Error uploading audio file: ${error.message}');
-        return;
-      }
+      if (error != null) return error;
+
       transcription = result?.transcription;
+      return null;
     }
+
+    return Failure(
+      errorType: ErrorType.unKnownError,
+      message: "No audio file found",
+    );
   }
 
-  Future<bool> managePermissions() async {
-    final hasPermission = await _audioRecorder.hasPermission();
-
-    if (!hasPermission) return false;
-
-    return true;
-  }
+  //Play Audio
 
   Future<void> playAudio() async {
     if (_audioPlayer.playing) {
@@ -143,33 +202,23 @@ class AudioServiceProvider extends ChangeNotifier {
     }
 
     if (audioFile == null || !audioFile!.existsSync()) {
-      log('Audio file does not exist or is null');
       return;
     }
 
     try {
-      log('Playing audio from: ${audioFile!.path}');
-
       await _audioPlayer.setVolume(1.0);
 
       await _audioPlayer.setFilePath(audioFile!.path);
       await _audioPlayer.play();
       isPlaying = true;
 
-      log('Audio playback started successfully');
-
-      _checkAudioCompletion();
+      await _audioPlayer.processingStateStream.firstWhere(
+        (state) => state == ProcessingState.completed,
+      );
+      isPlaying = false;
     } catch (e) {
-      log('Error playing audio: $e');
       isPlaying = false;
     }
-  }
-
-  Future<void> _checkAudioCompletion() async {
-    await _audioPlayer.processingStateStream.firstWhere(
-      (state) => state == ProcessingState.completed,
-    );
-    isPlaying = false;
   }
 
   Future<void> stopAudio() async {
@@ -180,8 +229,12 @@ class AudioServiceProvider extends ChangeNotifier {
   @override
   void dispose() {
     _recordingTimer?.cancel();
+    _voiceActivityDetection.dispose();
+    amplitudeSubscription?.cancel();
     _audioRecorder.dispose();
     _audioPlayer.dispose();
+    _audioFile = null;
+    _transcription = null;
     super.dispose();
   }
 }

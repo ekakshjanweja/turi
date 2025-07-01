@@ -95,7 +95,7 @@ class Api {
             );
 
             for (var fileField in multipartBody.files) {
-              final MediaType? contentType = _getAudioContentType(
+              final MediaType? contentType = _getContentType(
                 fileField.file.path,
               );
 
@@ -204,7 +204,7 @@ class Api {
   }
 
   /// Helper method to get the correct MediaType for audio files
-  static MediaType? _getAudioContentType(String filePath) {
+  static MediaType? _getContentType(String filePath) {
     final extension = filePath.toLowerCase().split('.').last;
 
     switch (extension) {
@@ -217,7 +217,7 @@ class Api {
       case 'ogg':
         return MediaType('audio', 'ogg');
       case 'm4a':
-        return MediaType('audio', 'mp4');
+        return MediaType('audio', 'm4a');
       case 'aac':
         return MediaType('audio', 'aac');
       default:

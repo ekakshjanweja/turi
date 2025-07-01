@@ -15,7 +15,7 @@ audioRouter.post("/stt", async (c) => {
   const session = c.get("session");
 
   if (!user || !session) {
-    return c.json({ error: "Unauthorized" }, 401);
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
   try {
@@ -25,7 +25,7 @@ audioRouter.post("/stt", async (c) => {
 
     // Validate that an audio file was uploaded
     if (!audioFile || !(audioFile instanceof File)) {
-      return c.json({ error: "No audio file provided" }, 400);
+      return c.json({ message: "No audio file provided" }, 400);
     }
 
     // Validate file type (optional but recommended)
@@ -39,9 +39,11 @@ audioRouter.post("/stt", async (c) => {
     ];
 
     if (!validMimeTypes.includes(audioFile.type)) {
+      console.log("Invalid file type", audioFile.type);
+
       return c.json(
         {
-          error:
+          message:
             "Invalid file type. Supported formats: WAV, MP3, WebM, OGG, M4A",
           receivedType: audioFile.type,
         },
@@ -54,7 +56,7 @@ audioRouter.post("/stt", async (c) => {
     if (audioFile.size > maxSize) {
       return c.json(
         {
-          error: `File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`,
+          message: `File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`,
           fileSize: audioFile.size,
         },
         400
@@ -80,7 +82,7 @@ audioRouter.post("/stt", async (c) => {
     console.error("Error processing audio file:", error);
     return c.json(
       {
-        error: "Failed to process audio file",
+        message: "Failed to process audio file",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       500
@@ -94,7 +96,7 @@ audioRouter.get("/status", async (c) => {
   const session = c.get("session");
 
   if (!user || !session) {
-    return c.json({ error: "Unauthorized" }, 401);
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
   return c.json({
