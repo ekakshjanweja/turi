@@ -298,8 +298,6 @@ export class Agent {
         });
 
         if (this.audioEnabled) {
-          console.log("audioEnabled", this.audioEnabled);
-
           //TODO: Uncomment this when tts is working
 
           // const audio = await tts({ text: followUp.text });
@@ -313,8 +311,6 @@ export class Agent {
                 "Error: Failed to generate audio. Please try again later.",
             });
           } else {
-            console.log("audio", audio);
-
             await this.sendMessage({
               type: "AUDIO",
               content: { audio: audio! },
