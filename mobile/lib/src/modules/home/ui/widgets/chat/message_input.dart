@@ -51,7 +51,9 @@ class _MessageInputState extends State<MessageInput> {
 
     cp.sendMessage(
       onDone: () {
-        startSTT();
+        //TODO: Add later if required
+
+        // startSTT();
       },
       onEnd: () {
         stopSTT();

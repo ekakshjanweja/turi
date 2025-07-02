@@ -16,10 +16,10 @@ import {
   UpdateLabelSchema,
 } from "../gmail/schema";
 import type { Message, EmailSummary } from "../../lib/types/types";
-import { tts } from "./eleven-labs";
+import { elevenLabsTts } from "./eleven-labs";
 import type { SSEStreamingApi } from "hono/streaming";
-import { openai } from "@ai-sdk/openai";
 import { detectEndChatIntent, resolveOrdinalEmailReferenceAI } from "./helpers";
+import { tts } from "../audio/tts";
 
 export class Agent {
   private stream: SSEStreamingApi;
@@ -198,9 +198,8 @@ export class Agent {
             execute: async (args: any) => {
               const createArgs = CreateLabelSchema.parse(args);
 
-              const response = await this.gmailService.createEmailLabel(
-                createArgs
-              );
+              const response =
+                await this.gmailService.createEmailLabel(createArgs);
 
               if (!response) {
                 throw new Error("Tool execution failed: create_email_label");
@@ -215,9 +214,8 @@ export class Agent {
             execute: async (args: any) => {
               const updateArgs = UpdateLabelSchema.parse(args);
 
-              const response = await this.gmailService.updateEmailLabel(
-                updateArgs
-              );
+              const response =
+                await this.gmailService.updateEmailLabel(updateArgs);
 
               if (!response) {
                 throw new Error(
@@ -234,9 +232,8 @@ export class Agent {
             execute: async (args: any) => {
               const deleteArgs = DeleteLabelSchema.parse(args);
 
-              const response = await this.gmailService.deleteEmailLabel(
-                deleteArgs
-              );
+              const response =
+                await this.gmailService.deleteEmailLabel(deleteArgs);
 
               if (!response) {
                 throw new Error("Tool execution failed: delete_email_label");
@@ -252,9 +249,8 @@ export class Agent {
             execute: async (args: any) => {
               const getOrCreateArgs = GetOrCreateLabelSchema.parse(args);
 
-              const response = await this.gmailService.getOrCreateEmailLabel(
-                getOrCreateArgs
-              );
+              const response =
+                await this.gmailService.getOrCreateEmailLabel(getOrCreateArgs);
 
               if (!response) {
                 throw new Error(
@@ -302,12 +298,28 @@ export class Agent {
         });
 
         if (this.audioEnabled) {
-          const audio = await tts(followUp.text);
+          console.log("audioEnabled", this.audioEnabled);
 
-          await this.sendMessage({
-            type: "AUDIO",
-            content: audio,
-          });
+          //TODO: Uncomment this when tts is working
+
+          // const audio = await tts({ text: followUp.text });
+
+          const audio = await elevenLabsTts(followUp.text);
+
+          if ((audio === undefined || !audio) && this.audioEnabled) {
+            await this.sendMessage({
+              type: "ERROR",
+              content:
+                "Error: Failed to generate audio. Please try again later.",
+            });
+          } else {
+            console.log("audio", audio);
+
+            await this.sendMessage({
+              type: "AUDIO",
+              content: { audio: audio! },
+            });
+          }
         }
 
         await this.sendMessage({
@@ -327,11 +339,11 @@ export class Agent {
         });
 
         if (this.audioEnabled) {
-          const audio = await tts(result.text);
+          const audio = await elevenLabsTts(result.text);
 
           await this.sendMessage({
             type: "AUDIO",
-            content: audio,
+            content: { audio },
           });
         }
 

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:developer';
 import 'package:flutter/widgets.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:path/path.dart' as path;
@@ -58,7 +57,6 @@ class AudioServiceProvider extends ChangeNotifier {
   Stream<double> get amplitudeStream => _amplitudeController.stream;
 
   final AudioRecorder _audioRecorder = AudioRecorder();
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   StreamSubscription<Amplitude>? _amplitudeSubscription;
   StreamSubscription<Amplitude>? get amplitudeSubscription =>
@@ -72,13 +70,6 @@ class AudioServiceProvider extends ChangeNotifier {
   bool get isRecording => _isRecording;
   set isRecording(bool value) {
     _isRecording = value;
-    notifyListeners();
-  }
-
-  bool _isPlaying = false;
-  bool get isPlaying => _isPlaying;
-  set isPlaying(bool value) {
-    _isPlaying = value;
     notifyListeners();
   }
 
@@ -218,40 +209,6 @@ class AudioServiceProvider extends ChangeNotifier {
     );
   }
 
-  //Play Audio
-
-  Future<void> playAudio() async {
-    if (_audioPlayer.playing) {
-      await _audioPlayer.stop();
-      isPlaying = false;
-      return;
-    }
-
-    if (audioFile == null || !audioFile!.existsSync()) {
-      return;
-    }
-
-    try {
-      await _audioPlayer.setVolume(1.0);
-
-      await _audioPlayer.setFilePath(audioFile!.path);
-      await _audioPlayer.play();
-      isPlaying = true;
-
-      await _audioPlayer.processingStateStream.firstWhere(
-        (state) => state == ProcessingState.completed,
-      );
-      isPlaying = false;
-    } catch (e) {
-      isPlaying = false;
-    }
-  }
-
-  Future<void> stopAudio() async {
-    await _audioPlayer.stop();
-    isPlaying = false;
-  }
-
   void reset() {
     _audioFile = null;
     amplitudeSubscription?.cancel();
@@ -263,7 +220,6 @@ class AudioServiceProvider extends ChangeNotifier {
     _voiceActivityDetection.dispose();
     amplitudeSubscription?.cancel();
     _audioRecorder.dispose();
-    _audioPlayer.dispose();
     _audioFile = null;
     _transcriptionController.close();
     _amplitudeController.close();

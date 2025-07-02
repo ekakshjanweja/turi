@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:convert";
 import "dart:developer";
 import "dart:io";
+import "dart:typed_data";
 import "dart:ui";
 import "package:cookie_jar/cookie_jar.dart";
 import "package:http/http.dart" as http;
@@ -33,7 +34,7 @@ class Sse {
     required void Function(String error) onError,
     required void Function(String content) onChunk,
     required void Function(String content) onThinking,
-    required void Function(String base64Audio) onAudio,
+    required void Function(File audioFile) onAudio,
     required VoidCallback onConnected,
     required VoidCallback onUnauthorized,
     required VoidCallback onDone,
@@ -106,18 +107,20 @@ class Sse {
                   case MessageType.aiResponse:
                     onChunk(parsedJson["content"] as String);
                   case MessageType.audio:
+                    log("Audio: ${parsedJson["content"]}");
                     final content =
-                        parsedJson["content"] as Map<String, dynamic>;
+                        parsedJson["content"]["audio"] as List<dynamic>;
+                    final audioBytes = Uint8List.fromList(content.cast<int>());
 
-                    final audioData = content["audioData"] as String;
-                    final format = content["format"] as String;
-                    final mimeType = content["mimeType"] as String;
+                    final dir = await getApplicationCacheDirectory();
+                    final recordingDir = Directory("${dir.path}/recordings");
 
-                    log(
-                      name: "SSE AUDIO",
-                      "Received audio: $audioData\nformat: $format\nmimeType: $mimeType",
-                    );
+                    await recordingDir.create(recursive: true);
 
+                    final file = File("${recordingDir.path}/audio.mp3");
+                    await file.writeAsBytes(audioBytes);
+
+                    onAudio(file);
                     break;
                   case MessageType.user:
                     break;

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:developer' as dev;
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
@@ -91,6 +93,22 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  bool _isPlaying = false;
+  bool get isPlaying => _isPlaying;
+  set isPlaying(bool value) {
+    _isPlaying = value;
+    notifyListeners();
+  }
+
+  File? _audioFile;
+  File? get audioFile => _audioFile;
+  set audioFile(File? value) {
+    _audioFile = value;
+    notifyListeners();
+  }
+
   void sendMessage({
     required VoidCallback onDone,
     required VoidCallback onEnd,
@@ -103,7 +121,7 @@ class ChatProvider extends ChangeNotifier {
     streamSubscription = await Sse.sendRequest(
       "/agent",
       queryParameters: {
-        "audio": "false",
+        "audio": "true",
         "clear": newConversation.toString(),
         "message": messages.last.content,
       },
@@ -120,7 +138,11 @@ class ChatProvider extends ChangeNotifier {
       onThinking: (content) {
         status = ChatStatus.thinking;
       },
-      onAudio: (base64Audio) {},
+      onAudio: (file) async {
+        audioFile = file;
+
+        await playAudio();
+      },
       onConnected: () {
         status = ChatStatus.connected;
         newConversation = false;
@@ -166,6 +188,38 @@ class ChatProvider extends ChangeNotifier {
       const Duration(seconds: 4),
       (_) => updateVoiceSuggestion(),
     );
+  }
+
+  Future<void> playAudio() async {
+    if (_audioPlayer.playing) {
+      await _audioPlayer.stop();
+      isPlaying = false;
+      return;
+    }
+
+    if (audioFile == null || !audioFile!.existsSync()) {
+      return;
+    }
+
+    try {
+      await _audioPlayer.setVolume(1.0);
+
+      await _audioPlayer.setFilePath(audioFile!.path);
+      await _audioPlayer.play();
+      isPlaying = true;
+
+      await _audioPlayer.processingStateStream.firstWhere(
+        (state) => state == ProcessingState.completed,
+      );
+      isPlaying = false;
+    } catch (e) {
+      isPlaying = false;
+    }
+  }
+
+  Future<void> stopAudio() async {
+    await _audioPlayer.stop();
+    isPlaying = false;
   }
 
   @override
