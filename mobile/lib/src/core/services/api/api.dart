@@ -2,11 +2,14 @@ import "dart:convert";
 import "dart:io";
 import "package:cookie_jar/cookie_jar.dart";
 import "package:http/http.dart" as http;
+import "package:http_parser/http_parser.dart";
 import "package:path_provider/path_provider.dart";
 import "package:turi_mail/src/core/config/config.dart";
 import "package:turi_mail/src/core/services/api/enums/error_type.dart";
+import "package:turi_mail/src/core/services/api/enums/request_type.dart";
 import "package:turi_mail/src/core/services/api/models/api_failure.dart";
 import "package:turi_mail/src/core/services/api/models/method_type.dart";
+import "package:turi_mail/src/core/services/api/models/multipart_body.dart";
 
 class Api {
   static final hc = http.Client();
@@ -23,10 +26,12 @@ class Api {
   static Future<(dynamic, Failure?)> sendRequest(
     String path, {
     required MethodType method,
+    RequestType requestType = RequestType.json,
     String? host,
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
+    MultipartBody? multipartBody,
     int retry = 0,
   }) async {
     final isDelete = method == MethodType.delete;
@@ -35,10 +40,17 @@ class Api {
     queryParameters ??= {};
     host = host ?? AppConfig.host;
 
-    headers.addAll({
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-    });
+    switch (requestType) {
+      case RequestType.json:
+        headers.addAll({
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        });
+        break;
+      case RequestType.multipart:
+        headers.addAll({"Accept": "application/json"});
+        break;
+    }
 
     final Uri uri = Uri(
       scheme: AppConfig.scheme,
@@ -63,11 +75,50 @@ class Api {
           response = await hc.get(uri, headers: headers);
           break;
         case MethodType.post:
-          response = await hc.post(
-            uri,
-            headers: headers,
-            body: jsonEncode(body),
-          );
+          if (requestType == RequestType.multipart && multipartBody != null) {
+            final multipartRequest = http.MultipartRequest("POST", uri);
+
+            if (cookies.isNotEmpty) {
+              multipartRequest.headers["Cookie"] = cookies
+                  .map((c) => "${c.name}=${c.value}")
+                  .join("; ");
+            }
+
+            headers.forEach((key, value) {
+              if (key.toLowerCase() != 'content-type') {
+                multipartRequest.headers[key] = value;
+              }
+            });
+
+            multipartBody.fields.forEach(
+              (key, value) => multipartRequest.fields[key] = value.toString(),
+            );
+
+            for (var fileField in multipartBody.files) {
+              final MediaType? contentType = _getContentType(
+                fileField.file.path,
+              );
+
+              final file = await http.MultipartFile.fromPath(
+                fileField.field,
+                fileField.file.path,
+                filename:
+                    fileField.filename ?? fileField.file.path.split('/').last,
+                contentType: contentType,
+              );
+
+              multipartRequest.files.add(file);
+            }
+
+            final streamedResponse = await multipartRequest.send();
+            response = await http.Response.fromStream(streamedResponse);
+          } else {
+            response = await hc.post(
+              uri,
+              headers: headers,
+              body: jsonEncode(body),
+            );
+          }
           break;
         case MethodType.patch:
           if (body != null) {
@@ -149,6 +200,28 @@ class Api {
             errorType: ErrorType.unKnownError,
           ),
         );
+    }
+  }
+
+  /// Helper method to get the correct MediaType for audio files
+  static MediaType? _getContentType(String filePath) {
+    final extension = filePath.toLowerCase().split('.').last;
+
+    switch (extension) {
+      case 'wav':
+        return MediaType('audio', 'wav');
+      case 'mp3':
+        return MediaType('audio', 'mpeg');
+      case 'webm':
+        return MediaType('audio', 'webm');
+      case 'ogg':
+        return MediaType('audio', 'ogg');
+      case 'm4a':
+        return MediaType('audio', 'm4a');
+      case 'aac':
+        return MediaType('audio', 'aac');
+      default:
+        return MediaType('audio', 'wav'); // Default fallback
     }
   }
 }

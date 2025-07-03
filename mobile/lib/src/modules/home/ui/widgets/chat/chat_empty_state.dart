@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:turi_mail/src/core/services/voice/stt_provider.dart';
+import 'package:turi_mail/src/core/services/audio/providers/audio_service_provider.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/voice_button.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/voice_hints.dart';
-import 'package:turi_mail/src/modules/home/ui/widgets/waveform.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 
 class ChatEmptyState extends StatefulWidget {
@@ -26,11 +25,6 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
   void initState() {
     super.initState();
 
-    // Defer loadSuggestions to avoid setState during build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      loadSuggestions();
-    });
-
     _bounceController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -42,6 +36,11 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
 
     // Start entrance animation
     _bounceController.forward();
+
+    // Defer loadSuggestions to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      loadSuggestions();
+    });
   }
 
   void loadSuggestions() {
@@ -58,39 +57,38 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
 
   Future<void> startSTT() async {
     final cp = context.read<ChatProvider>();
-    final stt = context.read<STTProvider>();
+    final asp = context.read<AudioServiceProvider>();
 
-    stt.isListening = true;
     cp.status = ChatStatus.connected;
 
-    await stt.startListening(
-      onSoundLevelChange: (level) {
-        soundLevel.value = level;
-      },
-      onResult: (result) {
-        cp.inputController.text = result.recognizedWords;
+    await asp.startRecording();
 
-        if (result.finalResult) {
-          cp.sendMessage(
-            onDone: () {
-              startSTT();
-            },
-            onEnd: () {
-              stt.stopListening();
-            },
-          );
+    asp.transcription.listen((data) {
+      cp.inputController.text = data;
+    });
 
-          stt.isListening = false;
-        }
-      },
-      onError: (error) {},
-    );
+    asp.amplitudeSubscription?.onData((data) {
+      soundLevel.value = data.current;
+    });
+  }
+
+  Future<void> stopSTT() async {
+    final asp = context.read<AudioServiceProvider>();
+    await asp.stopRecording();
+
+    final error = await asp.transcribe();
+
+    if (error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<STTProvider>(
-      builder: (context, stt, _) {
+    return Consumer<AudioServiceProvider>(
+      builder: (context, asp, _) {
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -102,14 +100,8 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
                   return Transform.scale(
                     scale: _bounceAnimation.value,
                     child: VoiceButton(
-                      onTap: () {
-                        if (stt.isListening) {
-                          stt.stopListening();
-                        } else {
-                          startSTT();
-                        }
-                      },
-                      isListening: stt.isListening,
+                      onTap: asp.isRecording ? stopSTT : startSTT,
+                      isListening: asp.isRecording,
                       soundLevel: soundLevel,
                       size: 120,
                       enablePulse: true,
@@ -121,7 +113,7 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
               const SizedBox(height: 32),
 
               // Main heading
-              if (!stt.isListening)
+              if (!asp.isRecording)
                 AnimatedBuilder(
                   animation: _bounceAnimation,
                   builder: (context, child) {
@@ -150,7 +142,7 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
                     child: Opacity(
                       opacity: (_bounceAnimation.value * 0.8).clamp(0.0, 1.0),
                       child: Text(
-                        stt.isListening
+                        asp.isRecording
                             ? 'I\'m all ears! Say something or tap to stop.'
                             : 'Tap the microphone to start\na voice conversation',
                         style: context.textTheme.bodyLarge,
@@ -163,22 +155,8 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
 
               const SizedBox(height: 24),
 
-              // Voice waves when listening
-              if (stt.isListening)
-                Waveform(
-                  soundLevel: soundLevel,
-                  barCount: 5,
-                  barWidth: 4,
-                  spacing: 6,
-                  minHeight: 8,
-                  maxHeight: 20,
-                  containerHeight: 64,
-                ),
-
-              const SizedBox(height: 40),
-
               // Helpful hints
-              if (!stt.isListening)
+              if (!asp.isRecording)
                 VoiceHints(animation: _bounceAnimation, opacity: 0.6),
             ],
           ),

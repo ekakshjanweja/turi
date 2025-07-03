@@ -15,11 +15,16 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_dotenv: ^5.2.1
-  go_router: ^15.2.4
+  go_router: ^15.1.3
   google_sign_in: ^6.2.1
   http: ^1.4.0
+  http_parser: ^4.1.2
+  just_audio: ^0.10.4
+  native_audio_trimmer: ^1.0.0
+  path: ^1.9.1
   path_provider: ^2.1.5
   provider: ^6.1.5
+  record: ^6.0.0
   shared_preferences: ^2.5.3
   solar_icon_pack: ^0.2.1
   speech_to_text: ^7.1.0

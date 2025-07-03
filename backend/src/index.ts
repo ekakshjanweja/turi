@@ -5,6 +5,7 @@ import { streamSSE } from "hono/streaming";
 import { cors } from "hono/cors";
 import { DATABASE_URL, PORT } from "./lib/config";
 import { deleteUser } from "./lib/delete-user";
+import { audioRouter } from "./audio-router";
 
 // Lazy imports to reduce startup time
 const lazyGmailService = async () => {
@@ -233,43 +234,7 @@ app.get("/agent", (c) => {
   });
 });
 
-app.post("/agent", async (c) => {
-  const user = c.get("user");
-  const session = c.get("session");
-
-  if (!user || !session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  const sessionId = user.id;
-
-  const body = await c.req.json();
-  const { message } = body;
-
-  if (!message || typeof message !== "string") {
-    return c.json({ error: "Message Required" }, 400);
-  }
-
-  const agentSession = agentSessions.find((s) => s.id === sessionId);
-
-  if (!agentSession) {
-    return c.json({ error: "Agent session not found" }, 404);
-  }
-
-  try {
-    await agentSession.agent.handleUserInput(message);
-
-    return c.json({ status: "success" });
-  } catch (error) {
-    return c.json(
-      {
-        status: "error",
-        message: error instanceof Error ? error.message : JSON.stringify(error),
-      },
-      500
-    );
-  }
-});
+app.route("/audio", audioRouter);
 
 const server =
   process.env.NODE_ENV === "production"
