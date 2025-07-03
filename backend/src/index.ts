@@ -122,7 +122,6 @@ app.get("/agent", (c) => {
   c.header("Connection", "keep-alive");
 
   const sessionId = user.id;
-
   const message = c.req.query("message");
 
   return streamSSE(c, async (stream) => {
@@ -221,7 +220,7 @@ app.get("/agent", (c) => {
       await agentSession.agent.handleUserInput(message);
     }
 
-    await stream.sleep(1000000);
+    await stream.sleep(1000);
 
     stream.onAbort(() => {
       const index = agentSessions.findIndex((s) => s.id === sessionId);

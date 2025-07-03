@@ -121,7 +121,7 @@ class ChatProvider extends ChangeNotifier {
     streamSubscription = await Sse.sendRequest(
       "/agent",
       queryParameters: {
-        "audio": "true",
+        "audio": "false",
         "clear": newConversation.toString(),
         "message": messages.last.content,
       },

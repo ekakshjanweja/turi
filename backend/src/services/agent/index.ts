@@ -300,9 +300,9 @@ export class Agent {
         if (this.audioEnabled) {
           //TODO: Uncomment this when tts is working
 
-          // const audio = await tts({ text: followUp.text });
+          const audio = await tts({ text: followUp.text });
 
-          const audio = await elevenLabsTts(followUp.text);
+          // const audio = await elevenLabsTts(followUp.text);
 
           if ((audio === undefined || !audio) && this.audioEnabled) {
             await this.sendMessage({
@@ -310,6 +310,9 @@ export class Agent {
               content:
                 "Error: Failed to generate audio. Please try again later.",
             });
+            throw new Error(
+              "Failed to generate audio. Please try again later."
+            );
           } else {
             await this.sendMessage({
               type: "AUDIO",
@@ -354,10 +357,9 @@ export class Agent {
         });
       }
     } catch (error) {
-      this.sendMessage({
+      await this.sendMessage({
         type: "ERROR",
-        content:
-          "Error: " + (error instanceof Error ? error.message : String(error)),
+        content: error instanceof Error ? error.message : JSON.stringify(error),
       });
     }
   }
