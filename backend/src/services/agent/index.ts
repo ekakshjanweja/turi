@@ -19,7 +19,6 @@ import type { Message, EmailSummary } from "../../lib/types/types";
 import { elevenLabsTts } from "./eleven-labs";
 import type { SSEStreamingApi } from "hono/streaming";
 import { detectEndChatIntent, resolveOrdinalEmailReferenceAI } from "./helpers";
-import { tts } from "../audio/tts";
 
 export class Agent {
   private stream: SSEStreamingApi;
@@ -298,11 +297,7 @@ export class Agent {
         });
 
         if (this.audioEnabled) {
-          //TODO: Uncomment this when tts is working
-
-          const audio = await tts({ text: followUp.text });
-
-          // const audio = await elevenLabsTts(followUp.text);
+          const audio = await elevenLabsTts(followUp.text);
 
           if ((audio === undefined || !audio) && this.audioEnabled) {
             await this.sendMessage({

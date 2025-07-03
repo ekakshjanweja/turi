@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
+import 'package:turi_mail/src/core/services/local_stoage/kv_store.dart';
+import 'package:turi_mail/src/core/services/local_stoage/kv_store_keys.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/chat/message.dart';
 
@@ -36,6 +38,18 @@ class ChatProvider extends ChangeNotifier {
     scrollController.addListener(() {
       notifyListeners();
     });
+
+    final audioEnabledCache =
+        KVStore.get<bool>(KVStoreKeys.audioEnabled) ?? false;
+
+    audioEnabled = audioEnabledCache;
+  }
+
+  bool _audioEnabled = false;
+  bool get audioEnabled => _audioEnabled;
+  set audioEnabled(bool value) {
+    _audioEnabled = value;
+    notifyListeners();
   }
 
   StreamSubscription? _streamSubscription;
@@ -121,7 +135,7 @@ class ChatProvider extends ChangeNotifier {
     streamSubscription = await Sse.sendRequest(
       "/agent",
       queryParameters: {
-        "audio": "false",
+        "audio": audioEnabled.toString(),
         "clear": newConversation.toString(),
         "message": messages.last.content,
       },

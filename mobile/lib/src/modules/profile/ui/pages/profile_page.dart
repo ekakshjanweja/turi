@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icon_pack/solar_bold_icons.dart';
+import 'package:turi_mail/src/core/services/local_stoage/kv_store.dart';
+import 'package:turi_mail/src/core/services/local_stoage/kv_store_keys.dart';
+import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/navbar/navbar.dart';
 import 'package:turi_mail/src/modules/profile/ui/widgets/delete_account_dialog.dart';
 import 'package:turi_mail/src/modules/profile/ui/widgets/profile_header/profile_header.dart';
@@ -46,6 +49,27 @@ class ProfilePage extends StatelessWidget {
                 );
               },
               trailing: Text(context.isDarkMode ? "Dark mode" : "Light mode"),
+            ),
+
+            const SizedBox(height: 12),
+
+            Consumer<ChatProvider>(
+              builder: (context, cp, _) {
+                return ProfileTile(
+                  title: "Audio Inputs",
+                  icon: cp.audioEnabled
+                      ? SolarBoldIcons.volume
+                      : SolarBoldIcons.muted,
+                  onTap: () async {
+                    cp.audioEnabled = !cp.audioEnabled;
+                    await KVStore.set(
+                      KVStoreKeys.audioEnabled,
+                      cp.audioEnabled,
+                    );
+                  },
+                  trailing: Text(cp.audioEnabled ? "Enabled" : "Disabled"),
+                );
+              },
             ),
 
             const SizedBox(height: 24),
