@@ -146,7 +146,7 @@ class _MessageInputState extends State<MessageInput> {
                             height: 48,
                             alignment: Alignment.center,
                             child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 150),
+                              duration: const Duration(milliseconds: 300),
                               child: Icon(
                                 hasText
                                     ? SolarBoldIcons.mapArrowRight

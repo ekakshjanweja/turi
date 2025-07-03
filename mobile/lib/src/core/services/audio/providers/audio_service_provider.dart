@@ -42,8 +42,8 @@ class AudioServiceProvider extends ChangeNotifier {
       },
       speechThreshold: -40.0,
       silenceThreshold: -50.0,
-      initialPauseToleranceSeconds: 10,
-      pauseToleranceSeconds: 5,
+      initialPauseToleranceSeconds: 5,
+      pauseToleranceSeconds: 3,
     );
   }
 
@@ -143,13 +143,19 @@ class AudioServiceProvider extends ChangeNotifier {
 
     _voiceActivityDetection.stop();
 
+    isRecording = false;
+
+    if (_voiceActivityDetection.trimStartTime == null) {
+      audioFile == null;
+      await AudioUtils.clearRecordingsFolder();
+      return;
+    }
+
     final filePath = await _audioRecorder.stop();
 
     if (filePath != null) {
       audioFile = File(filePath);
     }
-
-    isRecording = false;
 
     // Only trim if we have all required timestamps
     if (_voiceActivityDetection.recordingStartTime != null &&
@@ -178,6 +184,14 @@ class AudioServiceProvider extends ChangeNotifier {
     }
 
     isTranscribing = true;
+
+    if (audioFile == null) {
+      isTranscribing = false;
+      return Failure(
+        errorType: ErrorType.unKnownError,
+        message: "No audio file found",
+      );
+    }
 
     if (audioFile != null) {
       final (result, error) = await AudioRepo.uploadAudioFile(audioFile!);

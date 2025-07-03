@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:turi_mail/src/core/services/audio/providers/audio_service_provider.dart';
@@ -34,6 +35,7 @@ class Waveform extends StatefulWidget {
 
 class _WaveformState extends State<Waveform> with TickerProviderStateMixin {
   ValueNotifier<double> soundLevel = ValueNotifier(0);
+  StreamSubscription<double>? _amplitudeSubscription;
 
   List<double> _amplitudeHistory = [];
   double _currentLevel = 0.0;
@@ -46,18 +48,22 @@ class _WaveformState extends State<Waveform> with TickerProviderStateMixin {
     // Initialize amplitude history with baseline values
     _amplitudeHistory = List.filled(widget.barCount, 0.0);
 
-    // Listen to sound level changes
-
+    // Listen to amplitude stream from AudioServiceProvider
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final asp = context.read<AudioServiceProvider>();
-
-      asp.amplitudeSubscription?.onData((data) {
-        _updateAmplitudeHistory(data.current);
-      });
+      if (mounted) {
+        final asp = context.read<AudioServiceProvider>();
+        _amplitudeSubscription = asp.amplitudeStream.listen((amplitude) {
+          if (mounted) {
+            _updateAmplitudeHistory(amplitude);
+          }
+        });
+      }
     });
   }
 
   void _updateAmplitudeHistory(double amplitude) {
+    if (!mounted) return;
+
     // Normalize amplitude data to 0-1 range
     final normalizedLevel = ((amplitude + 60) / 60).clamp(0.0, 1.0);
 
@@ -82,11 +88,14 @@ class _WaveformState extends State<Waveform> with TickerProviderStateMixin {
       _currentLevel = normalizedLevel;
     }
 
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
+    _amplitudeSubscription?.cancel();
     soundLevel.dispose();
     super.dispose();
   }

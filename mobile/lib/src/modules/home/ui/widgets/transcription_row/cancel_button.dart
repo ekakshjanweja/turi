@@ -50,7 +50,9 @@ class _CancelButtonState extends State<CancelButton>
   Widget build(BuildContext context) {
     return Consumer<AudioServiceProvider>(
       builder: (context, asp, _) {
-        if (asp.isRecording) return const SizedBox.shrink();
+        if (asp.isRecording || asp.audioFile == null) {
+          return const SizedBox.shrink();
+        }
 
         return Tooltip(
           message: "Clear Recording",

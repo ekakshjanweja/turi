@@ -52,6 +52,8 @@ class _AcceptButtonState extends State<AcceptButton>
       builder: (context, asp, _) {
         if (asp.isRecording) return const SizedBox.shrink();
 
+        if (asp.audioFile == null) return const SizedBox.shrink();
+
         return Tooltip(
           message: asp.isTranscribing ? 'Transcribing...' : 'Transcribe audio',
           child: GestureDetector(
@@ -65,7 +67,7 @@ class _AcceptButtonState extends State<AcceptButton>
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(error.message),
-                    backgroundColor: context.colorScheme.error,
+                    backgroundColor: context.colorScheme.scrim,
                   ),
                 );
               }
