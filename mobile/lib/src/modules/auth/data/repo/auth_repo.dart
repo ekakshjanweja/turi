@@ -1,15 +1,17 @@
 import 'dart:developer';
 import 'package:better_auth_flutter/better_auth_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:turi_mail/src/core/config/config.dart';
-import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
+import 'package:turi_mail/src/core/services/api/api.dart';
+import 'package:turi_mail/src/core/services/api/enums/error_code.dart';
 import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
-import 'package:turi_mail/src/core/services/api/api.dart' as api_service;
-import 'package:turi_mail/src/core/services/api/models/method_type.dart'
-    as api_service_method_type;
+import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 
 class AuthRepo {
-  static final betterAuthClient = BetterAuth.instance.client;
+  static final BetterAuthClient _client = BetterAuthFlutter.client;
+
+  static final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   static final List<String> scopes = <String>[
     "openid",
@@ -20,153 +22,168 @@ class AuthRepo {
     "https://mail.google.com/",
   ];
 
-  static final GoogleSignIn googleSignIn = GoogleSignIn(
-    // clientId: AppConfig.googleAndroidClientId,
-    serverClientId: AppConfig.googleServerClientId,
-    scopes: scopes,
-  );
-
   static Future<void> initialize() async {
-    try {} catch (e) {
+    try {
+      await _googleSignIn.initialize(
+        serverClientId: AppConfig.googleServerClientId,
+      );
+    } catch (e) {
       log("Failed to initialize Google Sign-In: ${e.toString()}", error: e);
     }
   }
 
-  static Future<(User?, Failure?)> signInWithGoogle() async {
+  static Future<(SignInSocialResponse?, ApiFailure?)> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? user = await googleSignIn.signIn();
+      final GoogleSignInAccount user = await _googleSignIn.authenticate(
+        scopeHint: scopes,
+      );
 
-      if (user == null) {
-        return (
-          null,
-          Failure(
-            errorType: ErrorType.googleSignInError,
-            message: "Google Sign-In cancelled or failed",
-          ),
-        );
-      }
-
-      final GoogleSignInAuthentication googleAuth = await user.authentication;
-
-      final idToken = googleAuth.idToken;
-      final accessToken = googleAuth.accessToken;
+      final GoogleSignInAuthentication authentication = user.authentication;
+      final String? idToken = authentication.idToken;
 
       if (idToken == null) {
         return (
           null,
-          Failure(
-            errorType: ErrorType.googleSignInError,
-            message: "Google Sign-In ID Token is null",
-          ),
+          ApiFailure.fromErrorCode(errorType: ErrorCode.idTokenIsNull),
         );
       }
+
+      final accessToken = await _getAccessToken(user);
 
       if (accessToken == null) {
         return (
           null,
-          Failure(
-            errorType: ErrorType.googleSignInError,
-            message: "Google Sign-In Access Token is null",
-          ),
+          ApiFailure.fromErrorCode(errorType: ErrorCode.accessTokenIsNull),
         );
       }
 
-      final (result, error) = await betterAuthClient.signInWithIdToken(
-        provider: SocialProvider.google,
-        idToken: idToken,
-        accessToken: accessToken,
+      final response = await _client.signIn.social(
+        request: SignInSocialRequest(
+          provider: SocialProvider.google,
+          idToken: SocialIdTokenBody(token: idToken, accessToken: accessToken),
+          scopes: scopes,
+        ),
       );
 
-      if (error != null) {
+      if (response.error != null) {
         return (
           null,
-          Failure(
-            errorType: ErrorType.betterAuthError,
-            message: error.code.message,
+          ApiFailure(
+            message: response.error!.message,
+            code: response.error!.code,
           ),
         );
       }
 
-      if (result == null) {
-        return (
-          null,
-          Failure(
-            errorType: ErrorType.betterAuthError,
-            message: "Better Auth User is null",
-          ),
-        );
-      }
-
-      return (result, null);
+      return (response.data, null);
+    } on GoogleSignInException catch (e) {
+      return (
+        null,
+        ApiFailure.fromErrorCode(
+          errorType: ErrorCode.googleSignInError,
+          message: e.toString(),
+        ),
+      );
     } catch (e) {
       return (
         null,
-        Failure(errorType: ErrorType.unKnownError, message: e.toString()),
+        ApiFailure.fromErrorCode(
+          errorType: ErrorCode.unKnownError,
+          message: e.toString(),
+        ),
       );
     }
   }
 
-  static Future<((Session?, User?)?, Failure?)> getSession() async {
-    try {
-      final (result, error) = await betterAuthClient.getSession();
+  static Future<String?> _getAccessToken(GoogleSignInAccount user) async {
+    final ClientAuthorizationTokenData? tokens = await GoogleSignInPlatform
+        .instance
+        .clientAuthorizationTokensForScopes(
+          ClientAuthorizationTokensForScopesParameters(
+            request: AuthorizationRequestDetails(
+              scopes: scopes,
+              userId: user.id,
+              email: user.email,
+              promptIfUnauthorized: false,
+            ),
+          ),
+        );
 
-      if (error != null) {
+    if (tokens == null) return null;
+
+    final accessToken = tokens.accessToken;
+
+    return accessToken;
+  }
+
+  static Future<(SessionResponse?, ApiFailure?)> getSession() async {
+    try {
+      final response = await _client.getSession();
+
+      if (response.error != null) {
         return (
           null,
-          Failure(
-            errorType: ErrorType.betterAuthError,
-            message: error.code.message,
+          ApiFailure(
+            message: response.error!.message,
+            code: response.error!.code,
           ),
         );
       }
 
-      return (result, null);
+      return (response.data, null);
     } catch (e) {
       return (
-        (null, null),
-        Failure(errorType: ErrorType.unKnownError, message: e.toString()),
+        null,
+        ApiFailure.fromErrorCode(
+          errorType: ErrorCode.unKnownError,
+          message: e.toString(),
+        ),
       );
     }
   }
 
-  static Future<Failure?> signOut() async {
+  static Future<ApiFailure?> signOut() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await _googleSignIn.signOut();
 
-      await googleSignIn.signOut();
+      final response = await _client.signOut();
 
-      final error = await betterAuthClient.signOut();
-
-      if (error != null) {
-        return Failure(
-          errorType: ErrorType.betterAuthError,
-          message: error.code.message,
+      if (response.error != null) {
+        return ApiFailure(
+          message: response.error!.message,
+          code: response.error!.code,
         );
       }
 
       return null;
     } catch (e) {
-      return Failure(errorType: ErrorType.unKnownError, message: e.toString());
+      return ApiFailure.fromErrorCode(
+        errorType: ErrorCode.unKnownError,
+        message: e.toString(),
+      );
     }
   }
 
-  static Future<Failure?> deleteUser() async {
+  static Future<ApiFailure?> deleteUser() async {
     try {
-      final (result, error) = await api_service.Api.sendRequest(
+      final (result, error) = await Api.sendRequest(
         "/delete",
-        method: api_service_method_type.MethodType.get,
+        method: MethodType.get,
       );
 
       if (error != null) {
-        return Failure(
-          errorType: ErrorType.failedToDeleteUser,
+        return ApiFailure.fromErrorCode(
+          errorType: ErrorCode.failedToDeleteUser,
           message: error.message,
         );
       }
 
       return null;
     } catch (e) {
-      return Failure(errorType: ErrorType.unKnownError, message: e.toString());
+      return ApiFailure.fromErrorCode(
+        errorType: ErrorCode.unKnownError,
+        message: e.toString(),
+      );
     }
   }
 }

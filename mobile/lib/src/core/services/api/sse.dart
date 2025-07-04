@@ -4,7 +4,7 @@ import "dart:developer";
 import "dart:io";
 import "dart:typed_data";
 import "dart:ui";
-import "package:cookie_jar/cookie_jar.dart";
+import "package:better_auth_flutter/better_auth_flutter.dart";
 import "package:http/http.dart" as http;
 import "package:path_provider/path_provider.dart";
 import "package:turi_mail/src/core/config/config.dart";
@@ -14,15 +14,6 @@ import "package:turi_mail/src/modules/auth/data/repo/auth_repo.dart";
 
 class Sse {
   static final hc = http.Client();
-
-  static late PersistCookieJar _cookieJar;
-
-  static Future<void> init() async {
-    final cacheDir = await getApplicationCacheDirectory();
-    _cookieJar = PersistCookieJar(
-      storage: FileStorage("${cacheDir.path}/.cookies/"),
-    );
-  }
 
   static Future<StreamSubscription?> sendRequest(
     String path, {
@@ -58,9 +49,10 @@ class Sse {
       queryParameters: queryParameters,
     );
 
-    final cookies = await _cookieJar.loadForRequest(
-      Uri(scheme: uri.scheme, host: uri.host),
+    final cookies = await BetterAuthFlutter.storage.getCookies(
+      Uri(scheme: AppConfig.scheme, host: AppConfig.host).toString(),
     );
+
     if (cookies.isNotEmpty) {
       headers["Cookie"] = cookies.map((c) => "${c.name}=${c.value}").join("; ");
     }

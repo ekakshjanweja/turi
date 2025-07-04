@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:path/path.dart' as path;
-import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
+import 'package:turi_mail/src/core/services/api/enums/error_code.dart';
 import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
 import 'package:turi_mail/src/core/services/audio/audio_repo.dart';
 import 'package:turi_mail/src/core/services/audio/voice_activity_detection/audio_time_state.dart';
@@ -175,10 +175,10 @@ class AudioServiceProvider extends ChangeNotifier {
     }
   }
 
-  Future<Failure?> transcribe() async {
+  Future<ApiFailure?> transcribe() async {
     if (isTranscribing) {
-      return Failure(
-        errorType: ErrorType.unKnownError,
+      return ApiFailure.fromErrorCode(
+        errorType: ErrorCode.unKnownError,
         message: "Already transcribing",
       );
     }
@@ -187,8 +187,8 @@ class AudioServiceProvider extends ChangeNotifier {
 
     if (audioFile == null) {
       isTranscribing = false;
-      return Failure(
-        errorType: ErrorType.unKnownError,
+      return ApiFailure(
+        code: ErrorCode.unKnownError.id,
         message: "No audio file found",
       );
     }
@@ -203,8 +203,8 @@ class AudioServiceProvider extends ChangeNotifier {
 
       if (result == null) {
         isTranscribing = false;
-        return Failure(
-          errorType: ErrorType.unKnownError,
+        return ApiFailure(
+          code: ErrorCode.unKnownError.id,
           message: "No transcription result",
         );
       }
@@ -217,8 +217,8 @@ class AudioServiceProvider extends ChangeNotifier {
       return null;
     }
 
-    return Failure(
-      errorType: ErrorType.unKnownError,
+    return ApiFailure(
+      code: ErrorCode.unKnownError.id,
       message: "No audio file found",
     );
   }

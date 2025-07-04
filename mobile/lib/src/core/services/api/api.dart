@@ -1,11 +1,10 @@
 import "dart:convert";
 import "dart:io";
-import "package:cookie_jar/cookie_jar.dart";
+import "package:better_auth_flutter/better_auth_flutter.dart";
 import "package:http/http.dart" as http;
 import "package:http_parser/http_parser.dart";
-import "package:path_provider/path_provider.dart";
 import "package:turi_mail/src/core/config/config.dart";
-import "package:turi_mail/src/core/services/api/enums/error_type.dart";
+import "package:turi_mail/src/core/services/api/enums/error_code.dart";
 import "package:turi_mail/src/core/services/api/enums/request_type.dart";
 import "package:turi_mail/src/core/services/api/models/api_failure.dart";
 import "package:turi_mail/src/core/services/api/models/method_type.dart";
@@ -14,16 +13,7 @@ import "package:turi_mail/src/core/services/api/models/multipart_body.dart";
 class Api {
   static final hc = http.Client();
 
-  static late PersistCookieJar _cookieJar;
-
-  static Future<void> init() async {
-    final cacheDir = await getApplicationCacheDirectory();
-    _cookieJar = PersistCookieJar(
-      storage: FileStorage("${cacheDir.path}/.cookies/"),
-    );
-  }
-
-  static Future<(dynamic, Failure?)> sendRequest(
+  static Future<(dynamic, ApiFailure?)> sendRequest(
     String path, {
     required MethodType method,
     RequestType requestType = RequestType.json,
@@ -60,11 +50,14 @@ class Api {
       port: AppConfig.port,
     );
 
-    final cookies = await _cookieJar.loadForRequest(
-      Uri(scheme: uri.scheme, host: uri.host),
+    final cookies = await BetterAuthFlutter.storage.getCookies(
+      Uri(scheme: AppConfig.scheme, host: AppConfig.host).toString(),
     );
+
     if (cookies.isNotEmpty) {
-      headers["Cookie"] = cookies.map((c) => "${c.name}=${c.value}").join("; ");
+      headers["Cookie"] = cookies
+          .map((cookie) => '${cookie.name}=${cookie.value}')
+          .join('; ');
     }
 
     final http.Response response;
@@ -138,10 +131,16 @@ class Api {
     } on SocketException catch (error) {
       return (
         null,
-        Failure(message: error.message, errorType: ErrorType.unKnownError),
+        ApiFailure.fromErrorCode(
+          errorType: ErrorCode.unKnownError,
+          message: error.message,
+        ),
       );
     } catch (error) {
-      return (null, Failure(errorType: ErrorType.unKnownError));
+      return (
+        null,
+        ApiFailure.fromErrorCode(errorType: ErrorCode.unKnownError),
+      );
     }
 
     switch (response.statusCode) {
@@ -152,7 +151,10 @@ class Api {
         } catch (e) {
           return (
             null,
-            Failure(errorType: ErrorType.unKnownError, message: e.toString()),
+            ApiFailure.fromErrorCode(
+              errorType: ErrorCode.unKnownError,
+              message: e.toString(),
+            ),
           );
         }
       case 400:
@@ -161,23 +163,29 @@ class Api {
 
         return (
           null,
-          Failure(message: message, errorType: ErrorType.invalidInput),
+          ApiFailure.fromErrorCode(
+            errorType: ErrorCode.invalidInput,
+            message: message,
+          ),
         );
       case 401:
         if (isDelete) {
           return (null, null);
         }
 
-        return (null, Failure(errorType: ErrorType.unAuthorized));
+        return (
+          null,
+          ApiFailure.fromErrorCode(errorType: ErrorCode.unAuthorized),
+        );
       case 404:
         final data = jsonDecode(response.body);
         final message = data["message"];
 
         return (
           null,
-          Failure(
+          ApiFailure.fromErrorCode(
+            errorType: ErrorCode.unKnownError,
             message: message ?? "Not found.",
-            errorType: ErrorType.unKnownError,
           ),
         );
 
@@ -187,7 +195,10 @@ class Api {
 
         return (
           null,
-          Failure(message: message, errorType: ErrorType.serverError),
+          ApiFailure.fromErrorCode(
+            errorType: ErrorCode.serverError,
+            message: message,
+          ),
         );
       default:
         final data = jsonDecode(response.body);
@@ -195,9 +206,9 @@ class Api {
 
         return (
           null,
-          Failure(
+          ApiFailure.fromErrorCode(
+            errorType: ErrorCode.unKnownError,
             message: message ?? "Unknown error",
-            errorType: ErrorType.unKnownError,
           ),
         );
     }

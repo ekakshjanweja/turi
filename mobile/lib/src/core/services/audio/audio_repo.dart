@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'package:turi_mail/src/core/services/api/api.dart';
 import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
-import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
+import 'package:turi_mail/src/core/services/api/enums/error_code.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/enums/request_type.dart';
 import 'package:turi_mail/src/core/services/api/models/multipart_body.dart';
 import 'package:turi_mail/src/core/services/audio/models/audio_transcription_result.dart';
 
 class AudioRepo {
-  static Future<(AudioTranscriptionResult?, Failure?)> uploadAudioFile(
+  static Future<(AudioTranscriptionResult?, ApiFailure?)> uploadAudioFile(
     File audioFile, {
     Function(int sent, int total)? onProgress,
   }) async {
@@ -17,9 +17,9 @@ class AudioRepo {
       if (!await audioFile.exists()) {
         return (
           null,
-          Failure(
+          ApiFailure(
             message: "Audio file does not exist",
-            errorType: ErrorType.invalidInput,
+            code: ErrorCode.invalidInput.id,
           ),
         );
       }
@@ -30,9 +30,9 @@ class AudioRepo {
       if (fileSize > maxSize) {
         return (
           null,
-          Failure(
+          ApiFailure(
             message: "File too large. Maximum size is 10MB",
-            errorType: ErrorType.invalidInput,
+            code: ErrorCode.invalidInput.id,
           ),
         );
       }
@@ -68,15 +68,15 @@ class AudioRepo {
     } catch (e) {
       return (
         null,
-        Failure(
+        ApiFailure(
           message: "Failed to upload audio: ${e.toString()}",
-          errorType: ErrorType.unKnownError,
+          code: ErrorCode.unKnownError.id,
         ),
       );
     }
   }
 
-  static Future<(Map<String, dynamic>?, Failure?)>
+  static Future<(Map<String, dynamic>?, ApiFailure?)>
   checkAudioServiceStatus() async {
     final (response, error) = await Api.sendRequest(
       '/audio/status',

@@ -1,16 +1,13 @@
+import 'dart:developer';
+
 import 'package:better_auth_flutter/better_auth_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:turi_mail/src/core/services/api/enums/error_type.dart';
+import 'package:turi_mail/src/core/services/api/enums/error_code.dart';
 import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
 import 'package:turi_mail/src/modules/auth/data/repo/auth_repo.dart';
 
 class AuthProvider extends ChangeNotifier {
-  AuthProvider() {
-    user = betterAuthClient.user;
-    session = betterAuthClient.session;
-  }
-
-  static final BetterAuthClient betterAuthClient = BetterAuth.instance.client;
+  // AuthProvider() {}
 
   User? _user;
   User? get user => _user;
@@ -47,7 +44,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Failure?> onAuth() async {
+  Future<ApiFailure?> onAuth() async {
     isLoading = true;
     final (result, error) = await AuthRepo.signInWithGoogle();
 
@@ -57,12 +54,19 @@ class AuthProvider extends ChangeNotifier {
       return error;
     }
 
-    user = result;
+    final err = await getSession();
+
+    if (err != null) {
+      await signOut();
+      isLoading = false;
+      return err;
+    }
+
     isLoading = false;
     return null;
   }
 
-  Future<Failure?> getSession() async {
+  Future<ApiFailure?> getSession() async {
     isLoading = true;
     final (result, error) = await AuthRepo.getSession();
 
@@ -71,21 +75,25 @@ class AuthProvider extends ChangeNotifier {
       return error;
     }
 
-    final (s, u) = result!;
-    session = s;
-    user = u;
+    if (result == null) {
+      return ApiFailure.fromErrorCode(errorType: ErrorCode.unAuthorized);
+    }
+
+    session = result.session;
+    user = result.user;
+
     isLoading = false;
     return null;
   }
 
-  Future<Failure?> signOut() async {
+  Future<ApiFailure?> signOut() async {
     isSigningOut = true;
     final error = await AuthRepo.signOut();
 
     if (error != null) {
       isSigningOut = false;
-      return Failure(
-        errorType: ErrorType.betterAuthError,
+      return ApiFailure.fromErrorCode(
+        errorType: ErrorCode.betterAuthError,
         message: error.message,
       );
     }
@@ -96,7 +104,7 @@ class AuthProvider extends ChangeNotifier {
     return null;
   }
 
-  Future<Failure?> deleteUser() async {
+  Future<ApiFailure?> deleteUser() async {
     isDeleting = true;
 
     final error = await AuthRepo.deleteUser();
