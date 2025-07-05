@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:solar_icon_pack/solar_bold_icons.dart';
 import 'package:turi_mail/src/core/services/audio/providers/audio_service_provider.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
+import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
+import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/transcription_row/transcription_row.dart';
@@ -57,6 +60,27 @@ class _MessageInputState extends State<MessageInput> {
       },
       onEnd: () {
         stopSTT();
+      },
+      onUnauthorized: () async {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Oops! Your session has expired. Please sign in again.",
+            ),
+          ),
+        );
+
+        final ap = context.read<AuthProvider>();
+
+        final error = await ap.signOut();
+
+        if (error != null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(error.message)));
+        }
+
+        context.go(AuthPage.routeName);
       },
     );
   }

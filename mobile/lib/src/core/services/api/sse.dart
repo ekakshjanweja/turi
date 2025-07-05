@@ -129,6 +129,14 @@ class Sse {
                       break;
                     }
 
+                    if (content.toLowerCase().contains(
+                      "Request had invalid authentication credentials"
+                          .toLowerCase(),
+                    )) {
+                      onUnauthorized();
+                      break;
+                    }
+
                     onError(content);
                     break;
                   case MessageType.end:

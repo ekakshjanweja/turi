@@ -126,6 +126,7 @@ class ChatProvider extends ChangeNotifier {
   void sendMessage({
     required VoidCallback onDone,
     required VoidCallback onEnd,
+    required VoidCallback onUnauthorized,
   }) async {
     if (inputController.text.isEmpty) return;
 
@@ -169,7 +170,7 @@ class ChatProvider extends ChangeNotifier {
       onEnd: () {
         onEnd();
       },
-      onUnauthorized: () {},
+      onUnauthorized: onUnauthorized,
     );
   }
 
