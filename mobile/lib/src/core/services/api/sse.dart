@@ -99,7 +99,6 @@ class Sse {
                   case MessageType.aiResponse:
                     onChunk(parsedJson["content"] as String);
                   case MessageType.audio:
-                    log("Audio: ${parsedJson["content"]}");
                     final content =
                         parsedJson["content"]["audio"] as List<dynamic>;
                     final audioBytes = Uint8List.fromList(content.cast<int>());

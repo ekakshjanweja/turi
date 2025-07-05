@@ -1,13 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { GOOGLE_GENERATIVE_AI_API_KEY } from "../../lib/config";
-import wav from "wav";
-import { readFileSync, createWriteStream } from "fs";
 
-export async function googleTts({
-  text,
-}: {
-  text: string;
-}): Promise<number[] | undefined> {
+export async function googleTts(text: string): Promise<number[]> {
   try {
     const googleGenAI = new GoogleGenAI({
       vertexai: false,
@@ -32,43 +26,74 @@ export async function googleTts({
     const data =
       response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
 
-    if (!data) return undefined;
+    if (!data) {
+      throw new Error("No audio data received from Google TTS");
+    }
 
-    const audioBuffer = Buffer.from(data, "base64");
+    // Google TTS returns PCM data, we need to convert it to a proper WAV file in memory
+    const pcmData = Buffer.from(data, "base64");
 
-    await saveWaveFile("out.wav", audioBuffer);
+    // Create WAV file format in memory (no filesystem operations)
+    const wavBuffer = createWavBuffer(pcmData);
 
-    const wavFileBuffer = readFileSync("out.wav");
-
-    const audioFile = Array.from(wavFileBuffer);
-    return audioFile;
+    // Return as number array (same format as ElevenLabs)
+    return Array.from(wavBuffer);
   } catch (error) {
-    throw error;
+    throw new Error(
+      `Google TTS Failed: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
   }
 }
 
-async function saveWaveFile(
-  filename: string,
+function createWavBuffer(
   pcmData: Buffer,
   channels = 1,
-  rate = 24000,
-  sampleWidth = 2
-) {
-  return new Promise((resolve, reject) => {
-    const fileStream = createWriteStream(filename);
-    const writer = new wav.Writer({
-      sampleRate: rate,
-      channels: channels,
-      bitDepth: sampleWidth * 8,
-    });
+  sampleRate = 24000,
+  bitsPerSample = 16
+): Buffer {
+  const headerLength = 44;
+  const totalLength = headerLength + pcmData.length;
 
-    writer.pipe(fileStream);
+  // Create buffer for the entire WAV file
+  const wavBuffer = Buffer.alloc(totalLength);
 
-    writer.on("finish", resolve);
-    writer.on("error", reject);
-    fileStream.on("error", reject);
+  // Write WAV header
+  let offset = 0;
 
-    writer.write(pcmData);
-    writer.end();
-  });
+  // RIFF header
+  wavBuffer.write("RIFF", offset);
+  offset += 4;
+  wavBuffer.writeUInt32LE(totalLength - 8, offset);
+  offset += 4;
+  wavBuffer.write("WAVE", offset);
+  offset += 4;
+
+  // fmt chunk
+  wavBuffer.write("fmt ", offset);
+  offset += 4;
+  wavBuffer.writeUInt32LE(16, offset);
+  offset += 4; // fmt chunk size
+  wavBuffer.writeUInt16LE(1, offset);
+  offset += 2; // audio format (PCM)
+  wavBuffer.writeUInt16LE(channels, offset);
+  offset += 2;
+  wavBuffer.writeUInt32LE(sampleRate, offset);
+  offset += 4;
+  wavBuffer.writeUInt32LE((sampleRate * channels * bitsPerSample) / 8, offset);
+  offset += 4; // byte rate
+  wavBuffer.writeUInt16LE((channels * bitsPerSample) / 8, offset);
+  offset += 2; // block align
+  wavBuffer.writeUInt16LE(bitsPerSample, offset);
+  offset += 2;
+
+  // data chunk
+  wavBuffer.write("data", offset);
+  offset += 4;
+  wavBuffer.writeUInt32LE(pcmData.length, offset);
+  offset += 4;
+
+  // Copy PCM data
+  pcmData.copy(wavBuffer, offset);
+
+  return wavBuffer;
 }

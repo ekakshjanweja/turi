@@ -22,6 +22,7 @@ import {
   detectEndChatIntent,
   resolveOrdinalEmailReferenceAI,
 } from "./helpers/helpers";
+import { googleTts } from "../audio/google-tts";
 
 export class Agent {
   private stream: SSEStreamingApi;
@@ -160,21 +161,20 @@ export class Agent {
         });
 
         if (this.audioEnabled) {
-          const audio = await elevenLabsTts(followUp.text);
+          try {
+            // const audio = await elevenLabsTts(followUp.text);
 
-          if ((audio === undefined || !audio) && this.audioEnabled) {
+            const audio = await googleTts(followUp.text);
+            if (audio) {
+              await this.sendMessage({
+                type: "AUDIO",
+                content: { audio },
+              });
+            }
+          } catch (error) {
             await this.sendMessage({
               type: "ERROR",
-              content:
-                "Error: Failed to generate audio. Please try again later.",
-            });
-            throw new Error(
-              "Failed to generate audio. Please try again later."
-            );
-          } else {
-            await this.sendMessage({
-              type: "AUDIO",
-              content: { audio: audio! },
+              content: "Failed to generate audio. Please try again later.",
             });
           }
         }
@@ -196,12 +196,22 @@ export class Agent {
         });
 
         if (this.audioEnabled) {
-          const audio = await elevenLabsTts(result.text);
+          try {
+            // const audio = await elevenLabsTts(result.text);
 
-          await this.sendMessage({
-            type: "AUDIO",
-            content: { audio },
-          });
+            const audio = await googleTts(result.text);
+            if (audio) {
+              await this.sendMessage({
+                type: "AUDIO",
+                content: { audio },
+              });
+            }
+          } catch (error) {
+            await this.sendMessage({
+              type: "ERROR",
+              content: "Failed to generate audio. Please try again later.",
+            });
+          }
         }
 
         await this.sendMessage({

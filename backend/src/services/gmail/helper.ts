@@ -119,11 +119,6 @@ export async function configureOAuth2Client(userId: string) {
       return { error };
     }
 
-    console.log(
-      `[OAuth2Client] Setting up OAuth2Client for user ${userId} with token expiry:`,
-      finalExpiresAt?.toISOString() || "unknown"
-    );
-
     const oauth2Client = new OAuth2Client({
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
@@ -172,9 +167,6 @@ export async function configureOAuth2Client(userId: string) {
     try {
       const testGmail = google.gmail({ version: "v1", auth: oauth2Client });
       await testGmail.users.getProfile({ userId: "me" });
-      console.log(
-        `[OAuth2Client] Successfully validated credentials for user ${userId}`
-      );
     } catch (testError) {
       console.error(
         `[OAuth2Client] Failed to validate credentials for user ${userId}:`,
