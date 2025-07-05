@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:better_auth_flutter/better_auth_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:turi_mail/src/core/services/api/enums/error_code.dart';

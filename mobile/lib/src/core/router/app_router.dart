@@ -11,7 +11,7 @@ class AppRouter {
     redirect: (context, state) async {
       final response = await BetterAuthFlutter.client.getSession();
 
-      final isLoggedIn = response.data != null;
+      final isLoggedIn = response.data?.user != null;
       final isPublicRoute = AppRoutes.publicRoutes.contains(
         state.matchedLocation,
       );
