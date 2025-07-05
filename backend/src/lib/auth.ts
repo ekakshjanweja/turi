@@ -40,19 +40,6 @@ export const auth = betterAuth({
     "https://turimail.vercel.app",
   ],
   plugins: [openAPI()],
-  session: {
-    // Keep freshAge at 0 since we're using email verification for deletion
-    freshAge: 0,
-    // Extend session duration to prevent issues with delete flows
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-  },
-  account: {
-    accountLinking: {
-      enabled: true,
-      // Allow deletion even if user has multiple linked accounts
-      allowUnlinkingAll: true,
-    },
-  },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -65,6 +52,7 @@ export const auth = betterAuth({
         "https://www.googleapis.com/auth/gmail.modify",
         "https://mail.google.com/",
       ],
+      
     },
   },
 });
