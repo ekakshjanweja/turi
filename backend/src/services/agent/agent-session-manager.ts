@@ -18,9 +18,19 @@ export const AGENT_SESSION_CONFIG: AgentSessionConfig = {
 export class AgentSessionManager {
   private sessions = new Map<string, AgentSessionWithActivity>();
   private cleanupTimer: NodeJS.Timeout | null = null;
+  private isCleanupRunning = false;
 
   constructor() {
-    this.startCleanupTimer();
+    // Don't start cleanup timer automatically in constructor
+    // This will be started manually when needed
+  }
+
+  // Method to explicitly start cleanup timer when needed
+  public startCleanup() {
+    if (!this.isCleanupRunning) {
+      this.startCleanupTimer();
+      this.isCleanupRunning = true;
+    }
   }
 
   private startCleanupTimer() {

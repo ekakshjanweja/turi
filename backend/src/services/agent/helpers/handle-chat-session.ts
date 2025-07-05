@@ -4,7 +4,7 @@ import type {
   AgentSessionWithActivity,
   ValidatedChatQuery,
 } from "../../../lib/types/types";
-import { sessionManager } from "../../../routes/agent";
+import { getSessionManager } from "../../../routes/agent";
 import { initializeGmailService } from "./gmail-init";
 import { sendErrorMessage, sendSystemMessage } from "./agent-router-helpers";
 
@@ -20,7 +20,7 @@ export async function handleChatSession(
   query: ValidatedChatQuery,
   connectionTimeout: NodeJS.Timeout | null
 ) {
-  let agentSession = sessionManager.getSession(sessionId);
+  let agentSession = getSessionManager().getSession(sessionId);
 
   // Initialize Gmail service
   let gmailService;
@@ -44,7 +44,7 @@ export async function handleChatSession(
   } else {
     // Create new session
     await createNewSession(sessionId, stream, gmailService, query.audioEnabled);
-    agentSession = sessionManager.getSession(sessionId);
+    agentSession = getSessionManager().getSession(sessionId);
   }
 
   if (!agentSession) {
@@ -88,7 +88,7 @@ async function handleExistingSession(
   query: ValidatedChatQuery
 ) {
   // Update session components
-  sessionManager.updateSession(agentSession.id, {
+  getSessionManager().updateSession(agentSession.id, {
     sseConnection: stream,
     gmailService,
   });
@@ -100,7 +100,7 @@ async function handleExistingSession(
     const Agent = await lazyAgent();
     const newAgent = new Agent(stream, gmailService, query.audioEnabled);
 
-    sessionManager.updateSession(agentSession.id, {
+    getSessionManager().updateSession(agentSession.id, {
       agent: newAgent,
       audio: query.audioEnabled,
     });
@@ -131,7 +131,7 @@ async function createNewSession(
       audio: audioEnabled,
     };
 
-    const created = sessionManager.createSession(sessionId, newSession);
+    const created = getSessionManager().createSession(sessionId, newSession);
 
     if (!created) {
       throw new Error("Failed to create session - maximum sessions reached");

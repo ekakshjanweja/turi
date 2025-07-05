@@ -19,8 +19,17 @@ export const agentRouter = new Hono<{
   };
 }>();
 
-// Global session manager instance
-export const sessionManager = new AgentSessionManager();
+// Lazy-loaded session manager to avoid global scope timer issues
+let sessionManagerInstance: AgentSessionManager | null = null;
+
+export function getSessionManager(): AgentSessionManager {
+  if (!sessionManagerInstance) {
+    sessionManagerInstance = new AgentSessionManager();
+    // Start cleanup timer only when first accessed (not in global scope)
+    sessionManagerInstance.startCleanup();
+  }
+  return sessionManagerInstance;
+}
 
 // Main chat handler
 agentRouter.get("/chat", (c) => {
@@ -39,6 +48,7 @@ agentRouter.get("/chat", (c) => {
   c.header("Access-Control-Allow-Headers", "Cache-Control");
 
   const sessionId = user.id;
+  const sessionManager = getSessionManager(); // Get lazy-loaded instance
 
   try {
     const query = validateChatQuery(c);
@@ -73,7 +83,7 @@ agentRouter.get("/chat", (c) => {
         if (connectionTimeout) {
           clearTimeout(connectionTimeout);
         }
-        sessionManager.removeSession(sessionId);
+        getSessionManager().removeSession(sessionId);
       });
     });
   } catch (error) {
@@ -90,7 +100,7 @@ agentRouter.get("/chat", (c) => {
 
 // Health check endpoint for monitoring
 agentRouter.get("/health", (c) => {
-  const healthInfo = sessionManager.getHealthInfo();
+  const healthInfo = getSessionManager().getHealthInfo();
 
   return c.json({
     status: "healthy",
@@ -107,7 +117,7 @@ agentRouter.get("/sessions", (c) => {
   }
 
   // Only return session count for security
-  const sessionInfo = sessionManager.getUserSessionInfo(user.id);
+  const sessionInfo = getSessionManager().getUserSessionInfo(user.id);
 
   return c.json(sessionInfo);
 });
@@ -115,10 +125,14 @@ agentRouter.get("/sessions", (c) => {
 // Graceful shutdown handling
 process.on("SIGTERM", () => {
   console.log("Received SIGTERM, cleaning up sessions...");
-  sessionManager.destroy();
+  if (sessionManagerInstance) {
+    sessionManagerInstance.destroy();
+  }
 });
 
 process.on("SIGINT", () => {
   console.log("Received SIGINT, cleaning up sessions...");
-  sessionManager.destroy();
+  if (sessionManagerInstance) {
+    sessionManagerInstance.destroy();
+  }
 });
