@@ -19,7 +19,6 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
     with TickerProviderStateMixin {
   late AnimationController _bounceController;
   late Animation<double> _bounceAnimation;
-  ValueNotifier<double> soundLevel = ValueNotifier(0.0);
 
   @override
   void initState() {
@@ -51,7 +50,6 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
   @override
   void dispose() {
     _bounceController.dispose();
-    soundLevel.dispose();
     super.dispose();
   }
 
@@ -65,10 +63,6 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
 
     asp.transcription.listen((data) {
       cp.inputController.text = data;
-    });
-
-    asp.amplitudeSubscription?.onData((data) {
-      soundLevel.value = data.current;
     });
   }
 
@@ -102,7 +96,6 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
                     child: VoiceButton(
                       onTap: asp.isRecording ? stopSTT : startSTT,
                       isListening: asp.isRecording,
-                      soundLevel: soundLevel,
                       size: 120,
                       enablePulse: true,
                     ),

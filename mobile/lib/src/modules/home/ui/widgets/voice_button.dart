@@ -5,7 +5,6 @@ import 'package:turi_mail/src/core/utils/extensions.dart';
 class VoiceButton extends StatefulWidget {
   final VoidCallback onTap;
   final bool isListening;
-  final ValueNotifier<double> soundLevel;
   final double size;
   final bool enablePulse;
 
@@ -13,7 +12,6 @@ class VoiceButton extends StatefulWidget {
     super.key,
     required this.onTap,
     this.isListening = false,
-    required this.soundLevel,
     this.size = 120,
     this.enablePulse = true,
   });

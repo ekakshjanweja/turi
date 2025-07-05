@@ -30,7 +30,7 @@ export async function stt({
       model: "gemini-2.5-flash",
       contents: createUserContent([
         createPartFromUri(uploadedFile.uri!, uploadedFile.mimeType!),
-        "Exactly, return a word-for-word transcription of the audio",
+        "Exactly, return a word-for-word transcription of the audio. If there is silence, return an empty string.",
       ]),
     });
 

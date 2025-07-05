@@ -40,8 +40,8 @@ class AudioServiceProvider extends ChangeNotifier {
         log('Trim start detected');
         notifyListeners();
       },
-      speechThreshold: -40.0,
-      silenceThreshold: -50.0,
+      speechThreshold: -30.0,
+      silenceThreshold: -40.0,
       initialPauseToleranceSeconds: 5,
       pauseToleranceSeconds: 3,
     );

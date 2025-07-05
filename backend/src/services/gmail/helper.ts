@@ -44,31 +44,145 @@ export async function configureOAuth2Client(userId: string) {
 
     const account = userAccounts[0];
 
+    // Check if token is expired or about to expire (within 5 minutes)
+    const fiveMinutesInMs = 5 * 60 * 1000;
+    const now = Date.now();
+    const needsRefresh =
+      account.accessTokenExpiresAt &&
+      account.accessTokenExpiresAt.getTime() - now < fiveMinutesInMs;
+
+    let finalAccessToken = account.accessToken;
+    let finalExpiresAt = account.accessTokenExpiresAt;
+
+    // Use direct Google OAuth2 API to refresh token if needed
+    if (needsRefresh && account.refreshToken) {
+      console.log(
+        `[OAuth2Client] Token needs refresh for user ${userId}, account ${account.id}`
+      );
+      try {
+        // Create a temporary OAuth2Client for token refresh
+        const tempOAuth2Client = new OAuth2Client({
+          clientId: GOOGLE_CLIENT_ID,
+          clientSecret: GOOGLE_CLIENT_SECRET,
+        });
+
+        tempOAuth2Client.setCredentials({
+          refresh_token: account.refreshToken,
+        });
+
+        // Refresh the access token
+        const { credentials } = await tempOAuth2Client.refreshAccessToken();
+
+        if (credentials.access_token) {
+          console.log(
+            `[OAuth2Client] Successfully refreshed access token for user ${userId}`
+          );
+          finalAccessToken = credentials.access_token;
+
+          // Calculate expiry time (default 1 hour if not provided)
+          const expiryTime = credentials.expiry_date
+            ? new Date(credentials.expiry_date)
+            : new Date(Date.now() + 3600 * 1000);
+
+          // Update the database with the new access token
+          await db
+            .update(accountSchema)
+            .set({
+              accessToken: credentials.access_token,
+              accessTokenExpiresAt: expiryTime,
+            })
+            .where(eq(accountSchema.id, account.id));
+
+          // Update the local variable for OAuth2Client
+          finalExpiresAt = expiryTime;
+        }
+      } catch (refreshError) {
+        console.error(
+          `[OAuth2Client] Failed to refresh access token for user ${userId}:`,
+          refreshError
+        );
+        // Fall back to using the existing token and let googleapis handle refresh
+        console.log(
+          "[OAuth2Client] Falling back to existing token, googleapis will handle refresh if needed"
+        );
+      }
+    } else if (needsRefresh && !account.refreshToken) {
+      console.warn(
+        `[OAuth2Client] Token needs refresh for user ${userId} but no refresh token available`
+      );
+    }
+
+    // Validate that we have a valid access token
+    if (!finalAccessToken) {
+      const error = new Error(
+        "No valid access token available after refresh attempt"
+      );
+      return { error };
+    }
+
+    console.log(
+      `[OAuth2Client] Setting up OAuth2Client for user ${userId} with token expiry:`,
+      finalExpiresAt?.toISOString() || "unknown"
+    );
+
     const oauth2Client = new OAuth2Client({
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
     });
 
     oauth2Client.setCredentials({
-      access_token: account.accessToken!,
+      access_token: finalAccessToken,
       refresh_token: account.refreshToken,
-      expiry_date: account.accessTokenExpiresAt
-        ? account.accessTokenExpiresAt.getTime()
-        : undefined,
+      expiry_date: finalExpiresAt ? finalExpiresAt.getTime() : undefined,
     });
 
-    if (account.accessTokenExpiresAt && account.refreshToken) {
-      const fiveMinutesInMs = 5 * 60 * 1000;
-      if (
-        account.accessTokenExpiresAt.getTime() - Date.now() <
-        fiveMinutesInMs
-      ) {
-        const error = new Error(
-          "Token might be expiring soon. Relying on googleapis client to handle refresh if needed."
-        );
+    // Set up automatic token refresh handling
+    oauth2Client.on("tokens", async (tokens) => {
+      console.log(
+        `[OAuth2Client] Tokens refreshed automatically for user ${userId}`
+      );
 
-        return { error };
+      if (tokens.access_token) {
+        try {
+          const expiryTime = tokens.expiry_date
+            ? new Date(tokens.expiry_date)
+            : new Date(Date.now() + 3600 * 1000);
+
+          // Update the database with the new access token
+          await db
+            .update(accountSchema)
+            .set({
+              accessToken: tokens.access_token,
+              accessTokenExpiresAt: expiryTime,
+            })
+            .where(eq(accountSchema.id, account.id));
+
+          console.log(
+            `[OAuth2Client] Updated database with new access token for user ${userId}`
+          );
+        } catch (updateError) {
+          console.error(
+            `[OAuth2Client] Failed to update database with new token for user ${userId}:`,
+            updateError
+          );
+        }
       }
+    });
+
+    // Test the credentials by making a simple API call
+    try {
+      const testGmail = google.gmail({ version: "v1", auth: oauth2Client });
+      await testGmail.users.getProfile({ userId: "me" });
+      console.log(
+        `[OAuth2Client] Successfully validated credentials for user ${userId}`
+      );
+    } catch (testError) {
+      console.error(
+        `[OAuth2Client] Failed to validate credentials for user ${userId}:`,
+        testError
+      );
+      // Return the OAuth2Client anyway, as the error might be due to scopes
+      // and the calling code can handle the specific API errors
     }
 
     return { oauth2Client };
