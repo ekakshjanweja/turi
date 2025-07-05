@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
-import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/chat/chat_bubble.dart';
 import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
@@ -38,18 +35,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
     _listAnimationController.forward();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final ap = context.read<AuthProvider>();
-      final cp = context.read<ChatProvider>();
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    //   final ap = context.read<AuthProvider>();
+    //   final cp = context.read<ChatProvider>();
 
-      final error = await ap.getSession();
+    //   final error = await ap.getSession();
 
-      if (error != null) {
-        await ap.signOut();
-        cp.reset();
-        context.go(AuthPage.routeName);
-      }
-    });
+    //   if (error != null) {
+    //     await ap.signOut();
+    //     cp.reset();
+    //     context.go(AuthPage.routeName);
+    //   }
+    // });
   }
 
   @override

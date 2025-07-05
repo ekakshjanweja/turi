@@ -146,17 +146,23 @@ class AuthRepo {
     try {
       await _googleSignIn.signOut();
 
-      final response = await _client.signOut();
+      final (result, error) = await Api.sendRequest(
+        "/sign-out",
+        method: MethodType.get,
+      );
 
-      if (response.error != null) {
-        return ApiFailure(
-          message: response.error!.message,
-          code: response.error!.code,
+      if (error != null) {
+        return ApiFailure.fromErrorCode(
+          errorType: ErrorCode.failedToSignOut,
+          message: error.message,
         );
       }
 
+      log("Sign out response: $result");
+
       return null;
     } catch (e) {
+      log("Error signing out: ${e.toString()}", error: e);
       return ApiFailure.fromErrorCode(
         errorType: ErrorCode.unKnownError,
         message: e.toString(),

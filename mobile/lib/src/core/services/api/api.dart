@@ -9,6 +9,7 @@ import "package:turi_mail/src/core/services/api/enums/request_type.dart";
 import "package:turi_mail/src/core/services/api/models/api_failure.dart";
 import "package:turi_mail/src/core/services/api/models/method_type.dart";
 import "package:turi_mail/src/core/services/api/models/multipart_body.dart";
+import "package:turi_mail/src/core/services/local_storage/kv_store.dart";
 
 class Api {
   static final hc = http.Client();
@@ -172,6 +173,8 @@ class Api {
         if (isDelete) {
           return (null, null);
         }
+
+        await KVStore.clear();
 
         return (
           null,

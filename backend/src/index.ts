@@ -4,7 +4,7 @@ import type { AgentSession, Message } from "./lib/types/types";
 import { streamSSE } from "hono/streaming";
 import { cors } from "hono/cors";
 import { DATABASE_URL, PORT } from "./lib/config";
-import { deleteUser } from "./lib/delete-user";
+import { deleteUser, signOut } from "./lib/delete-user";
 import { audioRouter } from "./audio-router";
 
 // Lazy imports to reduce startup time
@@ -67,8 +67,26 @@ app.use("*", async (c, next) => {
   return next();
 });
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => {
-  return auth.handler(c.req.raw);
+app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
+
+app.get("/sign-out", async (c) => {
+  const user = c.get("user");
+  const session = c.get("session");
+
+  if (!user || !session) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  try {
+    await signOut({ user, session });
+
+    return c.json({ message: "Signed out successfully" }, 200);
+  } catch (error) {
+    return c.json(
+      { error: error instanceof Error ? error.message : JSON.stringify(error) },
+      500
+    );
+  }
 });
 
 app.get("/delete", async (c) => {
@@ -92,13 +110,9 @@ app.get("/delete", async (c) => {
 });
 
 app.get("/health", (c) => {
-  console.log("[HEALTH] Health check request received");
-
   try {
-    console.log("[HEALTH] Health check successful - service is running");
     return c.json({ status: "ok" });
   } catch (error) {
-    console.error("[HEALTH] Health check failed:", error);
     return c.json(
       {
         status: "error",

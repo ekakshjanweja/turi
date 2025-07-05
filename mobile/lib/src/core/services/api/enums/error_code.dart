@@ -8,6 +8,7 @@ enum ErrorCode {
   failedToDeleteUser,
   idTokenIsNull,
   accessTokenIsNull,
+  failedToSignOut,
 }
 
 extension ErrorCodeId on ErrorCode {
@@ -31,6 +32,8 @@ extension ErrorCodeId on ErrorCode {
         return "ID_TOKEN_IS_NULL";
       case ErrorCode.accessTokenIsNull:
         return "ACCESS_TOKEN_IS_NULL";
+      case ErrorCode.failedToSignOut:
+        return "FAILED_TO_SIGN_OUT";
     }
   }
 }
@@ -56,6 +59,8 @@ extension ErrorCodeMessage on ErrorCode {
         return "Id token is null";
       case ErrorCode.accessTokenIsNull:
         return "Access token is null";
+      case ErrorCode.failedToSignOut:
+        return "Failed to sign out";
     }
   }
 }

@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
-import 'package:turi_mail/src/core/services/local_stoage/kv_store.dart';
-import 'package:turi_mail/src/core/services/local_stoage/kv_store_keys.dart';
+import 'package:turi_mail/src/core/services/local_storage/kv_store.dart';
+import 'package:turi_mail/src/core/services/local_storage/kv_store_keys.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/chat/message.dart';
 

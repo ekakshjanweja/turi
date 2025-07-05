@@ -1,11 +1,23 @@
+import 'dart:convert';
+
 import 'package:better_auth_flutter/better_auth_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:turi_mail/src/core/services/api/enums/error_code.dart';
 import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
+import 'package:turi_mail/src/core/services/local_storage/kv_store.dart';
+import 'package:turi_mail/src/core/services/local_storage/kv_store_keys.dart';
 import 'package:turi_mail/src/modules/auth/data/repo/auth_repo.dart';
 
 class AuthProvider extends ChangeNotifier {
-  // AuthProvider() {}
+  AuthProvider() {
+    final sessionCache = KVStore.get<String>(KVStoreKeys.session);
+
+    if (sessionCache != null) {
+      final sessionData = SessionResponse.fromJson(jsonDecode(sessionCache));
+      session = sessionData.session;
+      user = sessionData.user;
+    }
+  }
 
   User? _user;
   User? get user => _user;
@@ -52,10 +64,11 @@ class AuthProvider extends ChangeNotifier {
       return error;
     }
 
+    await Future.delayed(const Duration(seconds: 3));
+
     final err = await getSession();
 
     if (err != null) {
-      await signOut();
       isLoading = false;
       return err;
     }
@@ -66,6 +79,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<ApiFailure?> getSession() async {
     isLoading = true;
+
     final (result, error) = await AuthRepo.getSession();
 
     if (error != null) {
@@ -76,6 +90,8 @@ class AuthProvider extends ChangeNotifier {
     if (result == null) {
       return ApiFailure.fromErrorCode(errorType: ErrorCode.unAuthorized);
     }
+
+    await KVStore.set(KVStoreKeys.session, jsonEncode(result.toJson()));
 
     session = result.session;
     user = result.user;
@@ -99,6 +115,8 @@ class AuthProvider extends ChangeNotifier {
     user = null;
     session = null;
     isSigningOut = false;
+    await KVStore.clear();
+
     return null;
   }
 

@@ -3,6 +3,7 @@ import { db } from "./db";
 import {
   user as userTable,
   verification as verificationTable,
+  session as sessionTable,
 } from "./db/schema/auth";
 import { eq } from "drizzle-orm";
 
@@ -31,6 +32,25 @@ export async function deleteUser({
     console.error(`Failed to delete user: ${user.id}`, error);
     throw new Error(
       `Failed to delete user: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
+  }
+}
+
+export async function signOut({
+  user,
+  session,
+}: {
+  user: User;
+  session: Session;
+}) {
+  try {
+    await db.transaction(async (tx) => {
+      await tx.delete(sessionTable).where(eq(sessionTable.id, session.id));
+    });
+  } catch (error) {
+    console.error(`Failed to sign out: ${user.id}`, error);
+    throw new Error(
+      `Failed to sign out: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 }

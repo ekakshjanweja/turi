@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:turi_mail/src/app.dart';
 import 'package:turi_mail/src/core/config/config.dart';
-import 'package:turi_mail/src/core/services/local_stoage/kv_store.dart';
+import 'package:turi_mail/src/core/services/local_storage/kv_store.dart';
 import 'package:turi_mail/src/core/services/audio/providers/stt_provider.dart';
 import 'package:turi_mail/src/core/services/audio/providers/audio_service_provider.dart';
 import 'package:turi_mail/src/modules/auth/data/repo/auth_repo.dart';
