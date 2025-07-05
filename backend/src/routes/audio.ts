@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import type { auth } from "./lib/auth";
-import { stt } from "./services/audio/stt";
+import type { auth } from "../lib/auth";
+import { stt } from "../services/audio/stt";
 
 export const audioRouter = new Hono<{
   Variables: {

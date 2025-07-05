@@ -132,8 +132,10 @@ class ChatProvider extends ChangeNotifier {
     addMessage(Message(content: inputController.text.trim(), isUser: true));
     inputController.clear();
 
+    await stopAudio();
+
     streamSubscription = await Sse.sendRequest(
-      "/agent",
+      "/agent/chat",
       queryParameters: {
         "audio": audioEnabled.toString(),
         "clear": newConversation.toString(),

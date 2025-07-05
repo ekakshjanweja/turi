@@ -5,6 +5,7 @@ import 'package:turi_mail/src/core/services/local_storage/kv_store.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
 import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
+import 'package:turi_mail/src/modules/home/providers/chat_provider.dart';
 
 class DeleteAccountDialog extends StatefulWidget {
   const DeleteAccountDialog({super.key});
@@ -40,6 +41,9 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
       }
 
       await KVStore.clear();
+
+      final cp = context.read<ChatProvider>();
+      cp.reset();
 
       context.go(AuthPage.routeName);
     } catch (e) {

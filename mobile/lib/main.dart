@@ -28,7 +28,7 @@ void main(List<String> args) async {
 }
 
 Future<void> bootstrap() async {
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: ".env.local");
   await BetterAuthFlutter.initialize(
     url: Uri(
       scheme: AppConfig.scheme,

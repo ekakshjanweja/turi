@@ -34,19 +34,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       curve: Curves.easeOutCubic,
     );
     _listAnimationController.forward();
-
-    // WidgetsBinding.instance.addPostFrameCallback((_) async {
-    //   final ap = context.read<AuthProvider>();
-    //   final cp = context.read<ChatProvider>();
-
-    //   final error = await ap.getSession();
-
-    //   if (error != null) {
-    //     await ap.signOut();
-    //     cp.reset();
-    //     context.go(AuthPage.routeName);
-    //   }
-    // });
   }
 
   @override

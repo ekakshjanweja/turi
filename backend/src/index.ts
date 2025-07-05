@@ -1,22 +1,10 @@
 import { Hono } from "hono";
 import { auth } from "./lib/auth";
-import type { AgentSession, Message } from "./lib/types/types";
-import { streamSSE } from "hono/streaming";
 import { cors } from "hono/cors";
-import { DATABASE_URL, PORT } from "./lib/config";
+import { PORT } from "./lib/config";
 import { deleteUser, signOut } from "./lib/delete-user";
-import { audioRouter } from "./audio-router";
-
-// Lazy imports to reduce startup time
-const lazyGmailService = async () => {
-  const { GmailService } = await import("./services/gmail");
-  return GmailService;
-};
-
-const lazyAgent = async () => {
-  const { Agent } = await import("./services/agent");
-  return Agent;
-};
+import { audioRouter } from "./routes/audio";
+import { agentRouter } from "./routes/agent";
 
 const app = new Hono<{
   Variables: {
@@ -25,8 +13,6 @@ const app = new Hono<{
     Bindings: CloudflareBindings;
   };
 }>();
-
-const agentSessions: AgentSession[] = [];
 
 app.use(
   "*", // or replace with "*" to enable cors for a routes
@@ -69,6 +55,23 @@ app.use("*", async (c, next) => {
 
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 
+app.route("/audio", audioRouter);
+app.route("/agent", agentRouter);
+
+app.get("/health", (c) => {
+  try {
+    return c.json({ status: "ok" });
+  } catch (error) {
+    return c.json(
+      {
+        status: "error",
+        message: error instanceof Error ? error.message : JSON.stringify(error),
+      },
+      500
+    );
+  }
+});
+
 app.get("/sign-out", async (c) => {
   const user = c.get("user");
   const session = c.get("session");
@@ -108,146 +111,6 @@ app.get("/delete", async (c) => {
     );
   }
 });
-
-app.get("/health", (c) => {
-  try {
-    return c.json({ status: "ok" });
-  } catch (error) {
-    return c.json(
-      {
-        status: "error",
-        message: error instanceof Error ? error.message : JSON.stringify(error),
-      },
-      500
-    );
-  }
-});
-
-app.get("/agent", (c) => {
-  const user = c.get("user");
-  const session = c.get("session");
-
-  if (!user || !session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  c.header("Content-Type", "text/event-stream");
-  c.header("Cache-Control", "no-cache");
-  c.header("Connection", "keep-alive");
-
-  const sessionId = user.id;
-  const message = c.req.query("message");
-
-  return streamSSE(c, async (stream) => {
-    let agentSession = agentSessions.find((s) => s.id === sessionId);
-
-    const audio = c.req.query("audio");
-    const audioEnabled = audio === "true";
-
-    let clear = c.req.query("clear") === "true";
-
-    const GmailService = await lazyGmailService();
-    const gmailService = new GmailService();
-    try {
-      await gmailService.init(user.id);
-    } catch (error) {
-      const accounts = await auth.api.listUserAccounts({
-        query: {
-          userId: user.id,
-        },
-      });
-
-      if (accounts[0]) {
-        console.log("Refreshing token");
-
-        await auth.api.refreshToken({
-          body: {
-            providerId: "google",
-            userId: user.id,
-            accountId: accounts[0].id,
-          },
-        });
-      }
-
-      stream.writeSSE({
-        data: JSON.stringify({
-          type: "ERROR",
-          content: "Failed to initialize Gmail service",
-        }),
-        event: "system",
-      });
-    }
-
-    if (!agentSession) {
-      const Agent = await lazyAgent();
-      const agent = new Agent(stream, gmailService, audioEnabled);
-
-      agentSession = {
-        id: sessionId,
-        agent,
-        gmailService,
-        sseConnection: stream,
-        audio: audioEnabled,
-      } as AgentSession;
-
-      agentSessions.push(agentSession);
-      clear = false;
-    } else {
-      agentSession.sseConnection = stream;
-      agentSession.agent.updateStream(stream);
-      agentSession.gmailService = gmailService;
-    }
-
-    if (agentSession.audio !== audioEnabled) {
-      const Agent = await lazyAgent();
-      const newAgent = new Agent(
-        stream,
-        agentSession.gmailService,
-        audioEnabled
-      );
-
-      agentSession.agent = newAgent;
-      agentSession.audio = audioEnabled;
-
-      const message: Message = {
-        type: "CONNECTED",
-        content: `Audio mode changed to ${
-          audioEnabled ? "enabled" : "disabled"
-        }`,
-      };
-
-      stream.writeSSE({ data: JSON.stringify(message), event: "system" });
-    }
-
-    if (clear) {
-      agentSession.agent.clearMessages();
-    }
-
-    const msg: Message = {
-      type: "CONNECTED",
-      content: "Agent session started",
-    };
-
-    stream.writeSSE({ data: JSON.stringify(msg), event: "system" });
-
-    if (message) {
-      await agentSession.agent.handleUserInput(message);
-    }
-
-    await stream.sleep(1000);
-
-    stream.onAbort(() => {
-      const index = agentSessions.findIndex((s) => s.id === sessionId);
-
-      if (index !== -1) {
-        agentSessions.splice(index, 1);
-        agentSession?.agent?.close();
-      }
-    });
-  });
-});
-
-app.route("/audio", audioRouter);
 
 const server =
   process.env.NODE_ENV === "production"

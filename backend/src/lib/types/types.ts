@@ -18,7 +18,8 @@ export type MessageType =
   | "USER"
   | "ERROR"
   | "DONE"
-  | "END";
+  | "END"
+  | "INFO";
 
 export type Message = {
   type: MessageType;
@@ -91,4 +92,41 @@ export interface EmailSearchResult {
 export interface EmailReadResult {
   email: EmailDetail;
   messageId: string;
+}
+
+// Agent Session Types
+export type AgentSessionWithActivity = AgentSession & { lastActivity: number };
+
+export interface AgentSessionConfig {
+  readonly MAX_SESSIONS: number;
+  readonly SESSION_TIMEOUT_MS: number;
+  readonly CONNECTION_TIMEOUT_MS: number;
+  readonly CLEANUP_INTERVAL_MS: number;
+}
+
+export interface SessionHealthInfo {
+  sessionCount: number;
+  maxSessions: number;
+  uptime: number;
+  timestamp: string;
+}
+
+export interface UserSessionInfo {
+  sessionCount: number;
+  userSessionExists: boolean;
+}
+
+// Query validation types
+export interface ChatQuery {
+  message?: string;
+  audio?: string;
+  clear?: string;
+}
+
+export interface ValidatedChatQuery {
+  message?: string;
+  audio?: string;
+  clearParam?: string;
+  audioEnabled: boolean;
+  clear: boolean;
 }

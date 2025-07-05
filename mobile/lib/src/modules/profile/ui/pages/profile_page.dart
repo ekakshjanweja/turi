@@ -96,6 +96,9 @@ class ProfilePage extends StatelessWidget {
                       return;
                     }
 
+                    final cp = context.read<ChatProvider>();
+                    cp.reset();
+
                     context.go(AuthPage.routeName);
                   },
                   trailing: Icon(
