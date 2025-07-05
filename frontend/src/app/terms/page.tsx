@@ -50,7 +50,8 @@ export default function TermsOfService() {
 
           <div className="bg-card border rounded-lg p-6">
             <p className="text-foreground leading-relaxed">
-              Welcome to <strong>TuriMail</strong>! These Terms of Service govern your use of our website located at{" "}
+              Welcome to <strong>TuriMail</strong>! These Terms of Service
+              govern your use of our website located at{" "}
               <Link
                 href="https://turimail.vercel.app"
                 className="text-primary hover:underline font-medium"
@@ -59,7 +60,8 @@ export default function TermsOfService() {
               >
                 https://turimail.vercel.app
               </Link>{" "}
-              and any related services provided by TuriMail. By accessing or using TuriMail, you agree to be bound by these Terms.
+              and any related services provided by TuriMail. By accessing or
+              using TuriMail, you agree to be bound by these Terms.
             </p>
           </div>
         </div>
@@ -75,7 +77,10 @@ export default function TermsOfService() {
 
             <div className="space-y-4 text-foreground">
               <p>
-                TuriMail provides tools to help you manage, organize, and interact with your email more effectively. You may use our service only for lawful purposes and in accordance with these Terms.
+                TuriMail provides tools to help you manage, organize, and
+                interact with your email more effectively. You may use our
+                service only for lawful purposes and in accordance with these
+                Terms.
               </p>
 
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
@@ -85,7 +90,10 @@ export default function TermsOfService() {
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   <li>Violate any applicable laws or regulations</li>
                   <li>Access or attempt to access data not intended for you</li>
-                  <li>Interfere with or disrupt the integrity or performance of the service</li>
+                  <li>
+                    Interfere with or disrupt the integrity or performance of
+                    the service
+                  </li>
                   <li>Use the service for any spam or abusive messaging</li>
                 </ul>
               </div>
@@ -101,12 +109,16 @@ export default function TermsOfService() {
 
             <div className="space-y-4 text-foreground">
               <p>
-                You may be required to log in via a third-party service (e.g., Gmail) to access certain features. You are responsible for maintaining the confidentiality of your credentials and for all activities that occur under your account.
+                You may be required to log in via a third-party service (e.g.,
+                Gmail) to access certain features. You are responsible for
+                maintaining the confidentiality of your credentials and for all
+                activities that occur under your account.
               </p>
 
               <div className="bg-accent/50 border rounded-lg p-4">
                 <p className="text-sm">
-                  <strong>Security Alert:</strong> If you believe your account has been compromised, please contact us immediately at{" "}
+                  <strong>Security Alert:</strong> If you believe your account
+                  has been compromised, please contact us immediately at{" "}
                   <Link
                     href="mailto:jekaksh@gmail.com"
                     className="text-primary hover:underline font-medium"
@@ -133,7 +145,8 @@ export default function TermsOfService() {
               >
                 Privacy Policy
               </Link>
-              , which explains how we collect, use, and protect your information.
+              , which explains how we collect, use, and protect your
+              information.
             </p>
           </section>
 
@@ -146,7 +159,11 @@ export default function TermsOfService() {
 
             <div className="space-y-4 text-foreground">
               <p>
-                All content, features, and functionality provided by TuriMail are the property of TuriMail or its licensors and are protected by copyright, trademark, and other laws. You may not reproduce, distribute, or create derivative works without our written consent.
+                All content, features, and functionality provided by TuriMail
+                are the property of TuriMail or its licensors and are protected
+                by copyright, trademark, and other laws. You may not reproduce,
+                distribute, or create derivative works without our written
+                consent.
               </p>
             </div>
           </section>
@@ -160,12 +177,17 @@ export default function TermsOfService() {
 
             <div className="space-y-4 text-foreground">
               <p>
-                TuriMail may integrate with third-party services (like email providers). We are not responsible for the practices, content, or policies of these third parties. Use of their services is governed by their respective terms and policies.
+                TuriMail may integrate with third-party services (like email
+                providers). We are not responsible for the practices, content,
+                or policies of these third parties. Use of their services is
+                governed by their respective terms and policies.
               </p>
 
               <div className="bg-accent/50 border rounded-lg p-4">
                 <p className="text-sm">
-                  <strong>Note:</strong> Third-party integrations may include Gmail, Google services, and other email providers. Please review their individual terms of service and privacy policies.
+                  <strong>Note:</strong> Third-party integrations may include
+                  Gmail, Google services, and other email providers. Please
+                  review their individual terms of service and privacy policies.
                 </p>
               </div>
             </div>
@@ -179,7 +201,10 @@ export default function TermsOfService() {
             </div>
 
             <p className="text-foreground">
-              We reserve the right to suspend or terminate your access to the service at our discretion, without notice, if you violate these Terms or use the service in a manner that could harm others or disrupt the platform.
+              We reserve the right to suspend or terminate your access to the
+              service at our discretion, without notice, if you violate these
+              Terms or use the service in a manner that could harm others or
+              disrupt the platform.
             </p>
           </section>
 
@@ -187,17 +212,23 @@ export default function TermsOfService() {
           <section className="bg-card border rounded-lg p-6">
             <div className="flex items-center gap-2 mb-4">
               <Shield className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Disclaimer of Warranties</h2>
+              <h2 className="text-xl font-semibold">
+                Disclaimer of Warranties
+              </h2>
             </div>
 
             <div className="space-y-4 text-foreground">
               <p>
-                TuriMail is provided "as is" and "as available." We do not make any warranties regarding the reliability, availability, or accuracy of the service and disclaim all warranties to the fullest extent permitted by law.
+                TuriMail is provided &quot;as is&quot; and &quot;as
+                available.&quot; We do not make any warranties regarding the
+                reliability, availability, or accuracy of the service and
+                disclaim all warranties to the fullest extent permitted by law.
               </p>
 
               <div className="bg-muted/50 border border-muted rounded-lg p-4">
                 <p className="text-sm">
-                  <strong>Important:</strong> This service is provided without warranties of any kind, either express or implied.
+                  <strong>Important:</strong> This service is provided without
+                  warranties of any kind, either express or implied.
                 </p>
               </div>
             </div>
@@ -211,7 +242,10 @@ export default function TermsOfService() {
             </div>
 
             <p className="text-foreground">
-              To the maximum extent permitted by law, TuriMail shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of data or profits, arising from your use of the service.
+              To the maximum extent permitted by law, TuriMail shall not be
+              liable for any indirect, incidental, special, consequential, or
+              punitive damages, or any loss of data or profits, arising from
+              your use of the service.
             </p>
           </section>
 
@@ -224,13 +258,15 @@ export default function TermsOfService() {
 
             <div className="space-y-4 text-foreground">
               <p>
-                We may modify these Terms at any time. If we make material changes, we will notify you by posting the updated Terms on our website. Your continued use of the service after changes means you accept the new Terms.
+                We may modify these Terms at any time. If we make material
+                changes, we will notify you by posting the updated Terms on our
+                website. Your continued use of the service after changes means
+                you accept the new Terms.
               </p>
 
               <div className="bg-accent/50 border rounded-lg p-4">
                 <p className="text-sm font-medium">
-                  These terms are effective as of{" "}
-                  <strong>July 5, 2025</strong>
+                  These terms are effective as of <strong>July 5, 2025</strong>
                 </p>
               </div>
             </div>
@@ -245,7 +281,8 @@ export default function TermsOfService() {
 
             <div className="space-y-4 text-foreground">
               <p>
-                If you have any questions about these Terms, please contact us at{" "}
+                If you have any questions about these Terms, please contact us
+                at{" "}
                 <Link
                   href="mailto:jekaksh@gmail.com"
                   className="text-primary hover:underline font-medium"
@@ -256,7 +293,8 @@ export default function TermsOfService() {
 
               <div className="bg-background border rounded-lg p-4 mt-4">
                 <p className="text-xs text-muted-foreground">
-                  For support, legal inquiries, or terms-related questions, please use the contact information above.
+                  For support, legal inquiries, or terms-related questions,
+                  please use the contact information above.
                 </p>
               </div>
             </div>
@@ -272,4 +310,4 @@ export default function TermsOfService() {
       </div>
     </main>
   );
-} 
+}
