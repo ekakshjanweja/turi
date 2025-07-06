@@ -22,7 +22,13 @@ class VoiceHints extends StatelessWidget {
               child: Opacity(
                 opacity: (animation.value * opacity).clamp(0.0, 1.0),
                 child: GestureDetector(
-                  onTap: cp.updateVoiceSuggestion,
+                  onTap: () {
+                    cp.updateVoiceSuggestion();
+
+                    if (cp.voiceSuggestion != null) {
+                      cp.inputController.text = cp.voiceSuggestion!;
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
