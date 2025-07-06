@@ -40,6 +40,7 @@ app.use(
 );
 
 app.use("*", async (c, next) => {
+  // const session = await getSession(c.req.raw.headers);
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
   if (!session) {

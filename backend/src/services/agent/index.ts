@@ -255,7 +255,8 @@ export class Agent {
         if (readArgs.emailReference) {
           const resolvedId = await resolveOrdinalEmailReferenceAI(
             readArgs.emailReference,
-            this.lastEmailList
+            this.lastEmailList,
+            this.messages,
           );
           if (resolvedId) {
             readArgs.messageId = resolvedId;

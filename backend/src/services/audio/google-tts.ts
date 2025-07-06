@@ -11,7 +11,13 @@ export async function googleTts(text: string): Promise<number[]> {
     const response = await googleGenAI.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [
-        { parts: [{ text: `Say in a warm and friendly tone: ${text}` }] },
+        {
+          parts: [
+            {
+              text: `Say in a warm and friendly tone, speaking at a slightly quick pace: ${text}`,
+            },
+          ],
+        },
       ],
       config: {
         responseModalities: ["AUDIO"],
