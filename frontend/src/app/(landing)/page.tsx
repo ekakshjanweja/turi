@@ -1,10 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/mode-toggle";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Mic, Brain, Zap, Shield } from "lucide-react";
-import PrimaryCta from "./_components/primary-cta";
+import HeroSection from "./_components/hero-section";
 
 export const metadata: Metadata = {
   title: "Turi - Voice-Powered Email Assistant | Transform Your Inbox with AI",
@@ -29,90 +28,8 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4">
-          <div className="flex h-14 items-center justify-between">
-            {/* Brand/Logo */}
-            <div className="flex items-center">
-              <Link
-                href="/"
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-              >
-                <div className="p-1.5 bg-primary/10 rounded-lg">
-                  <Mic className="h-5 w-5 text-primary" />
-                </div>
-                <h1 className="text-xl font-semibold">Turi</h1>
-              </Link>
-            </div>
-
-            {/* Right side buttons */}
-            <div className="flex items-center gap-4">
-              <div className="hidden sm:flex items-center gap-6">
-                <Link
-                  href="/early-access"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Early Access
-                </Link>
-                <Link
-                  href="/contact"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Contact
-                </Link>
-              </div>
-              <ModeToggle />
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-background to-muted/30 overflow-hidden">
-        <div className="container mx-auto px-4 py-20 md:py-32">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Hero Badge */}
-            <Badge variant="secondary" className="mb-6">
-              <Mic className="h-3 w-3 mr-1" />
-              Now in Early Access
-            </Badge>
-
-            {/* Main Headline */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
-              Transform Your Email with{" "}
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Voice Power
-              </span>
-            </h1>
-
-            {/* Subheading */}
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-              Meet Turi, the AI assistant that revolutionizes email
-              productivity. Compose, reply, and manage your inbox entirely
-              hands-free with intelligent voice commands and AI-powered
-              summaries.
-            </p>
-
-            {/* Primary CTA */}
-            <PrimaryCta />
-          </div>
-
-          {/* Hero Visual Placeholder */}
-          <div className="mt-16 relative max-w-5xl mx-auto">
-            <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl border border-border/50 backdrop-blur-sm flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-24 h-24 mx-auto mb-4 bg-primary/20 rounded-full flex items-center justify-center">
-                  <Mic className="h-12 w-12 text-primary" />
-                </div>
-                <p className="text-lg font-medium text-muted-foreground">
-                  Product Demo Coming Soon
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Features Section */}
       <section className="py-20 md:py-32 bg-background">

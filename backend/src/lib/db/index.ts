@@ -6,6 +6,7 @@ import postgres from "postgres";
 import { account, session, user, verification } from "./schema/auth";
 import { DATABASE_URL, NODE_ENV } from "../config";
 import { neon } from "@neondatabase/serverless";
+import { beta } from "./schema/beta";
 
 export const db =
   NODE_ENV === "production"
@@ -15,6 +16,7 @@ export const db =
           account,
           session,
           verification,
+          beta,
         },
       })
     : localDrizzle(postgres(DATABASE_URL!), {
@@ -23,5 +25,6 @@ export const db =
           account,
           session,
           verification,
+          beta,
         },
       });
