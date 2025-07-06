@@ -9,36 +9,31 @@ export async function resolveOrdinalEmailReferenceAI(
 ): Promise<string | null> {
   if (!lastEmailList || lastEmailList.length === 0) return null;
 
-  // Use AI to resolve both contextual and ordinal references
-  const msg = dedent`You are an assistant that determines which email a user is referring to from their natural language input. 
-
-There are ${lastEmailList.length} emails in the list (indexed from 0 to ${lastEmailList.length - 1}).
-
-Guidelines for interpreting user references:
-
-1. CONTEXTUAL REFERENCES (referring to previously mentioned email):
-   - "yes", "yeah", "sure", "okay", "of course" = index 0 (most recent/relevant)
-   - "that", "it", "the one", "this one" = index 0
-   - "read that", "could you read that", "please read it" = index 0
-   - "the email you just mentioned", "that email" = index 0
-   
-2. ORDINAL REFERENCES (specific position):
-   - "first", "1st", "top", "latest", "newest" = index 0
-   - "second", "2nd", "next" = index 1
-   - "third", "3rd" = index 2
-   - "last", "bottom", "oldest" = index ${lastEmailList.length - 1}
-
-Return only the number (0-${lastEmailList.length - 1}). If unclear, return 0.
-
-Now, based on the user's reference, return the index of the email they mean.
-
-User's reference: ${reference}
-
-Last email list: ${lastEmailList.map((email) => email.id).join(", ")}
-
-Messages: ${messages.map((message) => message.content).join("\n")}
-
-`;
+  const msg = dedent`
+  You are an AI that maps a user's natural language reference to an email's index.
+  
+  The list has ${lastEmailList.length} emails, indexed 0 to ${lastEmailList.length - 1}.
+  
+  Based on the user's reference, determine the correct index using these rules:
+  
+  1.  **Contextual / Vague (Default to 0):**
+      *   Affirmations: "yes", "yeah", "sure", "okay"
+      *   Pronouns: "that", "it", "the one"
+      *   General commands: "read that", "the one you mentioned"
+  
+  2.  **Ordinal:**
+      *   "first", "1st", "top", "latest", "newest" = 0
+      *   "second", "2nd", "next" = 1
+      *   "third", "3rd" = 2
+      *   "last", "bottom", "oldest" = ${lastEmailList.length - 1}
+  
+  If the user's intent is unclear, return 0. Return only the integer index.
+  
+  User's reference: ${reference}
+  Last email list IDs: ${lastEmailList.map((email) => email.id).join(", ")}
+  Conversation history:
+  ${messages.map((message) => message.content).join("\n")}
+  `;
 
   messages.push({ role: "user", content: msg });
 

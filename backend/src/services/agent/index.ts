@@ -1,4 +1,4 @@
-import { generateText, type CoreMessage } from "ai";
+import { generateText, tool, type CoreMessage } from "ai";
 import type { GmailService } from "../gmail";
 import {
   EMAIL_AGENT_SYSTEM_PROMPT,
@@ -130,6 +130,7 @@ export class Agent {
         // model: openai("gpt-4.1-mini"),
         messages: this.messages,
         tools: this.tools,
+        maxSteps: 5,
       });
 
       // Handle the response properly according to AI SDK patterns
@@ -242,8 +243,8 @@ export class Agent {
   }
 
   tools = {
-    send_email: {
-      description: "Send an email to a recipient. Or draft an email.",
+    send_email: tool({
+      description: "Send or draft an email to a recipient.",
       parameters: SendEmailSchema,
       execute: async (args: any) => {
         const sendArgs = SendEmailSchema.parse(args);
@@ -254,10 +255,10 @@ export class Agent {
 
         return response.content.text;
       },
-    },
-    read_email: {
+    }),
+    read_email: tool({
       description:
-        "Read an email by ID or reference. If you don't have a specific messageId, you can use emailReference to describe the email (e.g., 'email from John', 'latest email', 'email about project'). The system will find the email and read its content. Supports 'first', 'second', 'third' to refer to the last shown list.",
+        "Read an email by ID or reference (e.g., 'email from John', 'latest email'). Supports ordinal references like 'first', 'second', 'third' from recent lists.",
       parameters: ReadEmailSchema,
       execute: async (args: any) => {
         const readArgs = ReadEmailSchema.parse(args);
@@ -276,9 +277,9 @@ export class Agent {
         if (!response) throw new Error("Tool execution failed: read_email");
         return response.content.text;
       },
-    },
-    search_email: {
-      description: "Searches for emails using Gmail search syntax",
+    }),
+    search_email: tool({
+      description: "Search emails using Gmail search syntax",
       parameters: SearchEmailsSchema,
       execute: async (args: any) => {
         const searchArgs = SearchEmailsSchema.parse(args);
@@ -296,9 +297,9 @@ export class Agent {
         }
         return response.content.text;
       },
-    },
-    list_email_labels: {
-      description: "Retrieves all available Gmail labels",
+    }),
+    list_email_labels: tool({
+      description: "Get all available Gmail labels",
       parameters: ListEmailLabelsSchema,
       execute: async () => {
         const response = await this.gmailService.listEmailLabels();
@@ -309,9 +310,9 @@ export class Agent {
 
         return response.content.text;
       },
-    },
-    create_email_label: {
-      description: "Creates a new Gmail label",
+    }),
+    create_email_label: tool({
+      description: "Create a new Gmail label",
       parameters: CreateLabelSchema,
       execute: async (args: any) => {
         const createArgs = CreateLabelSchema.parse(args);
@@ -324,9 +325,9 @@ export class Agent {
 
         return response.content.text;
       },
-    },
-    update_email_label: {
-      description: "Updates an existing Gmail label",
+    }),
+    update_email_label: tool({
+      description: "Update an existing Gmail label",
       parameters: UpdateLabelSchema,
       execute: async (args: any) => {
         const updateArgs = UpdateLabelSchema.parse(args);
@@ -341,9 +342,9 @@ export class Agent {
 
         return response.content.text;
       },
-    },
-    delete_email_label: {
-      description: "Deletes a Gmail label",
+    }),
+    delete_email_label: tool({
+      description: "Delete a Gmail label",
       parameters: DeleteLabelSchema,
       execute: async (args: any) => {
         const deleteArgs = DeleteLabelSchema.parse(args);
@@ -356,10 +357,9 @@ export class Agent {
 
         return response.content.text;
       },
-    },
-    get_or_create_email_label: {
-      description:
-        "Gets an existing Gmail label by name or creates it if it doesn't exist",
+    }),
+    get_or_create_email_label: tool({
+      description: "Get existing Gmail label by name or create if missing",
       parameters: GetOrCreateLabelSchema,
       execute: async (args: any) => {
         const getOrCreateArgs = GetOrCreateLabelSchema.parse(args);
@@ -373,6 +373,6 @@ export class Agent {
 
         return response.content.text;
       },
-    },
+    }),
   };
 }
