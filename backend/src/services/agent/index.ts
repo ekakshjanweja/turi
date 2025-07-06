@@ -85,6 +85,8 @@ export class Agent {
   }
 
   public async handleUserInput(input: string) {
+    console.log(this.messages.length);
+
     try {
       await this.sendMessage({
         type: "THINKING",
@@ -116,6 +118,9 @@ export class Agent {
           content:
             "Goodbye! Thanks for using turi. Have a great day! You can always continue chatting by pressing the mic button.",
         });
+
+        this.clearMessages();
+        this.close();
 
         return; // Exit early, don't process further
       }
@@ -188,6 +193,8 @@ export class Agent {
           type: "DONE",
           content: "",
         });
+
+        this.close();
       } else {
         // No tools called, just add the regular response
         this.messages.push({
@@ -223,6 +230,8 @@ export class Agent {
           type: "DONE",
           content: "",
         });
+
+        this.close();
       }
     } catch (error) {
       await this.sendMessage({
@@ -256,7 +265,7 @@ export class Agent {
           const resolvedId = await resolveOrdinalEmailReferenceAI(
             readArgs.emailReference,
             this.lastEmailList,
-            this.messages,
+            this.messages
           );
           if (resolvedId) {
             readArgs.messageId = resolvedId;
