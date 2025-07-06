@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/mode-toggle";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Mic, Brain, Zap, Shield } from "lucide-react";
@@ -28,6 +29,45 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4">
+          <div className="flex h-14 items-center justify-between">
+            {/* Brand/Logo */}
+            <div className="flex items-center">
+              <Link
+                href="/"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                <div className="p-1.5 bg-primary/10 rounded-lg">
+                  <Mic className="h-5 w-5 text-primary" />
+                </div>
+                <h1 className="text-xl font-semibold">Turi</h1>
+              </Link>
+            </div>
+
+            {/* Right side buttons */}
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-6">
+                <Link
+                  href="/early-access"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Early Access
+                </Link>
+                <Link
+                  href="/contact"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Contact
+                </Link>
+              </div>
+              <ModeToggle />
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-background to-muted/30 overflow-hidden">
         <div className="container mx-auto px-4 py-20 md:py-32">
