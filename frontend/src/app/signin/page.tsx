@@ -16,7 +16,7 @@ export default function SignIn() {
         router.push("/home");
       }
     }
-  }, [session, router]);
+  }, [session, router, isPending]);
 
   const signIn = async () => {
     try {

@@ -96,6 +96,95 @@ export default function Home() {
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
+  const playAudio = useCallback(
+    async (audioContent: AudioContent) => {
+      // Only play audio if audio is enabled
+      if (!audio) {
+        console.log("Audio playback is disabled");
+        return;
+      }
+
+      // Validate audio content
+      if (!audioContent?.audioData || !audioContent?.mimeType) {
+        console.error("Invalid audio content:", audioContent);
+        return;
+      }
+
+      try {
+        // Create audio element if it doesn't exist
+        if (!audioRef.current) {
+          audioRef.current = new Audio();
+          // Set up global error handling for the audio element
+          audioRef.current.addEventListener("error", (e) => {
+            console.error("Audio element error:", e);
+          });
+        }
+
+        // Stop any currently playing audio and clean up previous URL
+        if (audioRef.current.src && !audioRef.current.paused) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+          if (audioRef.current.src.startsWith("blob:")) {
+            URL.revokeObjectURL(audioRef.current.src);
+          }
+        }
+
+        // Convert base64 to binary data
+        let binaryString;
+        try {
+          binaryString = atob(audioContent.audioData);
+        } catch (decodeError) {
+          console.error("Failed to decode base64 audio data:", decodeError);
+          return;
+        }
+
+        // Convert binary string to Uint8Array
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        // Create blob with proper MIME type
+        const audioBlob = new Blob([bytes], { type: audioContent.mimeType });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        // Set up one-time event listeners for cleanup
+        const cleanup = () => {
+          URL.revokeObjectURL(audioUrl);
+        };
+
+        audioRef.current.addEventListener("ended", cleanup, { once: true });
+        audioRef.current.addEventListener("error", cleanup, { once: true });
+
+        // Set source and play
+        audioRef.current.src = audioUrl;
+        audioRef.current.load(); // Ensure the audio is loaded
+
+        // Play the audio with user interaction handling
+        try {
+          await audioRef.current.play();
+          console.log("Audio playback started successfully");
+        } catch (playError) {
+          console.error("Failed to play audio:", playError);
+          cleanup();
+
+          // If autoplay failed, it might be due to browser autoplay policies
+          if (
+            playError instanceof DOMException &&
+            playError.name === "NotAllowedError"
+          ) {
+            console.warn(
+              "Audio autoplay blocked by browser. User interaction required."
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error in playAudio function:", error);
+      }
+    },
+    [audio]
+  );
+
   const connectToSSE = useCallback(
     (clear: boolean) => {
       eventSourceRef.current = new EventSource(
@@ -150,7 +239,7 @@ export default function Home() {
         eventSourceRef.current?.close();
       };
     },
-    [audio, setMessages, setIsConnected]
+    [audio, setMessages, setIsConnected, playAudio]
   );
 
   useEffect(() => {
@@ -197,92 +286,6 @@ export default function Home() {
       console.log("Message sent successfully:", data);
     } catch (error) {
       console.error("Error sending message:", error);
-    }
-  };
-
-  const playAudio = async (audioContent: AudioContent) => {
-    // Only play audio if audio is enabled
-    if (!audio) {
-      console.log("Audio playback is disabled");
-      return;
-    }
-
-    // Validate audio content
-    if (!audioContent?.audioData || !audioContent?.mimeType) {
-      console.error("Invalid audio content:", audioContent);
-      return;
-    }
-
-    try {
-      // Create audio element if it doesn't exist
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-        // Set up global error handling for the audio element
-        audioRef.current.addEventListener("error", (e) => {
-          console.error("Audio element error:", e);
-        });
-      }
-
-      // Stop any currently playing audio and clean up previous URL
-      if (audioRef.current.src && !audioRef.current.paused) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        if (audioRef.current.src.startsWith("blob:")) {
-          URL.revokeObjectURL(audioRef.current.src);
-        }
-      }
-
-      // Convert base64 to binary data
-      let binaryString;
-      try {
-        binaryString = atob(audioContent.audioData);
-      } catch (decodeError) {
-        console.error("Failed to decode base64 audio data:", decodeError);
-        return;
-      }
-
-      // Convert binary string to Uint8Array
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-
-      // Create blob with proper MIME type
-      const audioBlob = new Blob([bytes], { type: audioContent.mimeType });
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      // Set up one-time event listeners for cleanup
-      const cleanup = () => {
-        URL.revokeObjectURL(audioUrl);
-      };
-
-      audioRef.current.addEventListener("ended", cleanup, { once: true });
-      audioRef.current.addEventListener("error", cleanup, { once: true });
-
-      // Set source and play
-      audioRef.current.src = audioUrl;
-      audioRef.current.load(); // Ensure the audio is loaded
-
-      // Play the audio with user interaction handling
-      try {
-        await audioRef.current.play();
-        console.log("Audio playback started successfully");
-      } catch (playError) {
-        console.error("Failed to play audio:", playError);
-        cleanup();
-
-        // If autoplay failed, it might be due to browser autoplay policies
-        if (
-          playError instanceof DOMException &&
-          playError.name === "NotAllowedError"
-        ) {
-          console.warn(
-            "Audio autoplay blocked by browser. User interaction required."
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error in playAudio function:", error);
     }
   };
 

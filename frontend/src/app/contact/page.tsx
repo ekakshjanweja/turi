@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, Mail, Globe, MessageCircle, Calendar } from "lucide-react";
@@ -30,9 +29,9 @@ export default function ContactPage() {
 
           <div className="bg-card border rounded-lg p-6">
             <p className="text-foreground leading-relaxed">
-              Have questions about <strong>Turi</strong>? We'd love to hear from
-              you. Whether you're interested in early access, have feedback, or
-              need support, we're here to help.
+              Have questions about <strong>Turi</strong>? We&apos;d love to hear from
+              you. Whether you&apos;re interested in early access, have feedback, or
+              need support, we&apos;re here to help.
             </p>
           </div>
         </div>
@@ -103,7 +102,7 @@ export default function ContactPage() {
             <div className="space-y-4 text-foreground">
               <p>
                 Interested in partnerships, enterprise solutions, or media
-                inquiries? We'd love to explore opportunities to work together.
+                inquiries? We&apos;d love to explore opportunities to work together.
               </p>
 
               <div className="bg-accent/50 border rounded-lg p-4">
@@ -134,7 +133,7 @@ export default function ContactPage() {
                 </h3>
                 <p className="text-muted-foreground text-sm">
                   Turi is currently in early access. Sign up to be notified when
-                  we're ready for your email provider.
+                  we&apos;re ready for your email provider.
                 </p>
               </div>
 
@@ -143,7 +142,7 @@ export default function ContactPage() {
                   Which email providers are supported?
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  We're starting with Gmail and plan to support Outlook, Apple
+                  We&apos;re starting with Gmail and plan to support Outlook, Apple
                   Mail, and other major providers soon.
                 </p>
               </div>
