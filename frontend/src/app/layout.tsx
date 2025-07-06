@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "turi mail",
-  description: "talk to mail",
+  title: "Turi",
+  description: "Voice-powered email assistant",
 };
 
 export default function RootLayout({
@@ -25,9 +25,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      style={{ height: "auto", overflow: "auto" }}
+    >
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{ height: "auto", overflow: "auto" }}
       >
         <ThemeProvider
           attribute="class"
@@ -35,10 +40,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="h-screen flex flex-col">
-            <ConditionalNavbar />
-            <div className="flex-1 overflow-hidden">{children}</div>
-          </div>
+          <ConditionalNavbar />
+          {children}
         </ThemeProvider>
       </body>
     </html>

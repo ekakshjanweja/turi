@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function Home() {
+export default function SignIn() {
   const router = useRouter();
   const { data: session, isPending } = auth.useSession();
 
