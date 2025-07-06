@@ -83,7 +83,7 @@ agentRouter.get("/chat", (c) => {
         if (connectionTimeout) {
           clearTimeout(connectionTimeout);
         }
-        getSessionManager().removeSession(sessionId);
+        sessionManager.removeSession(sessionId);
       });
     });
   } catch (error) {
@@ -98,29 +98,29 @@ agentRouter.get("/chat", (c) => {
   }
 });
 
-// Health check endpoint for monitoring
-agentRouter.get("/health", (c) => {
-  const healthInfo = getSessionManager().getHealthInfo();
+// // Health check endpoint for monitoring
+// agentRouter.get("/health", (c) => {
+//   const healthInfo = getSessionManager().getHealthInfo();
 
-  return c.json({
-    status: "healthy",
-    ...healthInfo,
-  });
-});
+//   return c.json({
+//     status: "healthy",
+//     ...healthInfo,
+//   });
+// });
 
-// Session management endpoint (for debugging/admin)
-agentRouter.get("/sessions", (c) => {
-  const user = c.get("user");
+// // Session management endpoint (for debugging/admin)
+// agentRouter.get("/sessions", (c) => {
+//   const user = c.get("user");
 
-  if (!user) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+//   if (!user) {
+//     return c.json({ error: "Unauthorized" }, 401);
+//   }
 
-  // Only return session count for security
-  const sessionInfo = getSessionManager().getUserSessionInfo(user.id);
+//   // Only return session count for security
+//   const sessionInfo = getSessionManager().getUserSessionInfo(user.id);
 
-  return c.json(sessionInfo);
-});
+//   return c.json(sessionInfo);
+// });
 
 // Graceful shutdown handling
 process.on("SIGTERM", () => {

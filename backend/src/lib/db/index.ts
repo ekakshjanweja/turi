@@ -14,6 +14,7 @@ export const db =
           user,
           account,
           session,
+          verification,
         },
       })
     : localDrizzle(postgres(DATABASE_URL!), {
@@ -21,5 +22,6 @@ export const db =
           user,
           account,
           session,
+          verification,
         },
       });
