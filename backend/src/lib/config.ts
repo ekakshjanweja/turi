@@ -108,4 +108,5 @@ export const RESEND_API_KEY = process.env.RESEND_API_KEY!;
 
 // Frontend
 
-export const FRONTEND_URL = process.env.FRONTEND_URL || "https://turimail.vercel.app";
+export const FRONTEND_URL =
+  process.env.FRONTEND_URL || "https://turimail.vercel.app";

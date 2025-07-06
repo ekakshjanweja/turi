@@ -1,18 +1,9 @@
-"use client";
-
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db";
 import * as schema from "./db/schema/auth";
-import {
-  BETTER_AUTH_SECRET,
-  BETTER_AUTH_URL,
-  RESEND_API_KEY,
-  BACKEND_URL,
-  FRONTEND_URL,
-} from "./config";
+import { BETTER_AUTH_SECRET, BETTER_AUTH_URL } from "./config";
 import { openAPI } from "better-auth/plugins";
-import { Resend } from "resend";
 
 interface GoogleTokenResponse {
   access_token: string;
@@ -52,7 +43,6 @@ export const auth = betterAuth({
         "https://www.googleapis.com/auth/gmail.modify",
         "https://mail.google.com/",
       ],
-      
     },
   },
 });

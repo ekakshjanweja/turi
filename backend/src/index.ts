@@ -1,10 +1,12 @@
 import { Hono } from "hono";
 import { auth } from "./lib/auth";
 import { cors } from "hono/cors";
-import { PORT } from "./lib/config";
+import { loadEnv, PORT } from "./lib/config";
 import { deleteUser, signOut } from "./lib/delete-user";
 import { audioRouter } from "./routes/audio";
 import { agentRouter } from "./routes/agent";
+
+loadEnv();
 
 const app = new Hono<{
   Variables: {
@@ -40,18 +42,24 @@ app.use(
 );
 
 app.use("*", async (c, next) => {
-  // const session = await getSession(c.req.raw.headers);
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  try {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
-  if (!session) {
+    if (!session) {
+      c.set("user", null);
+      c.set("session", null);
+      return next();
+    }
+
+    c.set("user", session.user);
+    c.set("session", session.session);
+    return next();
+  } catch (error) {
+    console.error("❌ Session middleware error:", error);
     c.set("user", null);
     c.set("session", null);
     return next();
   }
-
-  c.set("user", session.user);
-  c.set("session", session.session);
-  return next();
 });
 
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));

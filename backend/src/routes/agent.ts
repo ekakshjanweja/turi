@@ -1,15 +1,9 @@
 import { Hono } from "hono";
 import { auth } from "../lib/auth";
+import type { AgentSession, Message } from "../lib/types/types";
 import { streamSSE } from "hono/streaming";
-import {
-  AgentSessionManager,
-  AGENT_SESSION_CONFIG,
-} from "../services/agent/agent-session-manager";
-import {
-  sendErrorMessage,
-  validateChatQuery,
-} from "../services/agent/helpers/agent-router-helpers";
-import { handleChatSession } from "../services/agent/helpers/handle-chat-session";
+
+const agentSessions: AgentSession[] = [];
 
 export const agentRouter = new Hono<{
   Variables: {
@@ -19,19 +13,17 @@ export const agentRouter = new Hono<{
   };
 }>();
 
-// Lazy-loaded session manager to avoid global scope timer issues
-let sessionManagerInstance: AgentSessionManager | null = null;
+// Lazy imports to reduce startup time
+const lazyGmailService = async () => {
+  const { GmailService } = await import("../services/gmail");
+  return GmailService;
+};
 
-export function getSessionManager(): AgentSessionManager {
-  if (!sessionManagerInstance) {
-    sessionManagerInstance = new AgentSessionManager();
-    // Start cleanup timer only when first accessed (not in global scope)
-    sessionManagerInstance.startCleanup();
-  }
-  return sessionManagerInstance;
-}
+const lazyAgent = async () => {
+  const { Agent } = await import("../services/agent");
+  return Agent;
+};
 
-// Main chat handler
 agentRouter.get("/chat", (c) => {
   const user = c.get("user");
   const session = c.get("session");
@@ -40,99 +32,111 @@ agentRouter.get("/chat", (c) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  // Set proper SSE headers
   c.header("Content-Type", "text/event-stream");
   c.header("Cache-Control", "no-cache");
   c.header("Connection", "keep-alive");
-  c.header("Access-Control-Allow-Origin", "*");
-  c.header("Access-Control-Allow-Headers", "Cache-Control");
 
   const sessionId = user.id;
-  const sessionManager = getSessionManager(); // Get lazy-loaded instance
+  const message = c.req.query("message");
 
-  try {
-    const query = validateChatQuery(c);
+  return streamSSE(c, async (stream) => {
+    let agentSession = agentSessions.find((s) => s.id === sessionId);
 
-    return streamSSE(c, async (stream) => {
-      let connectionTimeout: NodeJS.Timeout | null = null;
+    const audio = c.req.query("audio");
+    const audioEnabled = audio === "true";
 
-      try {
-        // Set connection timeout
-        connectionTimeout = setTimeout(() => {
-          console.log(`Connection timeout for session: ${sessionId}`);
-          stream.close();
-        }, AGENT_SESSION_CONFIG.CONNECTION_TIMEOUT_MS);
+    let clear = c.req.query("clear") === "true";
 
-        await handleChatSession(stream, sessionId, query, connectionTimeout);
-      } catch (error) {
-        console.error(`Chat session error for ${sessionId}:`, error);
-        await sendErrorMessage(
-          stream,
-          "An unexpected error occurred",
-          error instanceof Error ? error.message : String(error)
-        );
-      } finally {
-        if (connectionTimeout) {
-          clearTimeout(connectionTimeout);
-        }
+    const GmailService = await lazyGmailService();
+    const gmailService = new GmailService();
+    try {
+      await gmailService.init(user.id);
+    } catch (error) {
+      const accounts = await auth.api.listUserAccounts({
+        query: {
+          userId: user.id,
+        },
+      });
+
+      if (accounts[0]) {
+        console.log("Refreshing token");
+
+        await auth.api.refreshToken({
+          body: {
+            providerId: "google",
+            userId: user.id,
+            accountId: accounts[0].id,
+          },
+        });
       }
 
-      // Setup cleanup on connection abort
-      stream.onAbort(() => {
-        console.log(`Connection aborted for session: ${sessionId}`);
-        if (connectionTimeout) {
-          clearTimeout(connectionTimeout);
-        }
-        sessionManager.removeSession(sessionId);
+      stream.writeSSE({
+        data: JSON.stringify({
+          type: "ERROR",
+          content: "Failed to initialize Gmail service",
+        }),
+        event: "system",
       });
+    }
+
+    if (!agentSession) {
+      const Agent = await lazyAgent();
+      const agent = new Agent(stream, gmailService, audioEnabled);
+
+      agentSession = {
+        id: sessionId,
+        agent,
+        gmailService,
+        sseConnection: stream,
+        audio: audioEnabled,
+      } as AgentSession;
+
+      agentSessions.push(agentSession);
+      clear = false;
+    } else {
+      agentSession.sseConnection = stream;
+      agentSession.agent.updateStream(stream);
+      agentSession.gmailService = gmailService;
+    }
+
+    if (agentSession.audio !== audioEnabled) {
+      agentSession.agent.updateAudioEnabled(audioEnabled);
+      agentSession.audio = audioEnabled;
+
+      const message: Message = {
+        type: "CONNECTED",
+        content: `Audio mode changed to ${
+          audioEnabled ? "enabled" : "disabled"
+        }`,
+      };
+
+      stream.writeSSE({ data: JSON.stringify(message), event: "system" });
+    }
+
+    if (clear) {
+      agentSession.agent.clearMessages();
+    }
+
+    const msg: Message = {
+      type: "CONNECTED",
+      content: "Agent session started",
+    };
+
+    stream.writeSSE({ data: JSON.stringify(msg), event: "system" });
+
+    if (message) {
+      await agentSession.agent.handleUserInput(message);
+    }
+
+    await stream.sleep(1000);
+
+    stream.onAbort(() => {
+      const index = agentSessions.findIndex((s) => s.id === sessionId);
+
+      if (index !== -1) {
+        agentSessions.splice(index, 1);
+        agentSession?.agent?.close();
+      }
     });
-  } catch (error) {
-    console.error(`Chat setup error for ${sessionId}:`, error);
-    return c.json(
-      {
-        error: "Failed to setup chat session",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      500
-    );
-  }
-});
-
-// // Health check endpoint for monitoring
-// agentRouter.get("/health", (c) => {
-//   const healthInfo = getSessionManager().getHealthInfo();
-
-//   return c.json({
-//     status: "healthy",
-//     ...healthInfo,
-//   });
-// });
-
-// // Session management endpoint (for debugging/admin)
-// agentRouter.get("/sessions", (c) => {
-//   const user = c.get("user");
-
-//   if (!user) {
-//     return c.json({ error: "Unauthorized" }, 401);
-//   }
-
-//   // Only return session count for security
-//   const sessionInfo = getSessionManager().getUserSessionInfo(user.id);
-
-//   return c.json(sessionInfo);
-// });
-
-// Graceful shutdown handling
-process.on("SIGTERM", () => {
-  console.log("Received SIGTERM, cleaning up sessions...");
-  if (sessionManagerInstance) {
-    sessionManagerInstance.destroy();
-  }
-});
-
-process.on("SIGINT", () => {
-  console.log("Received SIGINT, cleaning up sessions...");
-  if (sessionManagerInstance) {
-    sessionManagerInstance.destroy();
-  }
+  });
 });
