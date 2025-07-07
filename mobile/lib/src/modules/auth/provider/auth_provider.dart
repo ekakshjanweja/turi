@@ -64,8 +64,6 @@ class AuthProvider extends ChangeNotifier {
       return error;
     }
 
-    await Future.delayed(const Duration(seconds: 3));
-
     final err = await getSession();
 
     if (err != null) {

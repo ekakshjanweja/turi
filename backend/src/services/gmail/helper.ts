@@ -1,18 +1,19 @@
 import { account as accountSchema } from "../../lib/db/schema/auth";
-import { db } from "../../lib/db";
 import { eq, and } from "drizzle-orm";
 import { google } from "googleapis";
 import { OAuth2Client } from "googleapis-common";
 import type { EmailContent, GmailMessagePart, GmailLabel } from "./types";
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../../lib/config";
+import type { DbInstance } from "../../lib/db";
 
 export async function configureOAuth2Client(
-  userId: string
+  userId: string,
+  db: DbInstance
 ): Promise<
   | { oauth2Client: OAuth2Client; error?: never }
   | { error: Error; oauth2Client?: never }
 >;
-export async function configureOAuth2Client(userId: string) {
+export async function configureOAuth2Client(userId: string, db: DbInstance) {
   try {
     const userAccounts = await db
       .select({

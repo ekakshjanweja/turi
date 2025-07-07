@@ -1,18 +1,17 @@
 import { Hono } from "hono";
-import type { auth } from "../lib/auth";
 import { stt } from "../services/audio/stt";
+import type { AppBindings } from "../lib/types/types";
 
-export const audioRouter = new Hono<{
-  Variables: {
-    user: typeof auth.$Infer.Session.user | null;
-    session: typeof auth.$Infer.Session.session | null;
-    Bindings: CloudflareBindings;
-  };
-}>();
+export const audioRouter = new Hono<AppBindings>();
 
 audioRouter.post("/stt", async (c) => {
   const user = c.get("user");
   const session = c.get("session");
+  const auth = c.get("auth");
+
+  if (!auth) {
+    return c.json({ error: "Auth instance not found" }, 500);
+  }
 
   if (!user || !session) {
     return c.json({ message: "Unauthorized" }, 401);

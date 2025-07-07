@@ -1,6 +1,20 @@
 import type { Agent } from "../../services/agent";
 import type { GmailService } from "../../services/gmail";
 import type { SSEStreamingApi } from "hono/streaming";
+import type { Session } from "better-auth";
+import type { AuthInstance } from "../auth";
+import type { User } from "better-auth";
+import type { DbInstance } from "../db";
+
+export type AppBindings = {
+  Bindings: CloudflareBindings;
+  Variables: {
+    user: User | null;
+    session: Session | null;
+    db: DbInstance;
+    auth: AuthInstance;
+  };
+};
 
 export type AgentSession = {
   id: string;

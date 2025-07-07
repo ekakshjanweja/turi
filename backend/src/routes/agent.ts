@@ -1,17 +1,10 @@
 import { Hono } from "hono";
-import { auth } from "../lib/auth";
-import type { AgentSession, Message } from "../lib/types/types";
+import type { AgentSession, AppBindings, Message } from "../lib/types/types";
 import { streamSSE } from "hono/streaming";
 
 const agentSessions: AgentSession[] = [];
 
-export const agentRouter = new Hono<{
-  Variables: {
-    user: typeof auth.$Infer.Session.user | null;
-    session: typeof auth.$Infer.Session.session | null;
-    Bindings: CloudflareBindings;
-  };
-}>();
+export const agentRouter = new Hono<AppBindings>();
 
 // Lazy imports to reduce startup time
 const lazyGmailService = async () => {
@@ -27,6 +20,16 @@ const lazyAgent = async () => {
 agentRouter.get("/chat", (c) => {
   const user = c.get("user");
   const session = c.get("session");
+  const auth = c.get("auth");
+  const db = c.get("db");
+
+  if (!db) {
+    return c.json({ error: "Database instance not found" }, 500);
+  }
+
+  if (!auth) {
+    return c.json({ error: "Auth instance not found" }, 500);
+  }
 
   if (!user || !session) {
     return c.json({ error: "Unauthorized" }, 401);
@@ -50,7 +53,7 @@ agentRouter.get("/chat", (c) => {
     const GmailService = await lazyGmailService();
     const gmailService = new GmailService();
     try {
-      await gmailService.init(user.id);
+      await gmailService.init(user.id, db);
     } catch (error) {
       const accounts = await auth.api.listUserAccounts({
         query: {

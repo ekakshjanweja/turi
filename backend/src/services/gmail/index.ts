@@ -1,15 +1,48 @@
 import { gmail_v1 } from "googleapis";
 import { OAuth2Client } from "googleapis-common";
-import { buildSearchQueryFromReference, configureOAuth2Client, createEmailMessage, createGmailClient, createLabel, deleteLabel, extractEmailContent, getOrCreateLabel, listLabels, updateLabel, validateEmail } from "./helper";
-import type { CreateLabel, DeleteLabel, EmailAttachment, EmailSendResult, GetOrCreateLabel, GmailMessagePart, LabelManagerResult, ListEmailLabels, ReadEmail, SearchEmails, SendEmail, UpdateLabel } from "./types";
-import type { EmailReadResult, EmailSearchResult, EmailSummary } from "../../lib/types/types";
+import {
+  buildSearchQueryFromReference,
+  configureOAuth2Client,
+  createEmailMessage,
+  createGmailClient,
+  createLabel,
+  deleteLabel,
+  extractEmailContent,
+  getOrCreateLabel,
+  listLabels,
+  updateLabel,
+  validateEmail,
+} from "./helper";
+import type {
+  CreateLabel,
+  DeleteLabel,
+  EmailAttachment,
+  EmailSendResult,
+  GetOrCreateLabel,
+  GmailMessagePart,
+  LabelManagerResult,
+  ListEmailLabels,
+  ReadEmail,
+  SearchEmails,
+  SendEmail,
+  UpdateLabel,
+} from "./types";
+import type {
+  EmailReadResult,
+  EmailSearchResult,
+  EmailSummary,
+} from "../../lib/types/types";
+import type { DbInstance } from "../../lib/db";
 
 export class GmailService {
   private oauth2Client: OAuth2Client | null = null;
   private gmail: gmail_v1.Gmail | null = null;
 
-  public async init(userId: string) {
-    const configureOAuth2ClientResponse = await configureOAuth2Client(userId);
+  public async init(userId: string, db: DbInstance) {
+    const configureOAuth2ClientResponse = await configureOAuth2Client(
+      userId,
+      db
+    );
 
     if (configureOAuth2ClientResponse.error) {
       console.log(

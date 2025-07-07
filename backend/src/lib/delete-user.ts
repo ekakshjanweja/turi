@@ -1,18 +1,20 @@
 import type { Session, User } from "better-auth";
-import { db } from "./db";
 import {
   user as userTable,
   verification as verificationTable,
   session as sessionTable,
 } from "./db/schema/auth";
 import { eq } from "drizzle-orm";
+import type { DbInstance } from "./db";
 
 export async function deleteUser({
   user,
   session,
+  db,
 }: {
   user: User;
   session: Session;
+  db: DbInstance;
 }) {
   try {
     // Start a transaction to ensure all deletions succeed or fail together
@@ -39,9 +41,11 @@ export async function deleteUser({
 export async function signOut({
   user,
   session,
+  db,
 }: {
   user: User;
   session: Session;
+  db: DbInstance;
 }) {
   try {
     await db.transaction(async (tx) => {
