@@ -7,6 +7,7 @@ import { audioRouter } from "./routes/audio";
 import { agentRouter } from "./routes/agent";
 import { db } from "./lib/db";
 import { beta } from "./lib/db/schema/beta";
+import postgres from "postgres";
 
 loadEnv();
 
@@ -161,12 +162,14 @@ app.post("/early-access", async (c) => {
 const server =
   process.env.NODE_ENV === "production"
     ? {
-        fetch(
+        async fetch(
           request: Request,
           env: CloudflareBindings,
           ctx: ExecutionContext
         ) {
-          return app.fetch(request, env, ctx);
+          const sql = postgres(env.HYPERDRIVE.connectionString);
+          const rows = await sql`SELECT * FROM beta`;
+          return new Response(JSON.stringify(rows));
         },
       }
     : {

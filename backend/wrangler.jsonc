@@ -3,7 +3,14 @@
   "name": "turi",
   "main": "src/index.ts",
   "compatibility_date": "2025-06-23",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "5c3a477b8aec42a5b2a44d390a995f7d",
+      "localConnectionString": "postgresql://postgres:postgres@localhost:4774/turidb",
+    },
+  ],
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },

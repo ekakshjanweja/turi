@@ -1,30 +1,18 @@
 import "dotenv/config";
-import { drizzle as localDrizzle } from "drizzle-orm/postgres-js";
-import { drizzle } from "drizzle-orm/neon-http";
-
+import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { account, session, user, verification } from "./schema/auth";
-import { DATABASE_URL, NODE_ENV } from "../config";
-import { neon } from "@neondatabase/serverless";
+import { DATABASE_URL } from "../config";
 import { beta } from "./schema/beta";
 
-export const db =
-  NODE_ENV === "production"
-    ? drizzle(neon(DATABASE_URL!), {
-        schema: {
-          user,
-          account,
-          session,
-          verification,
-          beta,
-        },
-      })
-    : localDrizzle(postgres(DATABASE_URL!), {
-        schema: {
-          user,
-          account,
-          session,
-          verification,
-          beta,
-        },
-      });
+const client = postgres(DATABASE_URL!);
+
+export const db = drizzle(client, {
+  schema: {
+    user,
+    account,
+    session,
+    verification,
+    beta,
+  },
+});
