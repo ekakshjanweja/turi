@@ -2,8 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Metadata } from "next";
 import Link from "next/link";
-import { Mic, Brain, Zap, Shield } from "lucide-react";
-import HeroSection from "./_components/hero-section";
+import HeroSection from "./_components/hero/hero-section";
+import FeaturesSection from "./_components/features/features-section";
 
 export const metadata: Metadata = {
   title: "Turi - Voice-Powered Email Assistant | Transform Your Inbox with AI",
@@ -32,79 +32,7 @@ export default function LandingPage() {
       <HeroSection />
 
       {/* Features Section */}
-      <section className="py-20 md:py-32 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
-              Email That Actually Works for{" "}
-              <span className="text-primary">You</span>
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Turi turns your inbox into a conversation. Listen, reply, and
-              organize—all hands-free.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            {/* Feature 1: Voice Control */}
-            <div className="text-center p-6 rounded-2xl bg-card border border-border/50 hover:shadow-lg transition-all">
-              <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <Mic className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">
-                Natural Voice Commands
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Compose emails, schedule replies, and navigate your inbox using
-                natural speech. Just talk to Turi like you would a personal
-                assistant.
-              </p>
-            </div>
-
-            {/* Feature 2: AI Summaries */}
-            <div className="text-center p-6 rounded-2xl bg-card border border-border/50 hover:shadow-lg transition-all">
-              <div className="w-16 h-16 mx-auto mb-6 bg-accent/10 rounded-2xl flex items-center justify-center">
-                <Brain className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">
-                Intelligent Summaries
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Get instant AI-powered summaries of long email threads.
-                Understand the key points without reading every message.
-              </p>
-            </div>
-
-            {/* Feature 3: Hands-Free Productivity */}
-            <div className="text-center p-6 rounded-2xl bg-card border border-border/50 hover:shadow-lg transition-all">
-              <div className="w-16 h-16 mx-auto mb-6 bg-secondary/10 rounded-2xl flex items-center justify-center">
-                <Zap className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">
-                Hands-Free Productivity
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Manage emails while cooking, driving, or multitasking. Turi
-                works when your hands are busy but your mind is free.
-              </p>
-            </div>
-
-            {/* Feature 4: Enterprise Security */}
-            <div className="text-center p-6 rounded-2xl bg-card border border-border/50 hover:shadow-lg transition-all">
-              <div className="w-16 h-16 mx-auto mb-6 bg-destructive/10 rounded-2xl flex items-center justify-center">
-                <Shield className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">
-                Enterprise Security
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Bank-level encryption and privacy controls. Your emails stay
-                private with zero-knowledge architecture and local processing.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <FeaturesSection />
 
       {/* Final CTA Section */}
       <section className="py-20 md:py-32 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">

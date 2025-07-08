@@ -30,12 +30,12 @@ export function Navbar() {
           {/* Right side buttons */}
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-6">
-              <Link
+              {/* <Link
                 href="/early-access"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Early Access
-              </Link>
+              </Link> */}
               <Link
                 href="/contact"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
