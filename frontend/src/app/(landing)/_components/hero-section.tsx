@@ -7,7 +7,7 @@ import HeroVisual from "./hero-visual";
 
 export default function HeroSection() {
   return (
-    <section className="relative bg-gradient-to-b from-background via-background/50 to-muted/30 overflow-hidden mt-12 md:mt-24">
+    <section className="relative bg-gradient-to-b from-background via-background/50 to-muted/30 overflow-hidden mt-12">
       <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
           {/* Hero Badge */}
@@ -22,15 +22,18 @@ export default function HeroSection() {
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight tracking-tight">
-            Effortless Email Just Say It
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-b from-foreground via-foreground/80 to-foreground/50 bg-clip-text text-transparent mb-6 leading-[1.1] tracking-tight max-w-2xl mx-auto">
+            Talk to Your Inbox and{" "}
+            <span className="bg-gradient-to-br from-primary via-accent to-primary/10 bg-clip-text text-transparent">
+              Get Back 2 Hours a day
+            </span>
           </h1>
 
           {/* Subheading */}
-          <p className="text-base md:text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed font-light">
-            Stop typing, start talking. Turi manages your entire inbox through
-            natural voice conversations, turning email into an effortless,
-            hands-free experience.
+          <p className="text-base text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed font-light">
+            Transform email from a daily burden into natural conversation. Turi
+            turns your voice into effortless email management—compose, reply,
+            and organize completely hands-free.
           </p>
 
           {/* Primary CTA */}

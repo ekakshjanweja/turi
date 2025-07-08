@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mx-4 md:mx-8 lg:mx-0">
       {/* Hero Section */}
       <HeroSection />
 
@@ -40,8 +40,8 @@ export default function LandingPage() {
               <span className="text-primary">You</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Stop wrestling with your inbox. Turi transforms email from a chore
-              into a seamless, intelligent conversation.
+              Turi turns your inbox into a conversation. Listen, reply, and
+              organize—all hands-free.
             </p>
           </div>
 
