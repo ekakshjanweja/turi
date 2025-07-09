@@ -39,4 +39,4 @@ const FeaturesSection = () => (
   </section>
 );
 
-export default FeaturesSection; 
+export default FeaturesSection;
