@@ -181,7 +181,7 @@ export default function EarlyAccessPage() {
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p>
             By joining our waitlist, you agree to our{" "}
-            <Link href="/privacy" className="text-primary hover:underline">
+            <Link href="/privacy-policy" className="text-primary hover:underline">
               Privacy Policy
             </Link>{" "}
             and{" "}

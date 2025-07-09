@@ -44,7 +44,7 @@ export function Navbar() {
               </Link>
 
               <Link
-                href="/privacy"
+                href="/privacy-policy"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Privacy Policy

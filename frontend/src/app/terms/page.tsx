@@ -106,7 +106,7 @@ export default function TermsOfService() {
               <p>
                 Your privacy is important to us. Please review our{" "}
                 <Link
-                  href="/privacy"
+                  href="/privacy-policy"
                   className="text-primary underline hover:no-underline"
                 >
                   Privacy Policy

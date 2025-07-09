@@ -98,7 +98,7 @@ export default function LandingPage() {
                   Contact
                 </Link>
                 <Link
-                  href="/privacy"
+                  href="/privacy-policy"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Privacy Policy
