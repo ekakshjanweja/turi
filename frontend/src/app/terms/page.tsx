@@ -52,7 +52,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Use of the Service
               </h2>
-              
+
               <p className="mb-4">
                 TuriMail provides tools to help you manage, organize, and
                 interact with your email more effectively. You may use our
@@ -66,7 +66,10 @@ export default function TermsOfService() {
               <ul className="list-disc pl-6 space-y-2 mb-6">
                 <li>Violate any applicable laws or regulations</li>
                 <li>Access or attempt to access data not intended for you</li>
-                <li>Interfere with or disrupt the integrity or performance of the service</li>
+                <li>
+                  Interfere with or disrupt the integrity or performance of the
+                  service
+                </li>
                 <li>Use the service for any spam or abusive messaging</li>
               </ul>
             </section>
@@ -75,7 +78,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Account and Security
               </h2>
-              
+
               <p className="mb-4">
                 You may be required to log in via a third-party service (e.g.,
                 Gmail) to access certain features. You are responsible for
@@ -84,8 +87,8 @@ export default function TermsOfService() {
               </p>
 
               <p className="mb-4 italic text-muted-foreground bg-accent/20 p-4 rounded">
-                <strong>Security Alert:</strong> If you believe your account
-                has been compromised, please contact us immediately at{" "}
+                <strong>Security Alert:</strong> If you believe your account has
+                been compromised, please contact us immediately at{" "}
                 <Link
                   href="mailto:jekaksh@gmail.com"
                   className="text-primary underline hover:no-underline"
@@ -99,7 +102,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Privacy
               </h2>
-              
+
               <p>
                 Your privacy is important to us. Please review our{" "}
                 <Link
@@ -117,7 +120,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Intellectual Property
               </h2>
-              
+
               <p>
                 All content, features, and functionality provided by TuriMail
                 are the property of TuriMail or its licensors and are protected
@@ -131,7 +134,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Third-Party Services
               </h2>
-              
+
               <p className="mb-4">
                 TuriMail may integrate with third-party services (like email
                 providers). We are not responsible for the practices, content,
@@ -141,8 +144,8 @@ export default function TermsOfService() {
 
               <p className="mb-4 italic text-muted-foreground bg-accent/20 p-4 rounded">
                 <strong>Note:</strong> Third-party integrations may include
-                Gmail, Google services, and other email providers. Please
-                review their individual terms of service and privacy policies.
+                Gmail, Google services, and other email providers. Please review
+                their individual terms of service and privacy policies.
               </p>
             </section>
 
@@ -150,7 +153,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Termination
               </h2>
-              
+
               <p>
                 We reserve the right to suspend or terminate your access to the
                 service at our discretion, without notice, if you violate these
@@ -163,9 +166,10 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Disclaimer of Warranties
               </h2>
-              
+
               <p className="mb-4">
-                TuriMail is provided "as is" and "as available." We do not make any warranties regarding the
+                TuriMail is provided &quot;as is&quot; and &quot;as
+                available.&quot; We do not make any warranties regarding the
                 reliability, availability, or accuracy of the service and
                 disclaim all warranties to the fullest extent permitted by law.
               </p>
@@ -180,7 +184,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Limitation of Liability
               </h2>
-              
+
               <p>
                 To the maximum extent permitted by law, TuriMail shall not be
                 liable for any indirect, incidental, special, consequential, or
@@ -193,7 +197,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Changes to Terms
               </h2>
-              
+
               <p className="mb-4">
                 We may modify these Terms at any time. If we make material
                 changes, we will notify you by posting the updated Terms on our
@@ -210,7 +214,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Contact
               </h2>
-              
+
               <p className="mb-4">
                 If you have any questions about these Terms, please contact us
                 at{" "}
@@ -223,8 +227,8 @@ export default function TermsOfService() {
               </p>
 
               <p className="text-sm text-muted-foreground italic">
-                For support, legal inquiries, or terms-related questions,
-                please use the contact information above.
+                For support, legal inquiries, or terms-related questions, please
+                use the contact information above.
               </p>
             </section>
           </div>
