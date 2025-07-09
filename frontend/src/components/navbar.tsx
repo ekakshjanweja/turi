@@ -42,6 +42,13 @@ export function Navbar() {
               >
                 Contact
               </Link>
+
+              <Link
+                href="/privacy"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Privacy Policy
+              </Link>
             </div>
             <ModeToggle />
             {session && !isPending && (
