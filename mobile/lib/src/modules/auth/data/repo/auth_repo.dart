@@ -39,6 +39,7 @@ class AuthRepo {
       );
 
       final GoogleSignInAuthentication authentication = user.authentication;
+
       final String? idToken = authentication.idToken;
 
       if (idToken == null) {
@@ -109,11 +110,15 @@ class AuthRepo {
           ),
         );
 
-    if (tokens == null) return null;
+    if (tokens == null) {
+      final GoogleSignInClientAuthorization authorization = await user
+          .authorizationClient
+          .authorizeScopes(scopes);
 
-    final accessToken = tokens.accessToken;
+      return authorization.accessToken;
+    }
 
-    return accessToken;
+    return tokens.accessToken;
   }
 
   static Future<(SessionResponse?, ApiFailure?)> getSession() async {
