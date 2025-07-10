@@ -32,7 +32,7 @@ export default function HeroSection() {
           {/* Subheading */}
           <p className="text-base text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed font-light">
             Transform email from a daily burden into natural conversation. Turi
-            turns your voice into effortless email management—compose, reply,
+            turns your voice into effortless email management, compose, reply,
             and organize completely hands-free.
           </p>
 
