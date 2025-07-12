@@ -7,6 +7,7 @@ import { agentRouter } from "./routes/agent";
 import { beta } from "./lib/db/schema/beta";
 import type { AppBindings } from "./lib/types/types";
 import authMiddleware from "./middlewares/auth.middleware";
+import { betaRouter } from "./routes/beta";
 
 loadEnv();
 
@@ -49,6 +50,7 @@ app.on(["POST", "GET"], "/api/auth/**", (c) => {
 
 app.route("/audio", audioRouter);
 app.route("/agent", agentRouter);
+app.route("/early-access", betaRouter);
 
 app.get("/health", async (c) => {
   try {
@@ -105,42 +107,6 @@ app.get("/delete", async (c) => {
   }
 });
 
-app.post("/early-access", async (c) => {
-  const { email } = await c.req.json();
-
-  const db = c.get("db");
-
-  if (!email) {
-    return c.json({ error: "Email is required" }, 400);
-  }
-
-  // Email validation regex
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return c.json({ error: "Invalid email format" }, 400);
-  }
-
-  try {
-    await db.insert(beta).values({ email });
-
-    //TODO: Send email to user
-
-    const isGmail = email.toLowerCase().endsWith("@gmail.com");
-    if (!isGmail) {
-      return c.json(
-        { error: "Currently we only support Gmail addresses" },
-        400
-      );
-    }
-
-    return c.json({ message: "Successfully joined early access" }, 200);
-  } catch (error) {
-    return c.json(
-      { error: error instanceof Error ? error.message : JSON.stringify(error) },
-      500
-    );
-  }
-});
 
 export default {
   async fetch(
