@@ -16,7 +16,11 @@ const app = new Hono<AppBindings>();
 app.use(
   "*", // or replace with "*" to enable cors for a routes
   cors({
-    origin: ["http://localhost:3000", "https://turimail.vercel.app"],
+    origin: [
+      "http://localhost:3000",
+      "https://turimail.vercel.app",
+      "https://www.turi.email",
+    ],
     allowHeaders: [
       "Content-Type",
       "Authorization",
@@ -106,7 +110,6 @@ app.get("/delete", async (c) => {
     );
   }
 });
-
 
 export default {
   async fetch(

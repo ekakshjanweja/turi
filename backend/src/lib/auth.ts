@@ -22,6 +22,7 @@ export function initAuth(db: DbInstance) {
       "http://localhost:3000",
       "http://localhost:8000",
       "https://turimail.vercel.app",
+      "https://www.turi.email",
     ],
     plugins: [openAPI()],
     socialProviders: {
