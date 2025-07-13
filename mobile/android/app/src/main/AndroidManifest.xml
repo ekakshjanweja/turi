@@ -17,7 +17,10 @@
     <application
         android:label="Turi Mail"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupOnly="false"
+    >
         <activity
             android:name=".MainActivity"
             android:exported="true"
