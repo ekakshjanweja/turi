@@ -97,28 +97,11 @@ class AuthRepo {
   }
 
   static Future<String?> _getAccessToken(GoogleSignInAccount user) async {
-    final ClientAuthorizationTokenData? tokens = await GoogleSignInPlatform
-        .instance
-        .clientAuthorizationTokensForScopes(
-          ClientAuthorizationTokensForScopesParameters(
-            request: AuthorizationRequestDetails(
-              scopes: scopes,
-              userId: user.id,
-              email: user.email,
-              promptIfUnauthorized: false,
-            ),
-          ),
-        );
+    final GoogleSignInClientAuthorization authorization = await user
+        .authorizationClient
+        .authorizeScopes(scopes);
 
-    if (tokens == null) {
-      final GoogleSignInClientAuthorization authorization = await user
-          .authorizationClient
-          .authorizeScopes(scopes);
-
-      return authorization.accessToken;
-    }
-
-    return tokens.accessToken;
+    return authorization.accessToken;
   }
 
   static Future<(SessionResponse?, ApiFailure?)> getSession() async {
