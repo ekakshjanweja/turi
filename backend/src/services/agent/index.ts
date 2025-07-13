@@ -30,18 +30,21 @@ export class Agent {
   private messageCount: number;
   private gmailService: GmailService;
   private audioEnabled: boolean;
+  private onSendMessage: (message: Message) => Promise<void>;
   private lastEmailList: EmailSummary[] = [];
 
   constructor(
     stream: SSEStreamingApi,
     gmailService: GmailService,
-    audioEnabled: boolean
+    audioEnabled: boolean,
+    onSendMessage: (message: Message) => Promise<void>
   ) {
     this.stream = stream;
     this.messages = [];
     this.messageCount = 0;
     this.gmailService = gmailService;
     this.audioEnabled = audioEnabled;
+    this.onSendMessage = onSendMessage;
     this.messages.push({
       role: "system",
       content: EMAIL_AGENT_SYSTEM_PROMPT,
@@ -73,8 +76,16 @@ export class Agent {
     });
   }
 
+  public async updateOnSendMessage(
+    onSendMessage: (message: Message) => Promise<void>
+  ) {
+    this.onSendMessage = onSendMessage;
+  }
+
   private async sendMessage(message: Message) {
     try {
+      await this.onSendMessage(message);
+
       await this.stream.writeSSE({
         data: JSON.stringify(message),
         event: "message",

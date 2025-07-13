@@ -5,12 +5,14 @@ import type { Session } from "better-auth";
 import type { AuthInstance } from "../auth";
 import type { User } from "better-auth";
 import type { DbInstance } from "../db";
+import type { Subscription } from "../db/schema/subscription";
 
 export type AppBindings = {
   Bindings: CloudflareBindings;
   Variables: {
     user: User | null;
     session: Session | null;
+    subscription: Subscription | null;
     db: DbInstance;
     auth: AuthInstance;
   };

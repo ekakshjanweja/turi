@@ -73,6 +73,7 @@ app.get("/health", async (c) => {
 app.get("/sign-out", async (c) => {
   const user = c.get("user");
   const session = c.get("session");
+
   const db = c.get("db");
   if (!user || !session) {
     return c.json({ error: "Unauthorized" }, 401);

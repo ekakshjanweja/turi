@@ -44,38 +44,3 @@ export function initAuth(db: DbInstance) {
 }
 
 export type AuthInstance = ReturnType<typeof initAuth>;
-
-// export const auth = betterAuth({
-//   secret: BETTER_AUTH_SECRET,
-//   database: drizzleAdapter(db, {
-//     provider: "pg",
-//     schema: {
-//       user: schema.user,
-//       session: schema.session,
-//       account: schema.account,
-//       verification: schema.verification,
-//     },
-//   }),
-//   baseURL: BETTER_AUTH_URL,
-//   trustedOrigins: [
-//     "http://localhost:3000",
-//     "http://localhost:8000",
-//     "https://turimail.vercel.app",
-//   ],
-//   plugins: [openAPI()],
-//   socialProviders: {
-//     google: {
-//       clientId: process.env.GOOGLE_CLIENT_ID as string,
-//       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-//       scope: [
-//         "openid",
-//         "email",
-//         "profile",
-//         "https://www.googleapis.com/auth/gmail.readonly",
-//         "https://www.googleapis.com/auth/gmail.compose",
-//         "https://www.googleapis.com/auth/gmail.labels",
-//         "https://www.googleapis.com/auth/gmail.modify",
-//       ],
-//     },
-//   },
-// });

@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { account, session, user, verification } from "./schema/auth";
 import { beta } from "./schema/beta";
+import { subscription } from "./schema/subscription";
 
 export function initDb(connectionString: string) {
   const client = postgres(connectionString);
@@ -13,6 +14,7 @@ export function initDb(connectionString: string) {
       session,
       verification,
       beta,
+      subscription,
     },
   });
 }
