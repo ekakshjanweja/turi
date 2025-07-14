@@ -35,7 +35,7 @@ export default function TermsOfService() {
               Welcome to <strong>TuriMail</strong>! These Terms of Service
               govern your use of our website located at{" "}
               <Link
-                href="https://turimail.vercel.app"
+                href="https://turi.email"
                 className="text-primary underline hover:no-underline"
                 target="_blank"
                 rel="noopener noreferrer"
