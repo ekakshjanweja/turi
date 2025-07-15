@@ -1,9 +1,6 @@
 import { generateText, tool, type CoreMessage } from "ai";
 import type { GmailService } from "../gmail";
-import {
-  EMAIL_AGENT_SYSTEM_PROMPT,
-  HUMANIZE_AGENT_SYSTEM_PROMPT,
-} from "./prompts";
+import { EMAIL_ASSISTANT_SYSTEM_PROMPT } from "./prompts";
 import { google } from "@ai-sdk/google";
 import {
   CreateLabelSchema,
@@ -47,7 +44,7 @@ export class Agent {
     this.onSendMessage = onSendMessage;
     this.messages.push({
       role: "system",
-      content: EMAIL_AGENT_SYSTEM_PROMPT,
+      content: EMAIL_ASSISTANT_SYSTEM_PROMPT,
     });
   }
 
@@ -72,7 +69,7 @@ export class Agent {
     this.messageCount = 0;
     this.messages.push({
       role: "system",
-      content: EMAIL_AGENT_SYSTEM_PROMPT,
+      content: EMAIL_ASSISTANT_SYSTEM_PROMPT,
     });
   }
 
@@ -159,27 +156,50 @@ export class Agent {
         }
 
         // Generate a follow-up response to explain the tool results
-        const followUp = await generateText({
-          model: google("gemini-2.0-flash"),
-          messages: [
-            ...this.messages,
-            {
-              role: "user" as const,
-              content: HUMANIZE_AGENT_SYSTEM_PROMPT,
-            },
-          ],
-        });
 
-        this.messages.push({
-          role: "assistant",
-          content: followUp.text,
-        });
+        // const followUp = await generateText({
+        //   model: google("gemini-2.0-flash"),
+        //   messages: [
+        //     ...this.messages,
+        //     {
+        //       role: "user" as const,
+        //       content: EMAIL_ASSISTANT_SYSTEM_PROMPT,
+        //     },
+        //   ],
+        // });
+
+        // this.messages.push({
+        //   role: "assistant",
+        //   content: followUp.text,
+        // });
+
+        // if (this.audioEnabled) {
+        //   try {
+        //     // const audio = await elevenLabsTts(followUp.text);
+
+        //     const audio = await googleTts(followUp.text);
+        //     if (audio) {
+        //       await this.sendMessage({
+        //         type: "AUDIO",
+        //         content: { audio },
+        //       });
+        //     }
+        //   } catch (error) {
+        //     await this.sendMessage({
+        //       type: "ERROR",
+        //       content: "Failed to generate audio. Please try again later.",
+        //     });
+        //   }
+        // }
+
+        // await this.sendMessage({
+        //   type: "AI_RESPONSE",
+        //   content: followUp.text,
+        // });
 
         if (this.audioEnabled) {
           try {
-            // const audio = await elevenLabsTts(followUp.text);
-
-            const audio = await googleTts(followUp.text);
+            const audio = await googleTts(result.text);
             if (audio) {
               await this.sendMessage({
                 type: "AUDIO",
@@ -196,7 +216,7 @@ export class Agent {
 
         await this.sendMessage({
           type: "AI_RESPONSE",
-          content: followUp.text,
+          content: result.text,
         });
 
         await this.sendMessage({
