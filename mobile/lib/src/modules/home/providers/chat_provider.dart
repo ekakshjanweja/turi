@@ -44,7 +44,7 @@ class ChatProvider extends ChangeNotifier {
     });
 
     final audioEnabledCache =
-        KVStore.get<bool>(KVStoreKeys.audioEnabled) ?? false;
+        KVStore.get<bool>(KVStoreKeys.audioEnabled) ?? true;
 
     audioEnabled = audioEnabledCache;
   }
