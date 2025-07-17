@@ -21,6 +21,7 @@ import {
 } from "./helpers/helpers";
 import { googleTtsStream } from "../audio/google-tts";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 
 export class Agent {
   private stream: SSEStreamingApi;
@@ -68,6 +69,7 @@ export class Agent {
   public clearMessages() {
     this.messages = [];
     this.messageCount = 0;
+    this.lastEmailList = [];
     this.messages.push({
       role: "system",
       content: EMAIL_ASSISTANT_SYSTEM_PROMPT,
@@ -90,6 +92,54 @@ export class Agent {
       });
     } catch (error) {
       console.error("Error sending message:", error);
+    }
+  }
+
+  // Helper method to get email context for tools
+  private getEmailContext(): string {
+    if (this.lastEmailList.length === 0) {
+      return "No emails currently loaded in context.";
+    }
+
+    const emailList = this.lastEmailList
+      .map(
+        (email, index) =>
+          `${index + 1}. ${email.subject} (from: ${email.from}, date: ${email.date}, id: ${email.id})`
+      )
+      .join("\n");
+
+    return `Recent emails in context (${this.lastEmailList.length} total):\n${emailList}`;
+  }
+
+  // Helper method to update email context from tool results
+  private updateEmailContext(result: any) {
+    // Check if result contains email list (from search)
+    if (result && result.emails && Array.isArray(result.emails)) {
+      this.lastEmailList = result.emails;
+      console.log(`Updated email context with ${result.emails.length} emails`);
+    }
+    // Check if result contains a single email (from read)
+    else if (result && result.email && result.email.id) {
+      // Add or update single email in context
+      const emailSummary: EmailSummary = {
+        id: result.email.id,
+        subject: result.email.subject || "",
+        from: result.email.from || "",
+        date: result.email.date || "",
+      };
+
+      // Update existing or add new
+      const existingIndex = this.lastEmailList.findIndex(
+        (e) => e.id === emailSummary.id
+      );
+      if (existingIndex >= 0) {
+        this.lastEmailList[existingIndex] = emailSummary;
+      } else {
+        this.lastEmailList.unshift(emailSummary); // Add to beginning
+      }
+      console.log(
+        `Updated email context with single email: ${emailSummary.subject}`
+      );
     }
   }
 
@@ -146,7 +196,6 @@ export class Agent {
       let assistantMessage = "";
       let toolCalls: any[] = [];
       let toolResults: any[] = [];
-      let audioBuffer = ""; // Buffer text for audio generation (only used when audioEnabled)
 
       for await (const chunk of stream.fullStream) {
         switch (chunk.type) {
@@ -159,38 +208,6 @@ export class Agent {
               content: chunk.textDelta,
               messageId,
             });
-
-            // TTS audio generation - only when audioEnabled is true
-            if (this.audioEnabled) {
-              audioBuffer += chunk.textDelta;
-
-              // Generate audio when we have enough text or hit sentence boundaries
-              const shouldGenerateAudio =
-                audioBuffer.length > 50 || // Buffer has enough characters
-                /[.!?]\s*$/.test(audioBuffer.trim()) || // Ends with sentence punctuation
-                /[,;:]\s*$/.test(audioBuffer.trim()); // Ends with pause punctuation
-
-              if (shouldGenerateAudio && audioBuffer.trim()) {
-                try {
-                  const textToSpeak = audioBuffer.trim();
-                  audioBuffer = ""; // Clear buffer
-
-                  for await (const audioChunk of googleTtsStream(textToSpeak)) {
-                    await this.sendMessage({
-                      type: "AUDIO",
-                      content: { audio: audioChunk },
-                      messageId,
-                    });
-                  }
-                } catch (error) {
-                  console.error(
-                    "Failed to generate audio for text buffer:",
-                    error
-                  );
-                  // Don't send error message for individual chunks to avoid spam
-                }
-              }
-            }
             break;
 
           case "tool-call-streaming-start":
@@ -217,32 +234,14 @@ export class Agent {
             // Tool execution result
             toolResults.push(chunk);
             console.log(`Tool result for ${chunk.toolName}:`, chunk.result);
+
+            // Update email context when tools return email data
+            this.updateEmailContext(chunk.result);
             break;
 
           case "finish":
             // Stream finished
             console.log("Stream finished:", chunk.finishReason);
-
-            // Generate TTS audio for any remaining buffered text - only when audioEnabled is true
-            if (this.audioEnabled && audioBuffer.trim()) {
-              try {
-                const textToSpeak = audioBuffer.trim();
-                audioBuffer = "";
-
-                for await (const audioChunk of googleTtsStream(textToSpeak)) {
-                  await this.sendMessage({
-                    type: "AUDIO",
-                    content: { audio: audioChunk },
-                    messageId,
-                  });
-                }
-              } catch (error) {
-                console.error(
-                  "Failed to generate audio for remaining buffer:",
-                  error
-                );
-              }
-            }
             break;
 
           case "error":
@@ -275,11 +274,28 @@ export class Agent {
         });
       }
 
-      // Audio was already streamed with each text delta chunk
-      // No need to generate audio again for the complete message
-
-      // Text response was already streamed via text-delta chunks
-      // No need to send the complete response again
+      // Generate audio for the complete message after text streaming is finished
+      if (this.audioEnabled && assistantMessage.trim()) {
+        try {
+          console.log("Generating audio for complete message");
+          for await (const audioChunk of googleTtsStream(
+            assistantMessage.trim()
+          )) {
+            await this.sendMessage({
+              type: "AUDIO",
+              content: { audio: audioChunk },
+              messageId,
+            });
+          }
+          console.log("Audio generation completed");
+        } catch (error) {
+          console.error(
+            "Failed to generate audio for complete message:",
+            error
+          );
+          // Don't throw error, just log it to avoid disrupting the response
+        }
+      }
 
       await this.sendMessage({
         type: "DONE",
@@ -298,11 +314,49 @@ export class Agent {
   }
 
   tools = {
+    get_email_context: tool({
+      description:
+        "Get information about currently loaded emails in context. Use this when user asks about 'what emails do I have', 'show me my emails', or when you need to understand what emails are available for reference.",
+      parameters: z.object({}),
+      execute: async () => {
+        const emailContext = this.getEmailContext();
+
+        if (this.lastEmailList.length === 0) {
+          return "No emails currently loaded in context. Use search_email to find emails first.";
+        }
+
+        const detailedContext = this.lastEmailList.map((email, index) => ({
+          position: index + 1,
+          ordinal:
+            index === 0
+              ? "first"
+              : index === 1
+                ? "second"
+                : index === 2
+                  ? "third"
+                  : `${index + 1}th`,
+          id: email.id,
+          subject: email.subject || "No subject",
+          from: email.from || "Unknown sender",
+          date: email.date || "Unknown date",
+        }));
+
+        return {
+          totalEmails: this.lastEmailList.length,
+          emails: detailedContext,
+          message: `Currently have ${this.lastEmailList.length} email(s) loaded in context. You can reference them by position (first, second, etc.) or by content (email from sender, email about subject).`,
+        };
+      },
+    }),
     send_email: tool({
       description: "Send or draft an email to a recipient.",
       parameters: SendEmailSchema,
       execute: async (args: any) => {
         const sendArgs = SendEmailSchema.parse(args);
+
+        // Add email context to help with thread continuity
+        const emailContext = this.getEmailContext();
+        console.log("Send email context:", emailContext);
 
         const response = await this.gmailService.sendEmail(sendArgs);
 
@@ -313,10 +367,15 @@ export class Agent {
     }),
     read_email: tool({
       description:
-        "Read an email by ID or reference (e.g., 'email from John', 'latest email'). Supports ordinal references like 'first', 'second', 'third' from recent lists.",
+        "Read an email by ID or reference. Use this tool with emailReference for ANY reference to emails from previous search results, including ordinal references like 'first', 'second', 'third', 'the second one', 'that one', 'read it', etc. Also supports descriptive references like 'email from John', 'latest email'. Current email context will be used to resolve references.",
       parameters: ReadEmailSchema,
       execute: async (args: any) => {
         const readArgs = ReadEmailSchema.parse(args);
+
+        // Add current email context to help with reference resolution
+        const emailContext = this.getEmailContext();
+        console.log("Read email context:", emailContext);
+
         if (readArgs.emailReference) {
           const resolvedId = await resolveOrdinalEmailReferenceAI(
             readArgs.emailReference,
@@ -326,30 +385,33 @@ export class Agent {
           if (resolvedId) {
             readArgs.messageId = resolvedId;
             delete readArgs.emailReference;
+          } else if (this.lastEmailList.length > 0) {
+            // Fallback to first email if resolution fails but we have emails
+            const firstEmail = this.lastEmailList[0];
+            if (firstEmail) {
+              readArgs.messageId = firstEmail.id;
+              delete readArgs.emailReference;
+            }
           }
         }
+
         const response = await this.gmailService.readEmails(readArgs);
         if (!response) throw new Error("Tool execution failed: read_email");
+
+        // Update context will happen in tool-result handler
         return response.content.text;
       },
     }),
     search_email: tool({
-      description: "Search emails using Gmail search syntax",
+      description:
+        "Search emails using Gmail search syntax. Results will be added to the current email context for future reference.",
       parameters: SearchEmailsSchema,
       execute: async (args: any) => {
         const searchArgs = SearchEmailsSchema.parse(args);
         const response = await this.gmailService.searchEmails(searchArgs);
         if (!response) throw new Error("Tool execution failed: search_email");
-        // Track the last list of emails for ordinal reference
-        if (
-          response.content &&
-          response.content.text &&
-          response.content.text.emails
-        ) {
-          this.lastEmailList = response.content.text.emails;
-        } else {
-          this.lastEmailList = [];
-        }
+
+        // Update context will happen in tool-result handler
         return response.content.text;
       },
     }),
@@ -357,6 +419,9 @@ export class Agent {
       description: "Get all available Gmail labels",
       parameters: ListEmailLabelsSchema,
       execute: async () => {
+        const emailContext = this.getEmailContext();
+        console.log("List labels email context:", emailContext);
+
         const response = await this.gmailService.listEmailLabels();
 
         if (!response) {
@@ -372,6 +437,9 @@ export class Agent {
       execute: async (args: any) => {
         const createArgs = CreateLabelSchema.parse(args);
 
+        const emailContext = this.getEmailContext();
+        console.log("Create label email context:", emailContext);
+
         const response = await this.gmailService.createEmailLabel(createArgs);
 
         if (!response) {
@@ -386,6 +454,9 @@ export class Agent {
       parameters: UpdateLabelSchema,
       execute: async (args: any) => {
         const updateArgs = UpdateLabelSchema.parse(args);
+
+        const emailContext = this.getEmailContext();
+        console.log("Update label email context:", emailContext);
 
         const response = await this.gmailService.updateEmailLabel(updateArgs);
 
@@ -404,6 +475,9 @@ export class Agent {
       execute: async (args: any) => {
         const deleteArgs = DeleteLabelSchema.parse(args);
 
+        const emailContext = this.getEmailContext();
+        console.log("Delete label email context:", emailContext);
+
         const response = await this.gmailService.deleteEmailLabel(deleteArgs);
 
         if (!response) {
@@ -418,6 +492,9 @@ export class Agent {
       parameters: GetOrCreateLabelSchema,
       execute: async (args: any) => {
         const getOrCreateArgs = GetOrCreateLabelSchema.parse(args);
+
+        const emailContext = this.getEmailContext();
+        console.log("Get/create label email context:", emailContext);
 
         const response =
           await this.gmailService.getOrCreateEmailLabel(getOrCreateArgs);

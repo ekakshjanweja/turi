@@ -12,21 +12,14 @@ import 'package:turi_mail/src/modules/home/ui/widgets/chat/message.dart';
 import 'package:uuid/uuid.dart';
 
 const List<String> voiceSuggestions = [
-  "Help me with my emails",
+  "What are the updates on my emails?",
   "Read my latest messages",
   "What emails do I have from work?",
   "Show me important emails",
-  "Check for unread messages",
   "Find emails from yesterday",
-  "Schedule a meeting",
-  "Draft an email to my team",
-  "Search for emails about the project",
   "What's in my inbox?",
-  "Show me emails from this week",
   "Find my recent conversations",
-  "Help me organize my emails",
   "What meetings do I have today?",
-  "Send a quick reply",
 ];
 
 class ChatProvider extends ChangeNotifier {

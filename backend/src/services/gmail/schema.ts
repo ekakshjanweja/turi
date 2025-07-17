@@ -34,7 +34,7 @@ export const ReadEmailSchema = z
       .string()
       .optional()
       .describe(
-        "Reference to an email from previous search results (e.g., 'first email', 'email from John', 'latest email', 'email with subject about project')"
+        "Reference to an email from previous search results. Use for ANY reference including ordinal (e.g., 'first email', 'second', 'the second one', 'that one', 'read it') or descriptive (e.g., 'email from John', 'latest email', 'email with subject about project')"
       ),
   })
   .refine((data) => data.messageId || data.emailReference, {

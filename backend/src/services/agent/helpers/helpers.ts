@@ -2,44 +2,85 @@ import { google } from "@ai-sdk/google";
 import { generateText, type CoreMessage } from "ai";
 import dedent from "dedent";
 
+interface EmailWithDetails {
+  id: string;
+  subject?: string;
+  from?: string;
+  date?: string;
+}
+
 export async function resolveOrdinalEmailReferenceAI(
   reference: string,
-  lastEmailList: { id: string }[],
+  lastEmailList: EmailWithDetails[],
   messages: CoreMessage[]
 ): Promise<string | null> {
   if (!lastEmailList || lastEmailList.length === 0) return null;
 
+  // Create detailed email context for better resolution
+  const emailDetails = lastEmailList
+    .map((email, index) => {
+      const subject = email.subject || "No subject";
+      const from = email.from || "Unknown sender";
+      const date = email.date || "Unknown date";
+      return `${index}. Subject: "${subject}" | From: ${from} | Date: ${date} | ID: ${email.id}`;
+    })
+    .join("\n");
+
   const msg = dedent`
-  You are an AI that maps a user's natural language reference to an email's index.
+  You are an AI that maps a user's natural language reference to an email's index in a list.
   
-  The list has ${lastEmailList.length} emails, indexed 0 to ${lastEmailList.length - 1}.
+  Available emails (${lastEmailList.length} total, indexed 0 to ${lastEmailList.length - 1}):
+  ${emailDetails}
   
   Based on the user's reference, determine the correct index using these rules:
   
   1.  **Contextual / Vague (Default to 0):**
       *   Affirmations: "yes", "yeah", "sure", "okay"
       *   Pronouns: "that", "it", "the one"
-      *   General commands: "read that", "the one you mentioned"
+      *   General commands: "read that", "the one you mentioned", "read it"
   
   2.  **Ordinal:**
-      *   "first", "1st", "top", "latest", "newest" = 0
-      *   "second", "2nd", "next" = 1
-      *   "third", "3rd" = 2
-      *   "last", "bottom", "oldest" = ${lastEmailList.length - 1}
+      *   "first", "1st", "top", "latest", "newest", "the first", "the first one", "first email", "first one" = 0
+      *   "second", "2nd", "next", "the second", "the second one", "second email", "second one" = 1
+      *   "third", "3rd", "the third", "the third one", "third email", "third one" = 2
+      *   "fourth", "4th", "the fourth", "the fourth one", "fourth email", "fourth one" = 3
+      *   "fifth", "5th", "the fifth", "the fifth one", "fifth email", "fifth one" = 4
+      *   "last", "bottom", "oldest", "the last", "the last one", "last email", "last one" = ${lastEmailList.length - 1}
   
-  If the user's intent is unclear, return 0. Return only the integer index.
+  3.  **Content-based references:**
+      *   "email from [sender name]" - match by sender
+      *   "email about [subject keyword]" - match by subject
+      *   "the [adjective] one" - use context to determine which
   
-  User's reference: ${reference}
-  Last email list IDs: ${lastEmailList.map((email) => email.id).join(", ")}
-  Conversation history:
-  ${messages.map((message) => message.content).join("\n")}
+  4.  **Position-based phrases:**
+      *   "read the second one" = 1
+      *   "read the first email" = 0
+      *   "show me the third" = 2
+  
+  Consider the conversation context to understand which email the user is likely referring to.
+  If the user's intent is unclear, return 0. 
+  
+  IMPORTANT: Return ONLY the integer index (0, 1, 2, etc.), nothing else.
+  
+  User's reference: "${reference}"
+  
+  Recent conversation context:
+  ${messages
+    .slice(-5)
+    .map(
+      (message, idx) =>
+        `${idx + 1}. ${typeof message.content === "string" ? message.content : JSON.stringify(message.content)}`
+    )
+    .join("\n")}
   `;
 
-  messages.push({ role: "user", content: msg });
+  // Create a copy of messages to avoid modifying the original
+  const contextMessages = [...messages];
+  contextMessages.push({ role: "user", content: msg });
 
   const aiResult = await generateText({
     model: google("gemini-2.0-flash"),
-    messages: messages,
+    messages: contextMessages,
   });
 
   const idx = parseInt(aiResult.text.trim(), 10);
