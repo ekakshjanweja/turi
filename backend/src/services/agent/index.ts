@@ -1,4 +1,4 @@
-import { generateText, tool, type CoreMessage } from "ai";
+import { generateText, streamText, tool, type CoreMessage } from "ai";
 import type { GmailService } from "../gmail";
 import { EMAIL_ASSISTANT_SYSTEM_PROMPT } from "./prompts";
 import { google } from "@ai-sdk/google";
@@ -19,7 +19,8 @@ import {
   detectEndChatIntent,
   resolveOrdinalEmailReferenceAI,
 } from "./helpers/helpers";
-import { googleTts } from "../audio/google-tts";
+import { googleTtsStream } from "../audio/google-tts";
+import { v4 as uuidv4 } from "uuid";
 
 export class Agent {
   private stream: SSEStreamingApi;
@@ -93,10 +94,12 @@ export class Agent {
   }
 
   public async handleUserInput(input: string) {
+    const messageId = uuidv4();
     try {
       await this.sendMessage({
         type: "THINKING",
         content: "Thinking about your request...",
+        messageId: uuidv4(), // Separate ID for thinking messages
       });
 
       this.messages.push({
@@ -111,11 +114,13 @@ export class Agent {
           type: "AI_RESPONSE",
           content:
             "Goodbye! Thanks for using turi. Have a great day! You can always continue chatting by pressing the mic button.",
+          messageId,
         });
 
         await this.sendMessage({
           type: "END",
           content: "Chat session ended",
+          messageId: uuidv4(), // Separate ID for end messages
         });
 
         // Add farewell to conversation history
@@ -131,142 +136,163 @@ export class Agent {
         return; // Exit early, don't process further
       }
 
-      const result = await generateText({
+      const stream = streamText({
         model: google("gemini-2.0-flash"),
-        // model: openai("gpt-4.1-mini"),
         messages: this.messages,
         tools: this.tools,
         maxSteps: 5,
       });
 
-      // Handle the response properly according to AI SDK patterns
-      if (result.toolCalls && result.toolCalls.length > 0) {
+      let assistantMessage = "";
+      let toolCalls: any[] = [];
+      let toolResults: any[] = [];
+      let audioBuffer = ""; // Buffer text for audio generation (only used when audioEnabled)
+
+      for await (const chunk of stream.fullStream) {
+        switch (chunk.type) {
+          case "text-delta":
+            // Accumulate the text response
+            assistantMessage += chunk.textDelta;
+            // Stream the text delta to the client in real-time
+            await this.sendMessage({
+              type: "AI_RESPONSE",
+              content: chunk.textDelta,
+              messageId,
+            });
+
+            // TTS audio generation - only when audioEnabled is true
+            if (this.audioEnabled) {
+              audioBuffer += chunk.textDelta;
+
+              // Generate audio when we have enough text or hit sentence boundaries
+              const shouldGenerateAudio =
+                audioBuffer.length > 50 || // Buffer has enough characters
+                /[.!?]\s*$/.test(audioBuffer.trim()) || // Ends with sentence punctuation
+                /[,;:]\s*$/.test(audioBuffer.trim()); // Ends with pause punctuation
+
+              if (shouldGenerateAudio && audioBuffer.trim()) {
+                try {
+                  const textToSpeak = audioBuffer.trim();
+                  audioBuffer = ""; // Clear buffer
+
+                  for await (const audioChunk of googleTtsStream(textToSpeak)) {
+                    await this.sendMessage({
+                      type: "AUDIO",
+                      content: { audio: audioChunk },
+                      messageId,
+                    });
+                  }
+                } catch (error) {
+                  console.error(
+                    "Failed to generate audio for text buffer:",
+                    error
+                  );
+                  // Don't send error message for individual chunks to avoid spam
+                }
+              }
+            }
+            break;
+
+          case "tool-call-streaming-start":
+            // Tool call is starting
+            console.log(`Tool call starting: ${chunk.toolName}`);
+            await this.sendMessage({
+              type: "THINKING",
+              content: `Using ${chunk.toolName}...`,
+              messageId: uuidv4(), // Separate ID for tool thinking messages
+            });
+            break;
+
+          case "tool-call-delta":
+            // Tool call arguments are being streamed
+            break;
+
+          case "tool-call":
+            // Complete tool call received
+            toolCalls.push(chunk);
+            console.log(`Tool call: ${chunk.toolName}`, chunk.args);
+            break;
+
+          case "tool-result":
+            // Tool execution result
+            toolResults.push(chunk);
+            console.log(`Tool result for ${chunk.toolName}:`, chunk.result);
+            break;
+
+          case "finish":
+            // Stream finished
+            console.log("Stream finished:", chunk.finishReason);
+
+            // Generate TTS audio for any remaining buffered text - only when audioEnabled is true
+            if (this.audioEnabled && audioBuffer.trim()) {
+              try {
+                const textToSpeak = audioBuffer.trim();
+                audioBuffer = "";
+
+                for await (const audioChunk of googleTtsStream(textToSpeak)) {
+                  await this.sendMessage({
+                    type: "AUDIO",
+                    content: { audio: audioChunk },
+                    messageId,
+                  });
+                }
+              } catch (error) {
+                console.error(
+                  "Failed to generate audio for remaining buffer:",
+                  error
+                );
+              }
+            }
+            break;
+
+          case "error":
+            // Handle errors
+            console.error("Stream error:", chunk.error);
+            throw new Error(`Stream error: ${chunk.error}`);
+        }
+      }
+
+      // Add messages to conversation history based on what happened
+      if (toolCalls.length > 0) {
         // Add assistant message with tool calls
         this.messages.push({
           role: "assistant",
-          content: result.toolCalls,
+          content: toolCalls,
         });
 
-        // Add tool results
-        if (result.toolResults && result.toolResults.length > 0) {
+        // Add tool results if any
+        if (toolResults.length > 0) {
           this.messages.push({
             role: "tool",
-            content: result.toolResults,
+            content: toolResults,
           });
         }
-
-        // Generate a follow-up response to explain the tool results
-
-        // const followUp = await generateText({
-        //   model: google("gemini-2.0-flash"),
-        //   messages: [
-        //     ...this.messages,
-        //     {
-        //       role: "user" as const,
-        //       content: EMAIL_ASSISTANT_SYSTEM_PROMPT,
-        //     },
-        //   ],
-        // });
-
-        // this.messages.push({
-        //   role: "assistant",
-        //   content: followUp.text,
-        // });
-
-        // if (this.audioEnabled) {
-        //   try {
-        //     // const audio = await elevenLabsTts(followUp.text);
-
-        //     const audio = await googleTts(followUp.text);
-        //     if (audio) {
-        //       await this.sendMessage({
-        //         type: "AUDIO",
-        //         content: { audio },
-        //       });
-        //     }
-        //   } catch (error) {
-        //     await this.sendMessage({
-        //       type: "ERROR",
-        //       content: "Failed to generate audio. Please try again later.",
-        //     });
-        //   }
-        // }
-
-        // await this.sendMessage({
-        //   type: "AI_RESPONSE",
-        //   content: followUp.text,
-        // });
-
-        if (this.audioEnabled) {
-          try {
-            const audio = await googleTts(result.text);
-            if (audio) {
-              await this.sendMessage({
-                type: "AUDIO",
-                content: { audio },
-              });
-            }
-          } catch (error) {
-            await this.sendMessage({
-              type: "ERROR",
-              content: "Failed to generate audio. Please try again later.",
-            });
-          }
-        }
-
-        await this.sendMessage({
-          type: "AI_RESPONSE",
-          content: result.text,
-        });
-
-        await this.sendMessage({
-          type: "DONE",
-          content: "",
-        });
-
-        this.close();
       } else {
         // No tools called, just add the regular response
         this.messages.push({
           role: "assistant",
-          content: result.text,
+          content: assistantMessage,
         });
-
-        if (this.audioEnabled) {
-          try {
-            // const audio = await elevenLabsTts(result.text);
-
-            const audio = await googleTts(result.text);
-            if (audio) {
-              await this.sendMessage({
-                type: "AUDIO",
-                content: { audio },
-              });
-            }
-          } catch (error) {
-            await this.sendMessage({
-              type: "ERROR",
-              content: "Failed to generate audio. Please try again later.",
-            });
-          }
-        }
-
-        await this.sendMessage({
-          type: "AI_RESPONSE",
-          content: result.text,
-        });
-
-        await this.sendMessage({
-          type: "DONE",
-          content: "",
-        });
-
-        this.close();
       }
+
+      // Audio was already streamed with each text delta chunk
+      // No need to generate audio again for the complete message
+
+      // Text response was already streamed via text-delta chunks
+      // No need to send the complete response again
+
+      await this.sendMessage({
+        type: "DONE",
+        content: "",
+        messageId: uuidv4(), // Separate ID for done messages
+      });
+
+      this.close();
     } catch (error) {
       await this.sendMessage({
         type: "ERROR",
         content: error instanceof Error ? error.message : JSON.stringify(error),
+        messageId,
       });
     }
   }
