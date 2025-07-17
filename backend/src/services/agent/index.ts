@@ -209,6 +209,29 @@ export class Agent {
               content: chunk.textDelta,
               messageId,
             });
+
+            // Generate audio for the text delta
+            if (this.audioEnabled) {
+              try {
+                for await (const audioChunk of googleTtsStream(
+                  chunk.textDelta
+                )) {
+                  await this.sendMessage({
+                    type: "AUDIO",
+                    content: {
+                      audio: audioChunk,
+                    },
+                    messageId,
+                  });
+                }
+              } catch (error) {
+                console.error(
+                  "Failed to generate audio for text delta:",
+                  error
+                );
+              }
+            }
+
             break;
 
           case "tool-call-streaming-start":
@@ -276,42 +299,42 @@ export class Agent {
       }
 
       // Generate audio for the complete message after text streaming is finished
-      if (this.audioEnabled && assistantMessage.trim()) {
-        try {
-          console.log("Generating audio for complete message");
+      // if (this.audioEnabled && assistantMessage.trim()) {
+      //   try {
+      //     console.log("Generating audio for complete message");
 
-          // Split the assistant message into smaller text chunks for progressive audio generation
-          const textChunks = splitTextIntoChunks(assistantMessage.trim());
-          console.log(`Split message into ${textChunks.length} text chunks`);
+      //     // Split the assistant message into smaller text chunks for progressive audio generation
+      //     const textChunks = splitTextIntoChunks(assistantMessage.trim());
+      //     console.log(`Split message into ${textChunks.length} text chunks`);
 
-          for (let i = 0; i < textChunks.length; i++) {
-            const textChunk = textChunks[i];
-            if (!textChunk) continue;
+      //     for (let i = 0; i < textChunks.length; i++) {
+      //       const textChunk = textChunks[i];
+      //       if (!textChunk) continue;
 
-            console.log(
-              `Generating audio for text chunk ${i + 1}/${textChunks.length}: "${textChunk.substring(0, 50)}..."`
-            );
+      //       console.log(
+      //         `Generating audio for text chunk ${i + 1}/${textChunks.length}: "${textChunk.substring(0, 50)}..."`
+      //       );
 
-            for await (const audioChunk of googleTtsStream(textChunk)) {
-              await this.sendMessage({
-                type: "AUDIO",
-                content: {
-                  audio: audioChunk, // Keep as number array for mobile compatibility
-                },
-                messageId,
-              });
-            }
-          }
+      //       for await (const audioChunk of googleTtsStream(textChunk)) {
+      //         await this.sendMessage({
+      //           type: "AUDIO",
+      //           content: {
+      //             audio: audioChunk, // Keep as number array for mobile compatibility
+      //           },
+      //           messageId,
+      //         });
+      //       }
+      //     }
 
-          console.log("Audio generation completed");
-        } catch (error) {
-          console.error(
-            "Failed to generate audio for complete message:",
-            error
-          );
-          // Don't throw error, just log it to avoid disrupting the response
-        }
-      }
+      //     console.log("Audio generation completed");
+      //   } catch (error) {
+      //     console.error(
+      //       "Failed to generate audio for complete message:",
+      //       error
+      //     );
+      //     // Don't throw error, just log it to avoid disrupting the response
+      //   }
+      // }
 
       await this.sendMessage({
         type: "DONE",
