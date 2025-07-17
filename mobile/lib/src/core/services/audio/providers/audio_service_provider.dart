@@ -32,9 +32,10 @@ class AudioServiceProvider extends ChangeNotifier {
       onSpeechStart: () {
         log('Speech started');
       },
-      onSilenceTimeout: () {
+      onSilenceTimeout: () async {
         log('Silence timeout');
-        stopRecording();
+        await stopRecording();
+        await transcribe();
       },
       onTrimStartDetected: (trimStartTime) {
         log('Trim start detected');

@@ -22,6 +22,13 @@ class _MessageInputState extends State<MessageInput> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final asp = context.read<AudioServiceProvider>();
+
+      asp.transcription.listen((data) {
+        sendMessage(message: data);
+      });
+    });
   }
 
   Future<void> startSTT() async {
@@ -31,10 +38,6 @@ class _MessageInputState extends State<MessageInput> {
     cp.status = ChatStatus.connected;
 
     await asp.startRecording();
-
-    asp.transcription.listen((data) {
-      cp.inputController.text = data;
-    });
   }
 
   Future<void> stopSTT() async {
@@ -50,10 +53,11 @@ class _MessageInputState extends State<MessageInput> {
     }
   }
 
-  void sendMessage() async {
+  void sendMessage({String? message}) async {
     final cp = context.read<ChatProvider>();
 
     cp.sendMessage(
+      message: message,
       onDone: () {
         //TODO: Add later if required
 

@@ -60,10 +60,6 @@ class _ChatEmptyStateState extends State<ChatEmptyState>
     cp.status = ChatStatus.connected;
 
     await asp.startRecording();
-
-    asp.transcription.listen((data) {
-      cp.inputController.text = data;
-    });
   }
 
   Future<void> stopSTT() async {

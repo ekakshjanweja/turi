@@ -133,15 +133,16 @@ class ChatProvider extends ChangeNotifier {
   }
 
   void sendMessage({
+    String? message,
     required VoidCallback onDone,
     required VoidCallback onEnd,
     required VoidCallback onUnauthorized,
   }) async {
-    if (inputController.text.isEmpty) return;
+    if (inputController.text.isEmpty && message == null) return;
 
     addMessage(
       Message(
-        content: inputController.text.trim(),
+        content: message ?? inputController.text.trim(),
         isUser: true,
         messageId: Uuid().v4(),
       ),
