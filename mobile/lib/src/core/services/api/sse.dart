@@ -112,7 +112,13 @@ class Sse {
 
                     await recordingDir.create(recursive: true);
 
-                    final file = File("${recordingDir.path}/audio.mp3");
+                    // Generate unique filename for each audio chunk to prevent overwrites
+                    final timestamp = DateTime.now().millisecondsSinceEpoch;
+                    final chunkId = "${messageId}_$timestamp";
+                    final file = File(
+                      "${recordingDir.path}/audio_chunk_$chunkId.wav",
+                    );
+
                     await file.writeAsBytes(audioBytes);
 
                     onAudio(file, messageId);

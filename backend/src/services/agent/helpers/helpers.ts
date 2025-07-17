@@ -129,3 +129,67 @@ export function detectEndChatIntent(input: string): boolean {
   const trimmedInput = input.trim();
   return endPatterns.some((pattern) => pattern.test(trimmedInput));
 }
+
+export function splitTextIntoChunks(text: string): string[] {
+  const maxChunkLength = 200; // Maximum characters per chunk
+  const chunks: string[] = [];
+
+  // Split by sentences first to maintain natural breaks
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  let currentChunk = "";
+
+  for (const sentence of sentences) {
+    // If adding this sentence would exceed the limit, save current chunk and start new one
+    if (
+      currentChunk.length + sentence.length > maxChunkLength &&
+      currentChunk.length > 0
+    ) {
+      chunks.push(currentChunk.trim());
+      currentChunk = sentence;
+    } else {
+      currentChunk += (currentChunk.length > 0 ? " " : "") + sentence;
+    }
+  }
+
+  // Add the last chunk if it has content
+  if (currentChunk.trim().length > 0) {
+    chunks.push(currentChunk.trim());
+  }
+
+  // If no sentence breaks were found or chunks are still too long, split by length
+  if (
+    chunks.length === 0 ||
+    chunks.some((chunk) => chunk.length > maxChunkLength)
+  ) {
+    const fallbackChunks: string[] = [];
+    for (const chunk of chunks.length > 0 ? chunks : [text]) {
+      if (chunk.length <= maxChunkLength) {
+        fallbackChunks.push(chunk);
+      } else {
+        // Split long chunks by words
+        const words = chunk.split(" ");
+        let currentFallbackChunk = "";
+
+        for (const word of words) {
+          if (
+            currentFallbackChunk.length + word.length + 1 > maxChunkLength &&
+            currentFallbackChunk.length > 0
+          ) {
+            fallbackChunks.push(currentFallbackChunk.trim());
+            currentFallbackChunk = word;
+          } else {
+            currentFallbackChunk +=
+              (currentFallbackChunk.length > 0 ? " " : "") + word;
+          }
+        }
+
+        if (currentFallbackChunk.trim().length > 0) {
+          fallbackChunks.push(currentFallbackChunk.trim());
+        }
+      }
+    }
+    return fallbackChunks;
+  }
+
+  return chunks;
+}

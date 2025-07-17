@@ -18,6 +18,7 @@ import type { SSEStreamingApi } from "hono/streaming";
 import {
   detectEndChatIntent,
   resolveOrdinalEmailReferenceAI,
+  splitTextIntoChunks,
 } from "./helpers/helpers";
 import { googleTtsStream } from "../audio/google-tts";
 import { v4 as uuidv4 } from "uuid";
@@ -278,15 +279,30 @@ export class Agent {
       if (this.audioEnabled && assistantMessage.trim()) {
         try {
           console.log("Generating audio for complete message");
-          for await (const audioChunk of googleTtsStream(
-            assistantMessage.trim()
-          )) {
-            await this.sendMessage({
-              type: "AUDIO",
-              content: { audio: audioChunk },
-              messageId,
-            });
+
+          // Split the assistant message into smaller text chunks for progressive audio generation
+          const textChunks = splitTextIntoChunks(assistantMessage.trim());
+          console.log(`Split message into ${textChunks.length} text chunks`);
+
+          for (let i = 0; i < textChunks.length; i++) {
+            const textChunk = textChunks[i];
+            if (!textChunk) continue;
+
+            console.log(
+              `Generating audio for text chunk ${i + 1}/${textChunks.length}: "${textChunk.substring(0, 50)}..."`
+            );
+
+            for await (const audioChunk of googleTtsStream(textChunk)) {
+              await this.sendMessage({
+                type: "AUDIO",
+                content: {
+                  audio: audioChunk, // Keep as number array for mobile compatibility
+                },
+                messageId,
+              });
+            }
           }
+
           console.log("Audio generation completed");
         } catch (error) {
           console.error(
