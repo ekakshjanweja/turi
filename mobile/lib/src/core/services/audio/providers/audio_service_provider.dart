@@ -44,7 +44,7 @@ class AudioServiceProvider extends ChangeNotifier {
       speechThreshold: -30.0,
       silenceThreshold: -40.0,
       initialPauseToleranceSeconds: 5,
-      pauseToleranceSeconds: 3,
+      pauseToleranceSeconds: 2,
     );
   }
 

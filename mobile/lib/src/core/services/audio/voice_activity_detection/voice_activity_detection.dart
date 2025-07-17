@@ -31,7 +31,7 @@ class VoiceActivityDetection {
     double speechThreshold = -40.0,
     double silenceThreshold = -50.0,
     int initialPauseToleranceSeconds = 10,
-    int pauseToleranceSeconds = 5,
+    int pauseToleranceSeconds = 3,
   }) : _speechThreshold = speechThreshold,
        _silenceThreshold = silenceThreshold,
        _pauseToleranceSeconds = pauseToleranceSeconds,

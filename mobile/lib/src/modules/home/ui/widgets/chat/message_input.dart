@@ -85,6 +85,10 @@ class _MessageInputState extends State<MessageInput> {
           ).showSnackBar(SnackBar(content: Text(error.message)));
         }
 
+        final cp = context.read<ChatProvider>();
+
+        cp.reset();
+
         await KVStore.clear();
 
         context.go(AuthPage.routeName);
