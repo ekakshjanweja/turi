@@ -3,7 +3,7 @@ description: "Effortless email, just say it."
 
 publish_to: none
 
-version: 0.2.0+19
+version: 0.2.1+20
 
 environment:
   sdk: ^3.8.1
