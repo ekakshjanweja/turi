@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { loadEnv, PORT } from "./lib/config";
+import { loadEnv, NODE_ENV, PORT } from "./lib/config";
 import { deleteUser, signOut } from "./lib/delete-user";
 import { audioRouter } from "./routes/audio";
 import { agentRouter } from "./routes/agent";
@@ -112,12 +112,21 @@ app.get("/delete", async (c) => {
   }
 });
 
-export default {
-  async fetch(
-    request: Request,
-    env: CloudflareBindings,
-    ctx: ExecutionContext
-  ) {
-    return app.fetch(request, env, ctx);
-  },
-};
+const server =
+  NODE_ENV === "development"
+    ? {
+        port: PORT,
+        fetch: app.fetch,
+        idleTimeout: 60,
+      }
+    : {
+        async fetch(
+          request: Request,
+          env: CloudflareBindings,
+          ctx: ExecutionContext
+        ) {
+          return app.fetch(request, env, ctx);
+        },
+      };
+
+export default server;

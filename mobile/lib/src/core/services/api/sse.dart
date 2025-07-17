@@ -23,9 +23,9 @@ class Sse {
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
     required void Function(String error) onError,
-    required void Function(String content) onChunk,
+    required void Function(String content, String messageId) onChunk,
     required void Function(String content) onThinking,
-    required void Function(File audioFile) onAudio,
+    required void Function(File audioFile, String messageId) onAudio,
     required VoidCallback onConnected,
     required VoidCallback onUnauthorized,
     required VoidCallback onDone,
@@ -97,10 +97,14 @@ class Sse {
                     onThinking(parsedJson["content"] as String);
                     break;
                   case MessageType.aiResponse:
-                    onChunk(parsedJson["content"] as String);
+                    final content = parsedJson["content"] as String;
+                    final messageId = parsedJson["messageId"] as String;
+
+                    onChunk(content, messageId);
                   case MessageType.audio:
                     final content =
                         parsedJson["content"]["audio"] as List<dynamic>;
+                    final messageId = parsedJson["messageId"] as String;
                     final audioBytes = Uint8List.fromList(content.cast<int>());
 
                     final dir = await getApplicationCacheDirectory();
@@ -111,7 +115,7 @@ class Sse {
                     final file = File("${recordingDir.path}/audio.mp3");
                     await file.writeAsBytes(audioBytes);
 
-                    onAudio(file);
+                    onAudio(file, messageId);
                     break;
                   case MessageType.user:
                     break;

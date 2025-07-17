@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { GOOGLE_GENERATIVE_AI_API_KEY } from "../../lib/config";
+import { createWavBuffer } from "./helpers";
 
 export async function googleTts(text: string): Promise<number[]> {
   try {
@@ -51,55 +52,46 @@ export async function googleTts(text: string): Promise<number[]> {
   }
 }
 
-function createWavBuffer(
-  pcmData: Buffer,
-  channels = 1,
-  sampleRate = 24000,
-  bitsPerSample = 16
-): Buffer {
-  const headerLength = 44;
-  const totalLength = headerLength + pcmData.length;
+export async function* googleTtsStream(
+  text: string
+): AsyncGenerator<number[], void, unknown> {
+  try {
+    const googleGenAI = new GoogleGenAI({
+      vertexai: false,
+      apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
+    });
 
-  // Create buffer for the entire WAV file
-  const wavBuffer = Buffer.alloc(totalLength);
+    const response = await googleGenAI.models.generateContentStream({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [
+        {
+          parts: [
+            {
+              text: `Say in a warm and friendly tone, speaking at a slightly quick pace: ${text}`,
+            },
+          ],
+        },
+      ],
+      config: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: "Kore" },
+          },
+        },
+      },
+    });
 
-  // Write WAV header
-  let offset = 0;
-
-  // RIFF header
-  wavBuffer.write("RIFF", offset);
-  offset += 4;
-  wavBuffer.writeUInt32LE(totalLength - 8, offset);
-  offset += 4;
-  wavBuffer.write("WAVE", offset);
-  offset += 4;
-
-  // fmt chunk
-  wavBuffer.write("fmt ", offset);
-  offset += 4;
-  wavBuffer.writeUInt32LE(16, offset);
-  offset += 4; // fmt chunk size
-  wavBuffer.writeUInt16LE(1, offset);
-  offset += 2; // audio format (PCM)
-  wavBuffer.writeUInt16LE(channels, offset);
-  offset += 2;
-  wavBuffer.writeUInt32LE(sampleRate, offset);
-  offset += 4;
-  wavBuffer.writeUInt32LE((sampleRate * channels * bitsPerSample) / 8, offset);
-  offset += 4; // byte rate
-  wavBuffer.writeUInt16LE((channels * bitsPerSample) / 8, offset);
-  offset += 2; // block align
-  wavBuffer.writeUInt16LE(bitsPerSample, offset);
-  offset += 2;
-
-  // data chunk
-  wavBuffer.write("data", offset);
-  offset += 4;
-  wavBuffer.writeUInt32LE(pcmData.length, offset);
-  offset += 4;
-
-  // Copy PCM data
-  pcmData.copy(wavBuffer, offset);
-
-  return wavBuffer;
+    for await (const chunk of response) {
+      if (chunk.data) {
+        const pcmData = Buffer.from(chunk.data, "base64");
+        const wavBuffer = createWavBuffer(pcmData);
+        yield Array.from(wavBuffer);
+      }
+    }
+  } catch (error) {
+    throw new Error(
+      `Google TTS Failed: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
+  }
 }

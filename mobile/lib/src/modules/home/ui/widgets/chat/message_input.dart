@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:solar_icon_pack/solar_bold_icons.dart';
 import 'package:turi_mail/src/core/services/audio/providers/audio_service_provider.dart';
+import 'package:turi_mail/src/core/services/local_storage/kv_store.dart';
 import 'package:turi_mail/src/core/utils/extensions.dart';
 import 'package:turi_mail/src/modules/auth/provider/auth_provider.dart';
 import 'package:turi_mail/src/modules/auth/ui/pages/auth_page.dart';
@@ -79,6 +80,8 @@ class _MessageInputState extends State<MessageInput> {
             context,
           ).showSnackBar(SnackBar(content: Text(error.message)));
         }
+
+        await KVStore.clear();
 
         context.go(AuthPage.routeName);
       },

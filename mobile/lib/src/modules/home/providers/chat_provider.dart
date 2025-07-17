@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'dart:developer' as dev;
-import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 import 'package:turi_mail/src/core/services/api/sse.dart';
 import 'package:turi_mail/src/core/services/local_storage/kv_store.dart';
 import 'package:turi_mail/src/core/services/local_storage/kv_store_keys.dart';
 import 'package:turi_mail/src/modules/home/data/enum/chat_status.dart';
+import 'package:turi_mail/src/modules/home/providers/audio_player_manager.dart';
 import 'package:turi_mail/src/modules/home/ui/widgets/chat/message.dart';
+import 'package:uuid/uuid.dart';
 
 const List<String> voiceSuggestions = [
   "Help me with my emails",
@@ -39,11 +39,22 @@ class ChatProvider extends ChangeNotifier {
       notifyListeners();
     });
 
+    audioPlayerManager.addListener(() {
+      notifyListeners();
+    });
+
     final audioEnabledCache =
         KVStore.get<bool>(KVStoreKeys.audioEnabled) ?? false;
 
     audioEnabled = audioEnabledCache;
   }
+
+  final AudioPlayerManager _audioPlayerManager = AudioPlayerManager();
+  AudioPlayerManager get audioPlayerManager => _audioPlayerManager;
+
+  // Convenience getters for audio state
+  bool get isPlayingAudio => _audioPlayerManager.isPlaying;
+  String? get currentAudioMessageId => _audioPlayerManager.currentMessageId;
 
   bool _audioEnabled = false;
   bool get audioEnabled => _audioEnabled;
@@ -107,19 +118,17 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
-
-  bool _isPlaying = false;
-  bool get isPlaying => _isPlaying;
-  set isPlaying(bool value) {
-    _isPlaying = value;
+  bool _isProcessing = false;
+  bool get isProcessing => _isProcessing;
+  set isProcessing(bool value) {
+    _isProcessing = value;
     notifyListeners();
   }
 
-  File? _audioFile;
-  File? get audioFile => _audioFile;
-  set audioFile(File? value) {
-    _audioFile = value;
+  String? _currentMessageId;
+  String? get currentMessageId => _currentMessageId;
+  set currentMessageId(String? value) {
+    _currentMessageId = value;
     notifyListeners();
   }
 
@@ -130,10 +139,14 @@ class ChatProvider extends ChangeNotifier {
   }) async {
     if (inputController.text.isEmpty) return;
 
-    addMessage(Message(content: inputController.text.trim(), isUser: true));
+    addMessage(
+      Message(
+        content: inputController.text.trim(),
+        isUser: true,
+        messageId: Uuid().v4(),
+      ),
+    );
     inputController.clear();
-
-    await stopAudio();
 
     streamSubscription = await Sse.sendRequest(
       "/agent/chat",
@@ -148,23 +161,25 @@ class ChatProvider extends ChangeNotifier {
         status = ChatStatus.error;
         dev.log("Error: $error", error: error);
       },
-      onChunk: (content) async {
-        addMessage(Message(content: content, isUser: false));
+      onChunk: (content, messageId) async {
+        addMessage(
+          Message(content: content, isUser: false, messageId: messageId),
+        );
         status = ChatStatus.connected;
       },
       onThinking: (content) {
         status = ChatStatus.thinking;
       },
-      onAudio: (file) async {
-        audioFile = file;
-
-        await playAudio();
+      onAudio: (file, messageId) async {
+        await audioPlayerManager.addAudioChunk(file, messageId);
       },
       onConnected: () {
         status = ChatStatus.connected;
         newConversation = false;
       },
       onDone: () {
+        isProcessing = false;
+        currentMessageId = null;
         onDone();
       },
       onEnd: () {
@@ -175,7 +190,27 @@ class ChatProvider extends ChangeNotifier {
   }
 
   void addMessage(Message message) async {
-    _messages.add(message);
+    // Check if a message with this messageId already exists
+    final existingIndex = _messages.indexWhere(
+      (m) => m.messageId == message.messageId,
+    );
+
+    if (existingIndex != -1) {
+      // Update existing message by appending content
+      final existingMessage = _messages[existingIndex];
+      _messages[existingIndex] = Message(
+        content: existingMessage.content + message.content,
+        isUser: existingMessage.isUser,
+        messageId: existingMessage.messageId,
+      );
+    } else {
+      // Add new message
+
+      isProcessing = true;
+      currentMessageId = message.messageId;
+      _messages.add(message);
+    }
+
     notifyListeners();
 
     await Future.delayed(Duration(milliseconds: 100));
@@ -207,44 +242,13 @@ class ChatProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> playAudio() async {
-    if (_audioPlayer.playing) {
-      await _audioPlayer.stop();
-      isPlaying = false;
-      return;
-    }
-
-    if (audioFile == null || !audioFile!.existsSync()) {
-      return;
-    }
-
-    try {
-      await _audioPlayer.setVolume(1.0);
-
-      await _audioPlayer.setFilePath(audioFile!.path);
-      await _audioPlayer.play();
-      isPlaying = true;
-
-      await _audioPlayer.processingStateStream.firstWhere(
-        (state) => state == ProcessingState.completed,
-      );
-      isPlaying = false;
-    } catch (e) {
-      isPlaying = false;
-    }
-  }
-
-  Future<void> stopAudio() async {
-    await _audioPlayer.stop();
-    isPlaying = false;
-  }
-
   @override
   void dispose() {
     _streamSubscription?.cancel();
     inputController.dispose();
     scrollController.dispose();
     focusNode.dispose();
+    _audioPlayerManager.dispose();
     super.dispose();
   }
 
@@ -255,6 +259,10 @@ class ChatProvider extends ChangeNotifier {
     _newConversation = true;
     _streamSubscription?.cancel();
     focusNode.unfocus();
+
+    // Clear all audio when resetting the conversation
+    _audioPlayerManager.clearAllAudio();
+
     notifyListeners();
   }
 }

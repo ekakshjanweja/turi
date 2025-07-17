@@ -42,6 +42,7 @@ export type Message = {
   content: string | object;
   toolName?: string;
   timestamp?: string;
+  messageId: string;
 };
 
 export type AUDIO_MESSAGE = Message & {

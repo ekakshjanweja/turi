@@ -164,7 +164,7 @@ agentRouter.get("/chat", (c) => {
       await agentSession.agent.handleUserInput(message);
     }
 
-    await stream.sleep(1000);
+    await stream.sleep(1000000);
 
     stream.onAbort(() => {
       const index = agentSessions.findIndex((s) => s.id === sessionId);
