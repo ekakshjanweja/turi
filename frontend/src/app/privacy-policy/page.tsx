@@ -83,6 +83,42 @@ export default function PrivacyPolicy() {
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
+                Google Workspace API Compliance
+              </h2>
+
+              <p className="mb-4">
+                This Application uses Google Workspace APIs, including Gmail
+                APIs, to provide enhanced functionality. Our use of information
+                received from Google APIs adheres to the{" "}
+                <Link
+                  href="https://developers.google.com/terms/api-services-user-data-policy"
+                  className="text-primary underline hover:no-underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Google API Services User Data Policy
+                </Link>
+                , including the Limited Use requirements.
+              </p>
+
+              <div className="mb-6 p-4 bg-accent/30 border border-border rounded">
+                <h3 className="font-semibold mb-2 text-foreground">
+                  Limited Use Compliance
+                </h3>
+                <p className="text-sm text-muted-foreground m-0">
+                  The use of raw or derived user data received from Workspace
+                  APIs, including Gmail APIs, will adhere to the Google User
+                  Data Policy, including the Limited Use requirements. This
+                  means we only use your Google data to provide and improve the
+                  features you've requested, and we do not transfer this data to
+                  third parties except as necessary to provide the service or as
+                  required by law.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-6 border-b border-border pb-2">
                 Third Party Access
               </h2>
 
@@ -102,7 +138,7 @@ export default function PrivacyPolicy() {
               </p>
 
               <div className="mb-6 p-4 bg-accent/20 rounded">
-                <p className="m-0">
+                <p className="mb-2">
                   <Link
                     href="https://www.google.com/policies/privacy/"
                     className="text-primary underline hover:no-underline"
@@ -110,6 +146,16 @@ export default function PrivacyPolicy() {
                     rel="noopener noreferrer"
                   >
                     Google Play Services
+                  </Link>
+                </p>
+                <p className="m-0">
+                  <Link
+                    href="https://developers.google.com/terms/api-services-user-data-policy"
+                    className="text-primary underline hover:no-underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Google API Services User Data Policy
                   </Link>
                 </p>
               </div>
@@ -285,4 +331,4 @@ export default function PrivacyPolicy() {
       </div>
     </div>
   );
-} 
+}
