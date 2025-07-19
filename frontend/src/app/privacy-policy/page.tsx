@@ -110,9 +110,9 @@ export default function PrivacyPolicy() {
                   APIs, including Gmail APIs, will adhere to the Google User
                   Data Policy, including the Limited Use requirements. This
                   means we only use your Google data to provide and improve the
-                  features you've requested, and we do not transfer this data to
-                  third parties except as necessary to provide the service or as
-                  required by law.
+                  features you&apos;ve requested, and we do not transfer this
+                  data to third parties except as necessary to provide the
+                  service or as required by law.
                 </p>
               </div>
             </section>
