@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:better_auth_flutter/better_auth_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:turi_mail/src/core/services/api/enums/error_code.dart';
 import 'package:turi_mail/src/core/services/api/models/api_failure.dart';
 import 'package:turi_mail/src/core/services/local_storage/kv_store.dart';
@@ -54,9 +55,11 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<ApiFailure?> onAuth() async {
+  Future<ApiFailure?> onAuth({GoogleSignInAuthenticationEvent? event}) async {
     isLoading = true;
-    final (result, error) = await AuthRepo.signInWithGoogle();
+    final (result, error) = event != null
+        ? await AuthRepo.signInWithGoogleAuthenticationEvent(event: event)
+        : await AuthRepo.signInWithGoogle();
 
     if (error != null) {
       await signOut();

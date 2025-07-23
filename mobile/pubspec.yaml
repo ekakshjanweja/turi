@@ -9,10 +9,12 @@ environment:
   sdk: ^3.8.1
 
 dependencies:
+  # better_auth_flutter:
+  #   git:
+  #     url: https://github.com/ekakshjanweja/better_auth_flutter.git
+  #     ref: v2
   better_auth_flutter:
-    git:
-      url: https://github.com/ekakshjanweja/better_auth_flutter.git
-      ref: v2
+    path: ../../better_auth_flutter
   cookie_jar: ^4.0.8
   cupertino_icons: ^1.0.8
   flutter:

@@ -1,6 +1,5 @@
 import 'package:better_auth_flutter/better_auth_flutter.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:turi_mail/src/app.dart';
 import 'package:turi_mail/src/core/config/config.dart';
@@ -28,7 +27,6 @@ void main(List<String> args) async {
 }
 
 Future<void> bootstrap() async {
-  await dotenv.load(fileName: ".env");
   await BetterAuthFlutter.initialize(
     url: Uri(
       scheme: AppConfig.scheme,

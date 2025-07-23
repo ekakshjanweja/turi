@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:better_auth_flutter/better_auth_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:turi_mail/src/core/config/config.dart';
@@ -11,30 +12,108 @@ import 'package:turi_mail/src/core/services/api/models/method_type.dart';
 class AuthRepo {
   static final BetterAuthClient _client = BetterAuthFlutter.client;
 
-  static final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  static final GoogleSignIn googleSignIn = GoogleSignIn.instance;
 
   static final List<String> scopes = <String>[
     "openid",
     "email",
     "profile",
-    "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.modify",
-    "https://mail.google.com/",
   ];
 
   static Future<void> initialize() async {
     try {
-      await _googleSignIn.initialize(
-        serverClientId: AppConfig.googleServerClientId,
+      await googleSignIn.initialize(
+        // serverClientId: kIsWeb ? null : AppConfig.googleServerClientId,
+        // clientId: kIsWeb ? AppConfig.googleServerClientId : null,
+        clientId: AppConfig.googleServerClientId,
       );
     } catch (e) {
       log("Failed to initialize Google Sign-In: ${e.toString()}", error: e);
     }
   }
 
+  static Future<(SignInSocialResponse?, ApiFailure?)>
+  signInWithGoogleAuthenticationEvent({
+    required GoogleSignInAuthenticationEvent event,
+  }) async {
+    try {
+      final GoogleSignInAccount? user = switch (event) {
+        GoogleSignInAuthenticationEventSignIn() => event.user,
+        GoogleSignInAuthenticationEventSignOut() => null,
+      };
+
+      if (user == null) {
+        return (
+          null,
+          ApiFailure.fromErrorCode(
+            errorType: ErrorCode.betterAuthError,
+            message: "No user found",
+          ),
+        );
+      }
+
+      final GoogleSignInAuthentication authentication = user.authentication;
+
+      final String? idToken = authentication.idToken;
+
+      if (idToken == null) {
+        return (
+          null,
+          ApiFailure.fromErrorCode(errorType: ErrorCode.idTokenIsNull),
+        );
+      }
+
+      final String? accessToken = await _getAccessToken(user);
+
+      if (accessToken == null) {
+        return (
+          null,
+          ApiFailure.fromErrorCode(errorType: ErrorCode.accessTokenIsNull),
+        );
+      }
+
+      final response = await _client.signIn.social(
+        request: SignInSocialRequest(
+          provider: SocialProvider.google,
+          idToken: SocialIdTokenBody(token: idToken, accessToken: accessToken),
+          scopes: scopes,
+        ),
+      );
+
+      if (response.error != null) {
+        return (
+          null,
+          ApiFailure(
+            message: response.error!.message,
+            code: response.error!.code,
+          ),
+        );
+      }
+
+      return (response.data, null);
+    } on GoogleSignInException catch (e) {
+      return (
+        null,
+        ApiFailure.fromErrorCode(
+          errorType: ErrorCode.googleSignInError,
+          message: e.toString(),
+        ),
+      );
+    } catch (e) {
+      return (
+        null,
+        ApiFailure.fromErrorCode(
+          errorType: ErrorCode.unKnownError,
+          message: e.toString(),
+        ),
+      );
+    }
+  }
+
   static Future<(SignInSocialResponse?, ApiFailure?)> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount user = await _googleSignIn.authenticate(
+      final GoogleSignInAccount user = await googleSignIn.authenticate(
         scopeHint: scopes,
       );
 
@@ -132,7 +211,7 @@ class AuthRepo {
 
   static Future<ApiFailure?> signOut() async {
     try {
-      await _googleSignIn.signOut();
+      await googleSignIn.signOut();
 
       final (result, error) = await Api.sendRequest(
         "/sign-out",
