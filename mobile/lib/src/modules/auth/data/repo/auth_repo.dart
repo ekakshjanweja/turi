@@ -24,9 +24,8 @@ class AuthRepo {
   static Future<void> initialize() async {
     try {
       await googleSignIn.initialize(
-        // serverClientId: kIsWeb ? null : AppConfig.googleServerClientId,
-        // clientId: kIsWeb ? AppConfig.googleServerClientId : null,
-        clientId: AppConfig.googleServerClientId,
+        serverClientId: kIsWeb ? null : AppConfig.googleServerClientId,
+        clientId: kIsWeb ? AppConfig.googleServerClientId : null,
       );
     } catch (e) {
       log("Failed to initialize Google Sign-In: ${e.toString()}", error: e);
