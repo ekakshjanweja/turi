@@ -82,9 +82,9 @@ export default function PrimaryCta() {
             Get Early Access
           </Button>
         </div>
-        <Button variant="outline" disabled={isLoading}>
+        {/* <Button variant="outline" disabled={isLoading}>
           Watch Demo
-        </Button>
+        </Button> */}
         <p className="text-xs text-muted-foreground text-center leading-relaxed transition-all duration-500 hover:text-primary-foreground">
           free during beta | no credit card required | cancel anytime
         </p>
