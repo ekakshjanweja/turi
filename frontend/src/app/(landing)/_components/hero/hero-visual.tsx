@@ -216,15 +216,23 @@ export default function HeroVisual() {
       await video.play();
       console.log("Video playing with audio");
 
-      // Set 2x speed for first 5 seconds only if starting from beginning
+      // Set 2x speed for first 5 seconds of video content
       if (video.currentTime < 1) {
         video.playbackRate = 2.0;
-        setTimeout(() => {
-          if (video && !video.paused) {
+        console.log("Video playing at 2x speed for first 5 seconds");
+
+        // Listen for timeupdate to check when we've reached 5 seconds of video content
+        const handleTimeUpdate = () => {
+          if (video.currentTime >= 5 && video.playbackRate === 2.0) {
             video.playbackRate = 1.0;
-            console.log("Video speed returned to normal");
+            video.removeEventListener("timeupdate", handleTimeUpdate);
+            console.log(
+              "Video speed returned to normal after 5 seconds of content"
+            );
           }
-        }, 5000);
+        };
+
+        video.addEventListener("timeupdate", handleTimeUpdate);
       }
     } catch (error) {
       console.log("Audio autoplay blocked, trying muted first:", error);
