@@ -10,6 +10,7 @@ export default function HeroVisual() {
   const [isFullyVisible, setIsFullyVisible] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // Initialize audio context
@@ -26,6 +27,18 @@ export default function HeroVisual() {
         audioContextRef.current.close();
       }
     };
+  }, []);
+
+  // Check for mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // Handle video loaded
@@ -280,15 +293,16 @@ export default function HeroVisual() {
       }
     );
 
-    if (videoRef.current) {
-      observer.observe(videoRef.current);
-      fullVisibilityObserver.observe(videoRef.current);
+    const currentVideo = videoRef.current;
+    if (currentVideo) {
+      observer.observe(currentVideo);
+      fullVisibilityObserver.observe(currentVideo);
     }
 
     return () => {
-      if (videoRef.current) {
-        observer.unobserve(videoRef.current);
-        fullVisibilityObserver.unobserve(videoRef.current);
+      if (currentVideo) {
+        observer.unobserve(currentVideo);
+        fullVisibilityObserver.unobserve(currentVideo);
       }
     };
   }, [isInView, canPlay, hasUserInteracted, attemptPlay, playAudioCue]);
@@ -320,7 +334,7 @@ export default function HeroVisual() {
           <motion.div
             className="relative"
             animate={{
-              scale: isFullyVisible ? 0.8 : 1,
+              scale: isMobile ? 1 : isFullyVisible ? 0.8 : 1,
             }}
             transition={{
               duration: 0.5,
@@ -340,6 +354,7 @@ export default function HeroVisual() {
               width={452}
               height={964}
               priority
+              className="w-[320px] h-[682px] sm:w-[380px] sm:h-[810px] md:w-[452px] md:h-[964px]"
               style={{
                 filter: "drop-shadow(0 25px 50px rgba(0, 0, 0, 0.3))",
               }}
@@ -347,21 +362,31 @@ export default function HeroVisual() {
 
             {/* Camera Punch Hole */}
             <div
-              className="absolute bg-black rounded-full z-20"
+              className="absolute bg-black rounded-full z-20 w-[21px] h-[21px] sm:w-[25px] sm:h-[25px] md:w-[30px] md:h-[30px]"
               style={{
-                width: "30px",
-                height: "30px",
-                top: "32px",
+                top: "23px",
                 left: "50%",
                 transform: "translateX(-50%)",
               }}
             />
+            <style jsx>{`
+              @media (min-width: 640px) {
+                .absolute.bg-black.rounded-full.z-20 {
+                  top: 27px !important;
+                }
+              }
+              @media (min-width: 768px) {
+                .absolute.bg-black.rounded-full.z-20 {
+                  top: 32px !important;
+                }
+              }
+            `}</style>
 
             {/* Video positioned over the phone screen */}
             <video
               ref={videoRef}
               src="/demo.webm"
-              className="absolute pointer-events-none"
+              className="absolute pointer-events-none w-[292px] h-[656px] sm:w-[347px] sm:h-[780px] md:w-[412px] md:h-[924px] rounded-[40px] sm:rounded-[48px] md:rounded-[57px]"
               loop
               playsInline
               preload="auto"
@@ -374,14 +399,11 @@ export default function HeroVisual() {
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
-                width: "412px",
-                height: "924px",
                 border: "none",
                 objectFit: "cover",
                 outline: "none",
                 WebkitAppearance: "none",
                 MozAppearance: "none",
-                borderRadius: "57px",
                 overflow: "hidden",
                 scrollbarWidth: "none",
                 msOverflowStyle: "none",

@@ -7,7 +7,7 @@ import HeroVisual from "./hero-visual";
 
 export default function HeroSection() {
   return (
-    <section className="relative bg-gradient-to-b from-background via-background/50 to-primary/10 overflow-hidden mt-12">
+    <section className="relative bg-gradient-to-b from-background via-background/50 to-primary/10 overflow-hidden mt-12 -mx-4 md:-mx-8 lg:mx-0">
       <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
           {/* Hero Badge */}
