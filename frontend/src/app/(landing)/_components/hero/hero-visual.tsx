@@ -13,6 +13,7 @@ export default function HeroVisual() {
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // Initialize audio context
@@ -63,6 +64,7 @@ export default function HeroVisual() {
     const handleVideoPlay = () => {
       console.log("Video started playing");
       setIsPlaying(true);
+      setHasAutoPlayed(true);
       playVideoPlaySound();
     };
 
@@ -70,6 +72,15 @@ export default function HeroVisual() {
       console.log("Video paused");
       setIsPlaying(false);
       playVideoPauseSound();
+    };
+
+    const handleVideoEnded = () => {
+      console.log("Video ended");
+      setIsPlaying(false);
+      // Reset to beginning for next play
+      if (video) {
+        video.currentTime = 0;
+      }
     };
 
     const handleUserInteraction = () => {
@@ -92,6 +103,7 @@ export default function HeroVisual() {
     video.addEventListener("error", handleError);
     video.addEventListener("play", handleVideoPlay);
     video.addEventListener("pause", handleVideoPause);
+    video.addEventListener("ended", handleVideoEnded);
 
     // Force load the video immediately
     video.load();
@@ -105,6 +117,7 @@ export default function HeroVisual() {
       video.removeEventListener("error", handleError);
       video.removeEventListener("play", handleVideoPlay);
       video.removeEventListener("pause", handleVideoPause);
+      video.removeEventListener("ended", handleVideoEnded);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -228,7 +241,7 @@ export default function HeroVisual() {
 
         // Listen for timeupdate to check when we've reached 5 seconds of video content
         const handleTimeUpdate = () => {
-          if (video.currentTime >= 5 && video.playbackRate === 2.0) {
+          if (video.currentTime >= 10 && video.playbackRate === 2.0) {
             video.playbackRate = 1.0;
             video.removeEventListener("timeupdate", handleTimeUpdate);
             console.log(
@@ -286,15 +299,17 @@ export default function HeroVisual() {
           audioContextRef.current.resume();
         }
 
-        // Control video playback - continue from where left off
+        // Control video playback - only autoplay on first view
         if (videoRef.current) {
           if (!wasInView && nowInView) {
-            // Video coming into view - resume playback
-            attemptPlay();
-            setTimeout(() => {
-              playAudioCue(440, 0.3, "start"); // A note
-              setTimeout(() => playAudioCue(554.37, 0.2, "start"), 100); // C# note
-            }, 200);
+            // Video coming into view - only autoplay if it hasn't been played before
+            if (!hasAutoPlayed) {
+              attemptPlay();
+              setTimeout(() => {
+                playAudioCue(440, 0.3, "start"); // A note
+                setTimeout(() => playAudioCue(554.37, 0.2, "start"), 100); // C# note
+              }, 200);
+            }
           } else if (wasInView && !nowInView) {
             // Video going out of view - pause but don't reset
             videoRef.current.pause();
@@ -330,7 +345,14 @@ export default function HeroVisual() {
         fullVisibilityObserver.unobserve(currentVideo);
       }
     };
-  }, [isInView, canPlay, hasUserInteracted, attemptPlay, playAudioCue]);
+  }, [
+    isInView,
+    canPlay,
+    hasUserInteracted,
+    hasAutoPlayed,
+    attemptPlay,
+    playAudioCue,
+  ]);
 
   return (
     <div className="mt-16 relative max-w-5xl mx-auto">
@@ -359,7 +381,7 @@ export default function HeroVisual() {
           <motion.div
             className="relative"
             animate={{
-              scale: isMobile ? 1 : isFullyVisible ? 0.8 : 1,
+              scale: isMobile ? 1 : isFullyVisible ? 0.7 : 0.9,
             }}
             transition={{
               duration: 0.5,
@@ -413,7 +435,6 @@ export default function HeroVisual() {
               src="/demo.webm"
               className="absolute cursor-pointer w-[292px] h-[656px] sm:w-[347px] sm:h-[780px] md:w-[412px] md:h-[924px] rounded-[40px] sm:rounded-[48px] md:rounded-[57px]"
               onClick={handlePlayPauseClick}
-              loop
               playsInline
               preload="auto"
               webkit-playsinline="true"
