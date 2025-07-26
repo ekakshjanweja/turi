@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
+import { Play } from "lucide-react";
 
 export default function HeroVisual() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -11,6 +12,7 @@ export default function HeroVisual() {
   const [canPlay, setCanPlay] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // Initialize audio context
@@ -60,11 +62,13 @@ export default function HeroVisual() {
 
     const handleVideoPlay = () => {
       console.log("Video started playing");
+      setIsPlaying(true);
       playVideoPlaySound();
     };
 
     const handleVideoPause = () => {
       console.log("Video paused");
+      setIsPlaying(false);
       playVideoPauseSound();
     };
 
@@ -102,6 +106,7 @@ export default function HeroVisual() {
       video.removeEventListener("play", handleVideoPlay);
       video.removeEventListener("pause", handleVideoPause);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Function to play audio cue
@@ -253,6 +258,18 @@ export default function HeroVisual() {
     }
   }, [canPlay]);
 
+  // Function to handle play/pause button click
+  const handlePlayPauseClick = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      attemptPlay();
+    } else {
+      video.pause();
+    }
+  }, [attemptPlay]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -394,7 +411,8 @@ export default function HeroVisual() {
             <video
               ref={videoRef}
               src="/demo.webm"
-              className="absolute pointer-events-none w-[292px] h-[656px] sm:w-[347px] sm:h-[780px] md:w-[412px] md:h-[924px] rounded-[40px] sm:rounded-[48px] md:rounded-[57px]"
+              className="absolute cursor-pointer w-[292px] h-[656px] sm:w-[347px] sm:h-[780px] md:w-[412px] md:h-[924px] rounded-[40px] sm:rounded-[48px] md:rounded-[57px]"
+              onClick={handlePlayPauseClick}
               loop
               playsInline
               preload="auto"
@@ -417,6 +435,24 @@ export default function HeroVisual() {
                 msOverflowStyle: "none",
               }}
             />
+
+            {/* Play Button - Only visible when paused */}
+            {!isPlaying && (
+              <button
+                onClick={handlePlayPauseClick}
+                className="absolute z-30 bg-white text-black rounded-full transition-all duration-200 opacity-90 hover:opacity-100 hover:scale-105 flex items-center justify-center"
+                style={{
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: "60px",
+                  height: "60px",
+                }}
+                aria-label="Play video"
+              >
+                <Play className="w-6 h-6 ml-0.5" />
+              </button>
+            )}
           </motion.div>
         </div>
       </motion.div>
