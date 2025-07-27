@@ -13,7 +13,6 @@ import {
   UpdateLabelSchema,
 } from "../gmail/schema";
 import type { Message, EmailSummary } from "../../lib/types/types";
-import { elevenLabsTts } from "./eleven-labs";
 import type { SSEStreamingApi } from "hono/streaming";
 import {
   detectEndChatIntent,

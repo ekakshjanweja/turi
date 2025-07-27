@@ -3,6 +3,8 @@ import type { AgentSession, AppBindings, Message } from "../lib/types/types";
 import { streamSSE } from "hono/streaming";
 import { subscription as subscriptionTable } from "../lib/db/schema/subscription";
 import { eq } from "drizzle-orm";
+import { uuid } from "drizzle-orm/gel-core";
+import { v4 as uuidv4 } from "uuid";
 
 const agentSessions: AgentSession[] = [];
 
@@ -144,6 +146,7 @@ agentRouter.get("/chat", (c) => {
         content: `Audio mode changed to ${
           audioEnabled ? "enabled" : "disabled"
         }`,
+        messageId: uuidv4(),
       };
 
       stream.writeSSE({ data: JSON.stringify(message), event: "system" });
@@ -156,6 +159,7 @@ agentRouter.get("/chat", (c) => {
     const msg: Message = {
       type: "CONNECTED",
       content: "Agent session started",
+      messageId: uuidv4(),
     };
 
     stream.writeSSE({ data: JSON.stringify(msg), event: "system" });
